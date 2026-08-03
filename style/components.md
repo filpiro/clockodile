@@ -1,7 +1,7 @@
 # UI Components Inventory
 
 Every visual component in the app, grouped by scope. Base for the style improvement work.
-Theme today: catppuccin (`lib/shared/theme.dart`) — latte for light, mocha for dark, `themeMode` from Settings. Primary is a hardcoded pale green (`#CEEFA7`) shared by both brightnesses — it under-contrasts on latte and is pending a palette pass; everything else is a manual ColorScheme mapping onto the flavor (secondary=pink, surface=base, containers=crust/mantle/surface0-2, error=red). Buttons (Filled/Elevated/Outlined/Text/Segmented) use 10px rounding instead of Material 3 stadium pills; FAB and chips keep defaults. `IconButton`s default to an 18px glyph in the stock 40px hit area, so hover-revealed row actions get breathing room.
+Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte for light, mocha for dark, `themeMode` from Settings. `lib/shared/theme.dart` holds the app's two `ThemeData` finals and is the only place clockodile's accent is stated: `primary` is the flavor's own green, taken per flavor so it tracks brightness. `secondary` falls back to the flavor pink, and `cat_ui` defaults `primary` to mauve for apps that state nothing. Everything else is a manual ColorScheme mapping onto the flavor (secondary=pink, surface=base, containers=crust/mantle/surface0-2, error=red). Buttons (Filled/Elevated/Outlined/Text/Segmented) use 10px rounding instead of Material 3 stadium pills; FAB and chips keep defaults. `IconButton`s default to an 18px glyph in the stock 40px hit area, so hover-revealed row actions get breathing room.
 
 ## App shell (`lib/main.dart`)
 

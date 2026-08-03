@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 
 import 'tokens.dart';
 
-final ThemeData lightTheme = catTheme(catppuccin.latte, Brightness.light);
-final ThemeData darkTheme = catTheme(catppuccin.mocha, Brightness.dark);
-
 /// Maps a catppuccin [flavor] onto a Material 3 [ThemeData].
 ///
-/// [primary] is the one axis apps are expected to differ on; everything else is
-/// the house style and is deliberately not parameterised. It defaults to the
-/// flavor's own green, which tracks the brightness — latte's is dark enough to
-/// carry [Flavor.base] as its foreground, mocha's light enough.
-ThemeData catTheme(Flavor flavor, Brightness brightness, {Color? primary}) {
+/// The accent pair is the axis apps differ on; everything else is the house
+/// style and is deliberately not parameterised. Both hues fall back to the
+/// flavor's own, so a new app gets a coherent theme without stating a brand.
+///
+/// The foregrounds are not settable: [Flavor.base] contrasts against every
+/// accent in the palette, in either brightness, because catppuccin accents all
+/// sit mid-range. An accent from outside the palette is on its own.
+ThemeData catTheme(
+  Flavor flavor,
+  Brightness brightness, {
+  Color? primary,
+  Color? secondary,
+}) {
   final scheme = ColorScheme(
     brightness: brightness,
-    primary: primary ?? flavor.green,
+    primary: primary ?? flavor.mauve,
     onPrimary: flavor.base,
-    secondary: flavor.pink,
+    secondary: secondary ?? flavor.pink,
     onSecondary: flavor.base,
     // Muted container so NavigationRail indicator / selected segments stay subtle.
     secondaryContainer: flavor.surface1,

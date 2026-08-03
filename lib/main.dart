@@ -18,6 +18,7 @@ import 'features/report/cubit/report_cubit.dart';
 import 'features/report/report_view.dart';
 import 'features/settings/cubit/theme_cubit.dart';
 import 'features/settings/settings_view.dart';
+import 'shared/theme.dart';
 
 const _instancePort = 38573;
 

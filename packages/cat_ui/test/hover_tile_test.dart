@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final highlight = lightTheme.colorScheme.surfaceContainerHighest;
+  final theme = catTheme(catppuccin.latte, Brightness.light);
+  final highlight = theme.colorScheme.surfaceContainerHighest;
 
   Color? tileColorOf(WidgetTester tester) =>
       tester.widget<ListTile>(find.byType(ListTile)).tileColor;
@@ -20,7 +21,7 @@ void main() {
   Future<void> pumpTile(WidgetTester tester, {VoidCallback? onTap}) {
     return tester.pumpWidget(
       MaterialApp(
-        theme: lightTheme,
+        theme: theme,
         home: Scaffold(
           body: HoverTile(title: const Text('riga'), onTap: onTap),
         ),
