@@ -33,7 +33,7 @@ class ClientsView extends StatelessWidget {
                     customBorder: const CircleBorder(),
                     onTap: () => _pickColor(context, c.client),
                     child: CircleAvatar(
-                      radius: 12,
+                      radius: AppTokens.dotRadiusMiddle,
                       backgroundColor: hexToColor(c.client.colorHex),
                     ),
                   ),

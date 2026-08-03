@@ -28,10 +28,12 @@ abstract final class AppTokens {
   /// Hover ripple tint strength for [intentHoverStyle].
   static const double hoverOverlayAlpha = 0.12;
 
-  /// Identity colour dots. [dotRadius] is the default for a list row;
-  /// small sits next to a group header, large is a dialog preview.
+  /// Identity colour dots. [dotRadius] is the default for a list row; small
+  /// sits next to a group header, middle marks a row whose dot is tappable,
+  /// large is a dialog preview.
   static const double dotRadiusSmall = 6;
   static const double dotRadius = 8;
+  static const double dotRadiusMiddle = 12;
   static const double dotRadiusLarge = 14;
 
   /// Single-column forms stay readable rather than stretching to the window.
