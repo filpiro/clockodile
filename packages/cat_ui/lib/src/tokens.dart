@@ -1,13 +1,7 @@
-import 'package:flutter/painting.dart';
-
 /// The numbers the house style is made of. Every magic value that more than one
 /// widget depends on lives here, so a new screen can match the existing ones
 /// without archaeology.
 abstract final class AppTokens {
-  /// Accent shared by both brightnesses.
-  // TODO: under-contrasts on latte — pending the palette pass.
-  static const Color primary = Color(0xFFCEEFA7);
-
   /// FAB-style rounding instead of Material 3 full-stadium pills.
   /// 10, not the FAB's 16: buttons are ~40px tall vs the FAB's 56, so 10
   /// matches the FAB's corner-to-height proportion (16 would still read as a pill).

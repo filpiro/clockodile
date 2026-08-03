@@ -9,15 +9,13 @@ final ThemeData darkTheme = catTheme(catppuccin.mocha, Brightness.dark);
 /// Maps a catppuccin [flavor] onto a Material 3 [ThemeData].
 ///
 /// [primary] is the one axis apps are expected to differ on; everything else is
-/// the house style and is deliberately not parameterised.
-ThemeData catTheme(
-  Flavor flavor,
-  Brightness brightness, {
-  Color primary = AppTokens.primary,
-}) {
+/// the house style and is deliberately not parameterised. It defaults to the
+/// flavor's own green, which tracks the brightness — latte's is dark enough to
+/// carry [Flavor.base] as its foreground, mocha's light enough.
+ThemeData catTheme(Flavor flavor, Brightness brightness, {Color? primary}) {
   final scheme = ColorScheme(
     brightness: brightness,
-    primary: primary,
+    primary: primary ?? flavor.green,
     onPrimary: flavor.base,
     secondary: flavor.pink,
     onSecondary: flavor.base,
