@@ -14,9 +14,13 @@ class EmptyState extends StatelessWidget {
         children: [
           Opacity(
             opacity: 0.60,
+            // Source art is 1024², drawn at 96: without cacheWidth Flutter
+            // decodes the full bitmap into memory for a thumbnail. 2x covers
+            // the highest-DPI display the app runs on.
             child: Image.asset(
               'assets/images/no-data.png',
               width: 96,
+              cacheWidth: 192,
               package: 'cat_ui',
             ),
           ),

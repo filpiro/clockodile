@@ -151,7 +151,7 @@ class _ClientHeader extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            radius: AppTokens.dotRadiusDense,
+            radius: AppTokens.dotRadiusSmall,
             backgroundColor: hexToColor(r.client.colorHex),
           ),
           const SizedBox(width: 8),
