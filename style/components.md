@@ -1,7 +1,10 @@
 # UI Components Inventory
 
-Every visual component in the app, grouped by scope. Base for the style improvement work.
-Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte for light, mocha for dark, `themeMode` from Settings. `lib/shared/theme.dart` holds the app's two `ThemeData` finals and is the only place clockodile's accent is stated: `primary` is the flavor's own green, taken per flavor so it tracks brightness. `secondary` falls back to the flavor pink, and `cat_ui` defaults `primary` to mauve for apps that state nothing. Everything else is a manual ColorScheme mapping onto the flavor (secondary=pink, surface=base, containers=crust/mantle/surface0-2, error=red). Buttons (Filled/Elevated/Outlined/Text/Segmented) use 10px rounding instead of Material 3 stadium pills; FAB and chips keep defaults. `IconButton`s default to an 18px glyph in the stock 40px hit area, so hover-revealed row actions get breathing room.
+Every visual component in this app, grouped by scope — what clockodile puts on screen, not how the style works.
+
+The house style itself — theme, tokens, shared widgets and the rules for using them — is `packages/cat_ui/DESIGN.md`. Read that first; this file assumes it.
+
+Clockodile's only style decision: `lib/shared/theme.dart` passes the flavor's green as `primary` (latte for light, mocha for dark, `themeMode` from Settings). Everything else is cat_ui's.
 
 ## App shell (`lib/main.dart`)
 
@@ -13,16 +16,24 @@ Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte f
 | Screen host | `IndexedStack` | keeps all 5 screens alive |
 | Startup loader | `CircularProgressIndicator` | shown while purge future resolves |
 
+## From cat_ui
+
+Behaviour and rationale live in `packages/cat_ui/DESIGN.md`; this is only where each one is used.
+
+| Component | Used by |
+|---|---|
+| `HoverTile` | Attività list, Active Entry tile, Clienti list, Report rows (`dense`) |
+| `EditIconButton` | Attività rows, Active Entry tile |
+| `DeleteIconButton` | Attività rows, Clienti rows, Entry page sessions |
+| `DangerButton` | delete confirms in Attività, Clienti, Impostazioni |
+| `intentHoverStyle()` | the four above, plus "Termina" |
+| `EmptyState` | Attività, Report, Clienti |
+
 ## Shared widgets (`lib/shared/widgets/`)
 
 | Component | Widget | Used by | Notes |
 |---|---|---|---|
-| Hover row | `HoverTile` (custom) | Attività list, Active Entry tile, Clienti list, Report rows (`dense`) | `ListTile` + `MouseRegion`; hover fades `tileColor` to `surfaceContainerHighest` over 200ms (Material's `InkHighlight` duration). Highlight is driven from `MouseRegion`, not `ListTile.hoverColor`, because `InkResponse` ignores hover when every callback is null — non-tappable rows must still light up. Stock `hoverColor` forced transparent so the ink overlay doesn't stack. Actions revealed on hover only (opacity + `IgnorePointer`) |
-| Edit action | `EditIconButton` (custom) | Attività rows, Active Entry tile | pencil, tooltip "Modifica"; `onSurfaceVariant` at rest → `primary` on hover |
-| Delete action | `DeleteIconButton` (custom) | Attività rows, Clienti rows, Entry page sessions | trash2, tooltip overridable; `onSurfaceVariant` at rest → `error` on hover; dims to 38% when disabled |
-| Destructive confirm | `DangerButton` (custom) | delete confirms in Attività, Clienti, Impostazioni | `FilledButton` on `error`/`onError` — filled, not hover-tinted: the user is committing, not browsing |
-| Intent hover style | `intentHoverStyle()` (helper) | the three above + "Termina" | `WidgetStateProperty` foreground: idle → accent on hover, plus a matching 12% overlay tint |
-| Client autocomplete | `ClientField` (custom) | Entry page | `RawAutocomplete`, dropdown from 3 chars; options: `Material(elevation 4)` + `ListView` of dense `ListTile`s, highlighted option = `secondaryContainer` bg, color dot per client |
+| Client autocomplete | `ClientField` (custom) | Entry page | `RawAutocomplete`, dropdown from 3 chars; options: `Material(elevation 4)` + `ListView` of dense `ListTile`s, highlighted option = `secondaryContainer` bg, color dot per client. Stays in the app: it reads `ClientsCubit` and knows the Client entity |
 
 ## Attività screen (`lib/features/entries/entries_view.dart`)
 
@@ -37,7 +48,7 @@ Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte f
 | Row hover actions | `EditIconButton` + `DeleteIconButton` | pencil (edit), trash (delete w/ confirm dialog) |
 | Delete confirm | `AlertDialog` | "Eliminare l'attività?" + cascade warning; confirm is a `DangerButton` |
 | Load more | `TextButton` | "Carica altre", only in Tutte |
-| Empty state | `Text` centered | "Nessuna attività." |
+| Empty state | `EmptyState` | "Nessuna attività." |
 
 ## Entry page (`lib/features/entries/entry_edit_page.dart`)
 
@@ -63,7 +74,7 @@ Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte f
 | Client header (grouped) | `_ClientHeader` (custom) | color dot + name, `titleSmall` |
 | Report row | `_ReportTile` (on `HoverTile`, `dense`) | normalized "HH:MM–HH:MM (h:mm) — nota"; subtitle client + real times; color dot only when ungrouped; zero-length rows in `error` color; tap copies the note, note-less rows aren't tappable but still highlight |
 | Day total footer | `Text` `titleSmall` | "Totale normalizzato: h:mm" |
-| Empty state | `Text` centered | "Nessuna sessione nel giorno scelto." |
+| Empty state | `EmptyState` | "Nessuna sessione nel giorno scelto." |
 
 ## Clienti screen (`lib/features/clients/clients_view.dart`)
 
@@ -76,7 +87,7 @@ Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte f
 | Rename dialog | `AlertDialog` | autofocused `TextField`, Annulla/Salva |
 | Color dialog | `AlertDialog` | preview `CircleAvatar` + hue `Slider` (fixed S/L), Annulla/Salva |
 | Delete confirm | `AlertDialog` | Annulla/Elimina |
-| Empty state | `Text` centered | "Nessun cliente." |
+| Empty state | `EmptyState` | "Nessun cliente." |
 
 ## Impostazioni screen (`lib/features/settings/settings_view.dart`)
 
@@ -101,4 +112,4 @@ Theme today: catppuccin, built by `catTheme` in the `cat_ui` package — latte f
 - **Color dots**: `CircleAvatar` radius 6–14 with client hex color — the app's main visual identity
 - **Confirmations**: `AlertDialog` with `TextButton` Annulla + `FilledButton` action
 - **Hover-reveal actions**: desktop-only affordance via `HoverTile`; no touch fallback
-- **Empty states**: bare centered `Text`, no illustration/icon
+- **Empty states**: `EmptyState` from cat_ui — dimmed 96px illustration above the message
