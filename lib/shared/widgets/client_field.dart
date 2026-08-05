@@ -1,4 +1,4 @@
-import 'package:cat_ui/cat_ui.dart';
+import 'package:catui/catui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

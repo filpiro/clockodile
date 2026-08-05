@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:cat_ui/cat_ui.dart';
+import 'package:catui/catui.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/database.dart';

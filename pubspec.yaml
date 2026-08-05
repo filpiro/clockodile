@@ -1,5 +1,5 @@
 name: clockodile
-description: "A new Flutter project."
+description: "Time manager for a single user, local-only desktop app."
 publish_to: 'none'
 version: 0.1.0
 
@@ -19,8 +19,10 @@ dependencies:
   window_manager: ^0.5.2
   # House style: theme, design tokens, atomic widgets.
   # Re-exports catppuccin_flutter and lucide_icons_flutter.
-  cat_ui:
-    path: packages/cat_ui
+  catui:
+    git:
+      url: https://github.com/filpiro/catui
+      ref: main
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +36,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/

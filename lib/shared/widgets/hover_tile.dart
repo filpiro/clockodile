@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'tokens.dart';
+import 'package:catui/catui.dart';
+
 
 /// List row with mouse-hover highlight and hover-only actions
 /// (shared UX between the entries, clients and report screens).

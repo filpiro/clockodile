@@ -2,9 +2,9 @@
 
 Every visual component in this app, grouped by scope — what clockodile puts on screen, not how the style works.
 
-The house style itself — theme, tokens, shared widgets and the rules for using them — is `packages/cat_ui/DESIGN.md`. Read that first; this file assumes it.
+The house style itself — theme, tokens, shared widgets and the rules for using them — is `packages/catui/DESIGN.md`. Read that first; this file assumes it.
 
-Clockodile's only style decision: `lib/shared/theme.dart` passes the flavor's green as `primary` (latte for light, mocha for dark, `themeMode` from Settings). Everything else is cat_ui's.
+Clockodile's only style decision: `lib/shared/theme.dart` passes the flavor's green as `primary` (latte for light, mocha for dark, `themeMode` from Settings). Everything else is catui's.
 
 ## App shell (`lib/main.dart`)
 
@@ -16,9 +16,9 @@ Clockodile's only style decision: `lib/shared/theme.dart` passes the flavor's gr
 | Screen host | `IndexedStack` | keeps all 5 screens alive |
 | Startup loader | `CircularProgressIndicator` | shown while purge future resolves |
 
-## From cat_ui
+## From catui
 
-Behaviour and rationale live in `packages/cat_ui/DESIGN.md`; this is only where each one is used.
+Behaviour and rationale live in `packages/catui/DESIGN.md`; this is only where each one is used.
 
 | Component | Used by |
 |---|---|
@@ -112,4 +112,4 @@ Behaviour and rationale live in `packages/cat_ui/DESIGN.md`; this is only where 
 - **Color dots**: `CircleAvatar` radius 6–14 with client hex color — the app's main visual identity
 - **Confirmations**: `AlertDialog` with `TextButton` Annulla + `FilledButton` action
 - **Hover-reveal actions**: desktop-only affordance via `HoverTile`; no touch fallback
-- **Empty states**: `EmptyState` from cat_ui — dimmed 96px illustration above the message
+- **Empty states**: `EmptyState` from catui — dimmed 96px illustration above the message
