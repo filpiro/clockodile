@@ -1,0 +1,33 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            artifact: build/windows/x64/runner/Release
+          - os: macos-latest
+            target: macos
+            artifact: build/macos/Build/Products/Release
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ${{ matrix.target }} --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clockodile-${{ matrix.target }}
+          path: ${{ matrix.artifact }}
