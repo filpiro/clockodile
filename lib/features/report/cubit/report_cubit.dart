@@ -11,28 +11,31 @@ import '../normalize.dart';
 
 enum ReportFilter { today, yesterday, day }
 
+/// How the day is presented. Rows, total and CSV are identical in both — the
+/// mode picks a renderer, nothing else. Not persisted across restarts.
+enum ReportMode { grouped, chronological }
+
 class ReportState {
   final ReportFilter filter;
 
   /// Day selected via the picker chip; only applied when [filter] == day.
   final DateTime? pickedDay;
 
-  /// Presentation only: group rows by client. Normalization is unaffected.
-  final bool grouped;
+  final ReportMode mode;
 
   /// Normalized rows for the selected day, in display order.
   final List<ReportRow> rows;
-  ReportState(this.filter, this.pickedDay, this.grouped, this.rows);
+  ReportState(this.filter, this.pickedDay, this.mode, this.rows);
 
   ReportState copyWith({
     ReportFilter? filter,
     DateTime? pickedDay,
-    bool? grouped,
+    ReportMode? mode,
     List<ReportRow>? rows,
   }) => ReportState(
     filter ?? this.filter,
     pickedDay ?? this.pickedDay,
-    grouped ?? this.grouped,
+    mode ?? this.mode,
     rows ?? this.rows,
   );
 
@@ -50,10 +53,11 @@ class ReportState {
 class ReportCubit extends Cubit<ReportState> {
   final AppDatabase db;
   StreamSubscription<List<SessionRow>>? _sub;
-  List<ReportRow> _normalized = const [];
 
   ReportCubit(this.db)
-    : super(ReportState(ReportFilter.today, null, true, const [])) {
+    : super(
+        ReportState(ReportFilter.today, null, ReportMode.grouped, const []),
+      ) {
     _watch();
   }
 
@@ -72,24 +76,14 @@ class ReportCubit extends Cubit<ReportState> {
     _watch();
   }
 
-  void setGrouped(bool grouped) {
-    emit(
-      state.copyWith(
-        grouped: grouped,
-        rows: orderRows(_normalized, grouped: grouped),
-      ),
-    );
-  }
+  void setMode(ReportMode mode) => emit(state.copyWith(mode: mode));
 
   void _watch() {
     _sub?.cancel();
     final from = state.day;
     final to = from.add(const Duration(days: 1));
     _sub = db.watchClosedSessions(from: from, to: to).listen((sessions) {
-      _normalized = normalizeDay(sessions);
-      emit(
-        state.copyWith(rows: orderRows(_normalized, grouped: state.grouped)),
-      );
+      emit(state.copyWith(rows: groupByClient(normalizeDay(sessions))));
     }, onError: addError);
   }
 

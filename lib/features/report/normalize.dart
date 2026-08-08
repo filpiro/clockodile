@@ -83,11 +83,11 @@ List<ReportRow> normalizeDay(List<SessionRow> sessions) {
   ];
 }
 
-/// Report row order. [grouped]: clients by first appearance in the day, each
-/// client's rows chronological. Otherwise plain chronological. Presentation
+/// Report row order: clients by first appearance in the day, each client's
+/// rows chronological. The one order for preview and CSV in both view modes —
+/// the board positions its tiles by time, so it doesn't care. Presentation
 /// only — normalization is unaffected.
-List<ReportRow> orderRows(List<ReportRow> rows, {required bool grouped}) {
-  if (!grouped) return rows;
+List<ReportRow> groupByClient(List<ReportRow> rows) {
   final byClient = <int, List<ReportRow>>{};
   for (final r in rows) {
     byClient.putIfAbsent(r.client.id, () => []).add(r);

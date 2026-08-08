@@ -13,7 +13,7 @@ This is a **report/preview**, not a correction of stored data. Stored Sessions a
 - Filters: **Oggi / Ieri / Data** (picker). No "Tutte" — a Report is strictly one day.
 - Day membership: a Session belongs to the Report iff its **start** falls on the chosen day (same convention as the entries list). Sessions of the same Entry from other days are ignored.
 - The Open Session is always excluded.
-- Toggle **"Raggruppa per cliente"**, default ON — presentation only, see Output order.
+- View mode, a radio pair of chips: **"Raggruppa per cliente"** (default) / **"Ordine cronologico"** — presentation only, see Output order. Not persisted across restarts.
 - Preview list: one row per normalized Session — client, normalized `start–end`, duration, note; real times shown as secondary text for eyeballing the rounding.
 - **Esporta CSV** button exporting exactly the previewed rows.
 - Clicking a row copies its Entry note to the clipboard (snackbar "Nota copiata"); rows without a note are not tappable.
@@ -21,7 +21,7 @@ This is a **report/preview**, not a correction of stored data. Stored Sessions a
 
 ## Normalization
 
-Input: the day's closed Sessions sorted by start. The chain is always chronological across all clients — the grouping toggle has no effect on normalization.
+Input: the day's closed Sessions sorted by start. The chain is always chronological across all clients — the view mode has no effect on normalization.
 
 All timestamps are **truncated to whole minutes** before any rounding — stored Sessions carry seconds, but the Report reasons at minute precision, matching what the UI displays. (Otherwise an end shown as `9:15` but stored as `9:15:47` would ceil to `9:30`.)
 
@@ -50,16 +50,20 @@ For each consecutive pair, gap = `start_(i+1) − end_i`:
 
 **B — real gap:** end `10:13`, next start `10:41` (28 min) → `10:15` / `10:30`. Gap shrinks 28→15 min; acceptable.
 
-## Output order (grouping toggle)
+## Output order
 
 One row per normalized Session, always — Sessions are never merged, even same-client contiguous ones (they simply share a rounded boundary).
 
-- **ON** (default): rows grouped by client — clients in order of first appearance in the day, each client's Sessions chronological. Applies to preview and CSV identically.
-- **OFF**: single chronological list.
+Rows are grouped by client — clients in order of first appearance in the day, each client's Sessions chronological. This is the one order, in both view modes and in the CSV; the board positions its tiles by time and so is indifferent to it.
+
+## View modes
+
+- **Raggruppa per cliente** (default): the list above, with a client header per run.
+- **Ordine cronologico**: the same rows as a vertical time board — one full-width column on a wall-clock axis bounded by the day's content, each Session a tile whose height *is* its normalized duration at a fixed 1.6 px/minute. Geometry uses normalized times only; real times live in the tooltip.
 
 ## CSV
 
-Columns: `client, start, end, duration_hours, note` — normalized times, duration computed from them, note from the owning Entry. Row order = current toggle state.
+Columns: `client, start, end, duration_hours, note` — normalized times, duration computed from them, note from the owning Entry. Row order as above — identical in both view modes.
 
 ## Out of scope (v1, hand-fixed in the portal when needed)
 

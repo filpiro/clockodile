@@ -1,17 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:clockodile/data/db/database.dart';
 import 'package:clockodile/features/report/normalize.dart';
 
-SessionRow row(int id, DateTime start, DateTime end,
-    {int clientId = 1, String client = 'Acme', String note = ''}) {
-  return SessionRow(
-    Session(id: id, entryId: id, start: start, end: end),
-    Entry(id: id, clientId: clientId, note: note),
-    Client(id: clientId, name: client, colorHex: '#000000'),
-  );
-}
-
-DateTime at(int h, int m) => DateTime(2026, 7, 18, h, m);
+import 'fixtures.dart';
 
 void main() {
   test('spec example A: two contiguous sessions share one rounded boundary',
@@ -82,9 +72,6 @@ void main() {
       row(2, at(9, 30), at(10, 0), clientId: 2, client: 'Globex'),
       row(3, at(10, 0), at(10, 30), clientId: 1, client: 'Acme'),
     ]);
-    final grouped = orderRows(rows, grouped: true);
-    expect(grouped.map((r) => r.session.id).toList(), [1, 3, 2]);
-    final flat = orderRows(rows, grouped: false);
-    expect(flat.map((r) => r.session.id).toList(), [1, 2, 3]);
+    expect(groupByClient(rows).map((r) => r.session.id).toList(), [1, 3, 2]);
   });
 }

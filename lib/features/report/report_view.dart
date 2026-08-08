@@ -9,6 +9,7 @@ import '../../shared/utils/colors.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/report_cubit.dart';
 import 'normalize.dart';
+import 'report_board.dart';
 
 /// Export with snackbar feedback — used by the page button and Ctrl+S.
 Future<void> runReportExport(BuildContext context) async {
@@ -26,6 +27,15 @@ Future<void> runReportExport(BuildContext context) async {
       SnackBar(content: Text('Esportazione fallita: $err')),
     );
   }
+}
+
+/// Copies an Entry note for pasting into the portal — the tap action shared by
+/// the list rows and the board tiles.
+void copyNote(BuildContext context, String note) {
+  Clipboard.setData(ClipboardData(text: note));
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(const SnackBar(content: Text('Nota copiata')));
 }
 
 class ReportView extends StatelessWidget {
@@ -87,13 +97,20 @@ class ReportView extends StatelessWidget {
                             onSelected: (_) => _pickDay(context, state),
                           ),
                           const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('Raggruppa per cliente'),
-                            showCheckmark: false,
-                            selected: state.grouped,
-                            onSelected: (v) =>
-                                context.read<ReportCubit>().setGrouped(v),
-                          ),
+                          // Radio pair: selecting one deselects the other,
+                          // neither can be deselected into an empty state.
+                          for (final m in ReportMode.values)
+                            ChoiceChip(
+                              label: Text(
+                                m == ReportMode.grouped
+                                    ? 'Raggruppa per cliente'
+                                    : 'Ordine cronologico',
+                              ),
+                              showCheckmark: false,
+                              selected: state.mode == m,
+                              onSelected: (_) =>
+                                  context.read<ReportCubit>().setMode(m),
+                            ),
                         ],
                       ),
                     ),
@@ -108,19 +125,24 @@ class ReportView extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: state.rows.isEmpty
-                    ? const EmptyState('Nessuna sessione nel giorno scelto.')
-                    : ListView(
-                        children: [
-                          for (final (i, r) in state.rows.indexed) ...[
-                            if (state.grouped &&
-                                (i == 0 ||
-                                    state.rows[i - 1].client.id != r.client.id))
-                              _ClientHeader(r),
-                            _ReportTile(r, grouped: state.grouped),
-                          ],
-                        ],
-                      ),
+                child: switch (state) {
+                  ReportState(rows: []) => const EmptyState(
+                    'Nessuna sessione nel giorno scelto.',
+                  ),
+                  ReportState(mode: ReportMode.chronological) => ReportBoard(
+                    state.rows,
+                  ),
+                  _ => ListView(
+                    children: [
+                      for (final (i, r) in state.rows.indexed) ...[
+                        if (i == 0 ||
+                            state.rows[i - 1].client.id != r.client.id)
+                          _ClientHeader(r),
+                        _ReportTile(r),
+                      ],
+                    ],
+                  ),
+                },
               ),
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -166,11 +188,7 @@ class _ClientHeader extends StatelessWidget {
 
 class _ReportTile extends StatelessWidget {
   final ReportRow r;
-
-  /// Grouped rows sit under a client header that already carries the color
-  /// dot — repeating it per session is noise.
-  final bool grouped;
-  const _ReportTile(this.r, {required this.grouped});
+  const _ReportTile(this.r);
 
   @override
   Widget build(BuildContext context) {
@@ -180,21 +198,9 @@ class _ReportTile extends StatelessWidget {
       // Stateful row: keyed so hover doesn't survive a filter change.
       key: ValueKey(r.session.id),
       dense: true,
-      // Tap copies the note for pasting into the portal; no note, no tap.
-      onTap: note.isEmpty
-          ? null
-          : () {
-              Clipboard.setData(ClipboardData(text: note));
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(const SnackBar(content: Text('Nota copiata')));
-            },
-      leading: grouped
-          ? null
-          : CircleAvatar(
-              radius: AppTokens.dotRadius,
-              backgroundColor: hexToColor(r.client.colorHex),
-            ),
+      // No note, no tap.
+      onTap: note.isEmpty ? null : () => copyNote(context, note),
+      // No color dot: the client header above every run already carries it.
       title: Text(
         '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
         ' (${formatHm(r.normDuration)})'

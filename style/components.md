@@ -69,10 +69,12 @@ Behaviour and rationale live in `packages/catui/DESIGN.md`; this is only where e
 | Component | Widget | Notes |
 |---|---|---|
 | Filter chips | `ChoiceChip` ×3 | Oggi, Ieri, Data — no Tutte, no checkmark |
-| Group toggle chip | `ChoiceChip` | "Raggruppa per cliente", default selected |
+| Mode chips | `ChoiceChip` ×2 | "Raggruppa per cliente" (default) / "Ordine cronologico" — radio pair, exactly one selected, never zero. Presentation only: same rows, same total, same CSV in both |
 | Export button | `FilledButton.tonalIcon` | "Esporta CSV", disabled when empty |
-| Client header (grouped) | `_ClientHeader` (custom) | color dot + name, `titleSmall` |
-| Report row | `_ReportTile` (on `HoverTile`, `dense`) | normalized "HH:MM–HH:MM (h:mm) — nota"; subtitle client + real times; color dot only when ungrouped; zero-length rows in `error` color; tap copies the note, note-less rows aren't tappable but still highlight |
+| Client header (grouped mode) | `_ClientHeader` (custom) | color dot + name, `titleSmall` |
+| Report row (grouped mode) | `_ReportTile` (on `HoverTile`, `dense`) | normalized "HH:MM–HH:MM (h:mm) — nota"; subtitle client + real times; no color dot (the header carries it); zero-length rows in `error` color; tap copies the note, note-less rows aren't tappable but still highlight |
+| Day board (chronological mode) | `ReportBoard` (`Stack` of `Positioned`) | single full-width column on a wall-clock axis; fixed 1.6 px/minute, no zoom; axis = first normalized start floored to its hour → last normalized end ceiled to its hour; 56px left gutter with `HH:00` labels and an `outlineVariant` hairline gridline per hour; gaps are bare background; no "now" marker. Geometry lives in `board_geometry.dart` |
+| Board tile | `_BoardTile` (custom) | height *is* the normalized duration, no minimum; `surfaceContainer` fill (`surfaceContainerHighest` on hover), 4px client-color left border, 1px `surface` top/bottom so contiguous tiles stay separable without changing height; content is a clipped column (client, normalized range + duration, note) — a short tile keeps only the client name; tooltip carries client, normalized range, duration, real range and note; tap copies the note like the list rows. Zero/negative-length rows: 2px `error` hairline, tooltip only |
 | Day total footer | `Text` `titleSmall` | "Totale normalizzato: h:mm" |
 | Empty state | `EmptyState` | "Nessuna sessione nel giorno scelto." |
 
