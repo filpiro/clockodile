@@ -118,7 +118,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "194483836a5b7a631a6f713be768498d4a045feb"
+      resolved-ref: e51917ebd851c75a37b530f993532e4f877289db
       url: "https://github.com/filpiro/catui"
     source: git
     version: "0.1.0"
