@@ -4,10 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
   build:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -31,3 +35,15 @@ jobs:
         with:
           name: clockodile-${{ matrix.target }}
           path: ${{ matrix.artifact }}
+
+      - name: Zip (windows)
+        if: matrix.target == 'windows' && github.event_name == 'release'
+        run: Compress-Archive -Path "${{ matrix.artifact }}\*" -DestinationPath clockodile-windows.zip
+      - name: Zip (macos)
+        if: matrix.target == 'macos' && github.event_name == 'release'
+        run: ditto -c -k --keepParent "${{ matrix.artifact }}/clockodile.app" clockodile-macos.zip
+      - name: Attach to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" clockodile-${{ matrix.target }}.zip --clobber
