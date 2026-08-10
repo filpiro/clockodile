@@ -2,16 +2,20 @@ name: build
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    tags:
+      - 'v*'
+
   pull_request:
-  release:
-    types: [published]
+
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -19,31 +23,80 @@ jobs:
           - os: windows-latest
             target: windows
             artifact: build/windows/x64/runner/Release
+
           - os: macos-latest
             target: macos
             artifact: build/macos/Build/Products/Release
+
     runs-on: ${{ matrix.os }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - run: flutter pub get
-      - run: flutter build ${{ matrix.target }} --release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: clockodile-${{ matrix.target }}
-          path: ${{ matrix.artifact }}
 
-      - name: Zip (windows)
-        if: matrix.target == 'windows' && github.event_name == 'release'
-        run: Compress-Archive -Path "${{ matrix.artifact }}\*" -DestinationPath clockodile-windows.zip
-      - name: Zip (macos)
-        if: matrix.target == 'macos' && github.event_name == 'release'
-        run: ditto -c -k --keepParent "${{ matrix.artifact }}/clockodile.app" clockodile-macos.zip
-      - name: Attach to release
-        if: github.event_name == 'release'
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build
+        run: flutter build ${{ matrix.target }} --release
+
+      # Crea lo ZIP Windows solo quando il workflow è partito da un tag
+      - name: Zip Windows
+        if: matrix.target == 'windows' && github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "${{ matrix.artifact }}\*" `
+            -DestinationPath "clockodile-windows.zip"
+
+      # Crea lo ZIP macOS solo quando il workflow è partito da un tag
+      - name: Zip macOS
+        if: matrix.target == 'macos' && github.ref_type == 'tag'
+        run: |
+          ditto -c -k --keepParent \
+            "${{ matrix.artifact }}/clockodile.app" \
+            "clockodile-macos.zip"
+
+      # Gli ZIP vengono passati al job release
+      - name: Upload release artifact
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: clockodile-${{ matrix.target }}.zip
+
+  release:
+    name: Create GitHub Release
+    needs: build
+
+    # Ulteriore protezione: questo job gira solo per i tag v*
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" clockodile-${{ matrix.target }}.zip --clobber
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            artifacts/clockodile-windows.zip \
+            artifacts/clockodile-macos.zip \
+            --title "Clockodile ${{ github.ref_name }}" \
+            --generate-notes
