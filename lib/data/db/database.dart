@@ -38,9 +38,33 @@ class Settings extends Table {
   /// 'light' | 'dark' | 'system'
   TextColumn get themeMode => text().withDefault(const Constant('system'))();
 
+  BoolColumn get aiEnabled => boolean().withDefault(const Constant(false))();
+
+  /// [AiProvider.name]
+  TextColumn get aiProvider =>
+      text().withDefault(const Constant('claudeCode'))();
+
+  // Model and effort are kept per provider so switching away and back does not
+  // lose a configuration. Claude Code's are picked from fixed lists; the other
+  // two are free text (their model names move faster than this app).
+  TextColumn get aiClaudeModel =>
+      text().withDefault(const Constant('sonnet'))();
+  TextColumn get aiClaudeEffort => text().withDefault(const Constant('high'))();
+  TextColumn get aiCodexModel => text().withDefault(const Constant(''))();
+  TextColumn get aiCodexEffort => text().withDefault(const Constant(''))();
+  TextColumn get aiOpencodeModel => text().withDefault(const Constant(''))();
+  TextColumn get aiOpencodeEffort => text().withDefault(const Constant(''))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// The local coding-agent CLI asked for Note summaries.
+enum AiProvider { claudeCode, codex, opencode }
+
+/// Free-text model/effort values end up interpolated into a shell command, so
+/// anything a shell would read as syntax is refused. Empty means "no flag".
+final aiValuePattern = RegExp(r'^[A-Za-z0-9._/-]+$');
 
 /// One closed Session with its owning Entry and Client — the list/export row.
 class SessionRow {
@@ -77,12 +101,18 @@ class AppDatabase extends _$AppDatabase {
   static const minRetentionDays = 30;
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      // Guarantees the single settings row exists, so every default lives in
+      // the table definition and nowhere else.
+      await into(settings).insert(
+        const SettingsCompanion(id: Value(1)),
+        mode: InsertMode.insertOrIgnore,
+      );
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(settings);
@@ -98,8 +128,25 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await m.addColumn(settings, settings.themeMode);
       }
+      if (from < 5) {
+        await m.addColumn(settings, settings.aiEnabled);
+        await m.addColumn(settings, settings.aiProvider);
+        await m.addColumn(settings, settings.aiClaudeModel);
+        await m.addColumn(settings, settings.aiClaudeEffort);
+        await m.addColumn(settings, settings.aiCodexModel);
+        await m.addColumn(settings, settings.aiCodexEffort);
+        await m.addColumn(settings, settings.aiOpencodeModel);
+        await m.addColumn(settings, settings.aiOpencodeEffort);
+      }
     },
   );
+
+  /// The single settings row, always present (see [migration]'s beforeOpen).
+  Future<Setting> getSettings() => select(settings).getSingle();
+
+  Future<void> saveSettings(SettingsCompanion values) => into(
+    settings,
+  ).insertOnConflictUpdate(values.copyWith(id: const Value(1)));
 
   // ---- retention ----
 

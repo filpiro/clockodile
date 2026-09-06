@@ -34,6 +34,18 @@ _Avoid_: Lifetime, rotation, expiry
 A portal-ready view of one day's closed Sessions, with all boundaries rounded to quarter-hour marks. Contiguous Sessions stay contiguous (one shared rounded boundary); real gaps may shrink but are never invented. A preview the user copies into the portal by hand — never a correction of stored Sessions. Only Sessions started on the chosen day are included; the Open Session never is.
 _Avoid_: Normalization page, export page, summary
 
+**Note Summary**:
+A short Italian line an AI writes to replace the text a user pasted into an Entry's Note — typically a client email condensed to its core request. Produced on demand, only when the user asks for it, by a coding-agent CLI already installed on the machine. It is not a second field: it overwrites the Note in place, the pasted source is not kept, and there is no undo. The user still has the original email wherever they copied it from.
+_Avoid_: AI note, generated note, abstract, condensation
+
+**AI Provider**:
+The local CLI a Note Summary is generated with — Claude Code, Codex, or OpenCode — configured once in Settings and used for every generation. Each provider carries its own model and effort settings, remembered separately so switching providers and back loses nothing. Clockodile never holds an API key or talks to a model directly; it spawns the CLI and reads its stdout, so authentication is whatever the user already set up for that CLI. A provider whose CLI is not on the machine cannot be saved.
+_Avoid_: Backend, engine, model, integration
+
+**WSL Mode**:
+A Windows-only setting routing every provider command through a WSL login shell instead of running it on Windows. Needed because the CLIs are commonly installed only inside WSL, under paths (`~/.local/bin`, `~/.nvm`, `~/.opencode/bin`) that exist on no Windows PATH and on no non-login WSL PATH either. Off means the CLI is executed directly; hidden entirely on macOS.
+_Avoid_: Linux mode, shell mode, compatibility mode
+
 ## Example dialogue
 
 > **Dev:** What happens if I tap an Entry while another is active?
@@ -44,3 +56,11 @@ _Avoid_: Normalization page, export page, summary
 > **Expert:** Nothing. The Open Session stays open until the user closes it — via Stop or by setting an end time in the edit dialog. The app has no say in it.
 > **Dev:** I set the Retention Period to 30 days but I have a year of Entries. What happens?
 > **Expert:** You are warned that Entries whose newest Session started over 30 days ago will be deleted; on confirm they are purged with all their Sessions. The Active Entry survives whatever its age. Clients left with no Entries survive — only Entries are purged.
+> **Dev:** I paste an email into the Note and generate a summary. Can I get the email back?
+> **Expert:** Not from Clockodile. The Note Summary overwrites the Note, nothing is kept, and there is no undo. The email is still in your mail client — that is the copy that matters.
+> **Dev:** Why is the generate button greyed out?
+> **Expert:** Either AI is off in Settings, in which case the button is not there at all, or the Note is under ten words. There is nothing to summarise in a line already short enough to be a note.
+> **Dev:** The CLI fails halfway through. What happens to my text?
+> **Expert:** Nothing. The Note is only ever written on success, and a blank result counts as a failure. The field unlocks, and the error line from the CLI is shown.
+> **Dev:** I saved Settings and it refused, saying the CLI was not found.
+> **Expert:** Clockodile ran `--version` for the chosen provider and got nothing back. On Windows this almost always means the CLI lives in WSL and WSL Mode is off. Nothing about your AI settings was saved.

@@ -826,8 +826,119 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     requiredDuringInsert: false,
     defaultValue: const Constant('system'),
   );
+  static const VerificationMeta _aiEnabledMeta = const VerificationMeta(
+    'aiEnabled',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, retentionDays, themeMode];
+  late final GeneratedColumn<bool> aiEnabled = GeneratedColumn<bool>(
+    'ai_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ai_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _aiProviderMeta = const VerificationMeta(
+    'aiProvider',
+  );
+  @override
+  late final GeneratedColumn<String> aiProvider = GeneratedColumn<String>(
+    'ai_provider',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('claudeCode'),
+  );
+  static const VerificationMeta _aiClaudeModelMeta = const VerificationMeta(
+    'aiClaudeModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiClaudeModel = GeneratedColumn<String>(
+    'ai_claude_model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('sonnet'),
+  );
+  static const VerificationMeta _aiClaudeEffortMeta = const VerificationMeta(
+    'aiClaudeEffort',
+  );
+  @override
+  late final GeneratedColumn<String> aiClaudeEffort = GeneratedColumn<String>(
+    'ai_claude_effort',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('high'),
+  );
+  static const VerificationMeta _aiCodexModelMeta = const VerificationMeta(
+    'aiCodexModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiCodexModel = GeneratedColumn<String>(
+    'ai_codex_model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _aiCodexEffortMeta = const VerificationMeta(
+    'aiCodexEffort',
+  );
+  @override
+  late final GeneratedColumn<String> aiCodexEffort = GeneratedColumn<String>(
+    'ai_codex_effort',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _aiOpencodeModelMeta = const VerificationMeta(
+    'aiOpencodeModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiOpencodeModel = GeneratedColumn<String>(
+    'ai_opencode_model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _aiOpencodeEffortMeta = const VerificationMeta(
+    'aiOpencodeEffort',
+  );
+  @override
+  late final GeneratedColumn<String> aiOpencodeEffort = GeneratedColumn<String>(
+    'ai_opencode_effort',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    retentionDays,
+    themeMode,
+    aiEnabled,
+    aiProvider,
+    aiClaudeModel,
+    aiClaudeEffort,
+    aiCodexModel,
+    aiCodexEffort,
+    aiOpencodeModel,
+    aiOpencodeEffort,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -858,6 +969,72 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
       );
     }
+    if (data.containsKey('ai_enabled')) {
+      context.handle(
+        _aiEnabledMeta,
+        aiEnabled.isAcceptableOrUnknown(data['ai_enabled']!, _aiEnabledMeta),
+      );
+    }
+    if (data.containsKey('ai_provider')) {
+      context.handle(
+        _aiProviderMeta,
+        aiProvider.isAcceptableOrUnknown(data['ai_provider']!, _aiProviderMeta),
+      );
+    }
+    if (data.containsKey('ai_claude_model')) {
+      context.handle(
+        _aiClaudeModelMeta,
+        aiClaudeModel.isAcceptableOrUnknown(
+          data['ai_claude_model']!,
+          _aiClaudeModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_claude_effort')) {
+      context.handle(
+        _aiClaudeEffortMeta,
+        aiClaudeEffort.isAcceptableOrUnknown(
+          data['ai_claude_effort']!,
+          _aiClaudeEffortMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_codex_model')) {
+      context.handle(
+        _aiCodexModelMeta,
+        aiCodexModel.isAcceptableOrUnknown(
+          data['ai_codex_model']!,
+          _aiCodexModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_codex_effort')) {
+      context.handle(
+        _aiCodexEffortMeta,
+        aiCodexEffort.isAcceptableOrUnknown(
+          data['ai_codex_effort']!,
+          _aiCodexEffortMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_opencode_model')) {
+      context.handle(
+        _aiOpencodeModelMeta,
+        aiOpencodeModel.isAcceptableOrUnknown(
+          data['ai_opencode_model']!,
+          _aiOpencodeModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ai_opencode_effort')) {
+      context.handle(
+        _aiOpencodeEffortMeta,
+        aiOpencodeEffort.isAcceptableOrUnknown(
+          data['ai_opencode_effort']!,
+          _aiOpencodeEffortMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -879,6 +1056,38 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.string,
         data['${effectivePrefix}theme_mode'],
       )!,
+      aiEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ai_enabled'],
+      )!,
+      aiProvider: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_provider'],
+      )!,
+      aiClaudeModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_claude_model'],
+      )!,
+      aiClaudeEffort: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_claude_effort'],
+      )!,
+      aiCodexModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_codex_model'],
+      )!,
+      aiCodexEffort: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_codex_effort'],
+      )!,
+      aiOpencodeModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_opencode_model'],
+      )!,
+      aiOpencodeEffort: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_opencode_effort'],
+      )!,
     );
   }
 
@@ -894,10 +1103,28 @@ class Setting extends DataClass implements Insertable<Setting> {
 
   /// 'light' | 'dark' | 'system'
   final String themeMode;
+  final bool aiEnabled;
+
+  /// [AiProvider.name]
+  final String aiProvider;
+  final String aiClaudeModel;
+  final String aiClaudeEffort;
+  final String aiCodexModel;
+  final String aiCodexEffort;
+  final String aiOpencodeModel;
+  final String aiOpencodeEffort;
   const Setting({
     required this.id,
     required this.retentionDays,
     required this.themeMode,
+    required this.aiEnabled,
+    required this.aiProvider,
+    required this.aiClaudeModel,
+    required this.aiClaudeEffort,
+    required this.aiCodexModel,
+    required this.aiCodexEffort,
+    required this.aiOpencodeModel,
+    required this.aiOpencodeEffort,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -905,6 +1132,14 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['id'] = Variable<int>(id);
     map['retention_days'] = Variable<int>(retentionDays);
     map['theme_mode'] = Variable<String>(themeMode);
+    map['ai_enabled'] = Variable<bool>(aiEnabled);
+    map['ai_provider'] = Variable<String>(aiProvider);
+    map['ai_claude_model'] = Variable<String>(aiClaudeModel);
+    map['ai_claude_effort'] = Variable<String>(aiClaudeEffort);
+    map['ai_codex_model'] = Variable<String>(aiCodexModel);
+    map['ai_codex_effort'] = Variable<String>(aiCodexEffort);
+    map['ai_opencode_model'] = Variable<String>(aiOpencodeModel);
+    map['ai_opencode_effort'] = Variable<String>(aiOpencodeEffort);
     return map;
   }
 
@@ -913,6 +1148,14 @@ class Setting extends DataClass implements Insertable<Setting> {
       id: Value(id),
       retentionDays: Value(retentionDays),
       themeMode: Value(themeMode),
+      aiEnabled: Value(aiEnabled),
+      aiProvider: Value(aiProvider),
+      aiClaudeModel: Value(aiClaudeModel),
+      aiClaudeEffort: Value(aiClaudeEffort),
+      aiCodexModel: Value(aiCodexModel),
+      aiCodexEffort: Value(aiCodexEffort),
+      aiOpencodeModel: Value(aiOpencodeModel),
+      aiOpencodeEffort: Value(aiOpencodeEffort),
     );
   }
 
@@ -925,6 +1168,14 @@ class Setting extends DataClass implements Insertable<Setting> {
       id: serializer.fromJson<int>(json['id']),
       retentionDays: serializer.fromJson<int>(json['retentionDays']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
+      aiEnabled: serializer.fromJson<bool>(json['aiEnabled']),
+      aiProvider: serializer.fromJson<String>(json['aiProvider']),
+      aiClaudeModel: serializer.fromJson<String>(json['aiClaudeModel']),
+      aiClaudeEffort: serializer.fromJson<String>(json['aiClaudeEffort']),
+      aiCodexModel: serializer.fromJson<String>(json['aiCodexModel']),
+      aiCodexEffort: serializer.fromJson<String>(json['aiCodexEffort']),
+      aiOpencodeModel: serializer.fromJson<String>(json['aiOpencodeModel']),
+      aiOpencodeEffort: serializer.fromJson<String>(json['aiOpencodeEffort']),
     );
   }
   @override
@@ -934,13 +1185,41 @@ class Setting extends DataClass implements Insertable<Setting> {
       'id': serializer.toJson<int>(id),
       'retentionDays': serializer.toJson<int>(retentionDays),
       'themeMode': serializer.toJson<String>(themeMode),
+      'aiEnabled': serializer.toJson<bool>(aiEnabled),
+      'aiProvider': serializer.toJson<String>(aiProvider),
+      'aiClaudeModel': serializer.toJson<String>(aiClaudeModel),
+      'aiClaudeEffort': serializer.toJson<String>(aiClaudeEffort),
+      'aiCodexModel': serializer.toJson<String>(aiCodexModel),
+      'aiCodexEffort': serializer.toJson<String>(aiCodexEffort),
+      'aiOpencodeModel': serializer.toJson<String>(aiOpencodeModel),
+      'aiOpencodeEffort': serializer.toJson<String>(aiOpencodeEffort),
     };
   }
 
-  Setting copyWith({int? id, int? retentionDays, String? themeMode}) => Setting(
+  Setting copyWith({
+    int? id,
+    int? retentionDays,
+    String? themeMode,
+    bool? aiEnabled,
+    String? aiProvider,
+    String? aiClaudeModel,
+    String? aiClaudeEffort,
+    String? aiCodexModel,
+    String? aiCodexEffort,
+    String? aiOpencodeModel,
+    String? aiOpencodeEffort,
+  }) => Setting(
     id: id ?? this.id,
     retentionDays: retentionDays ?? this.retentionDays,
     themeMode: themeMode ?? this.themeMode,
+    aiEnabled: aiEnabled ?? this.aiEnabled,
+    aiProvider: aiProvider ?? this.aiProvider,
+    aiClaudeModel: aiClaudeModel ?? this.aiClaudeModel,
+    aiClaudeEffort: aiClaudeEffort ?? this.aiClaudeEffort,
+    aiCodexModel: aiCodexModel ?? this.aiCodexModel,
+    aiCodexEffort: aiCodexEffort ?? this.aiCodexEffort,
+    aiOpencodeModel: aiOpencodeModel ?? this.aiOpencodeModel,
+    aiOpencodeEffort: aiOpencodeEffort ?? this.aiOpencodeEffort,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -949,6 +1228,28 @@ class Setting extends DataClass implements Insertable<Setting> {
           ? data.retentionDays.value
           : this.retentionDays,
       themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
+      aiEnabled: data.aiEnabled.present ? data.aiEnabled.value : this.aiEnabled,
+      aiProvider: data.aiProvider.present
+          ? data.aiProvider.value
+          : this.aiProvider,
+      aiClaudeModel: data.aiClaudeModel.present
+          ? data.aiClaudeModel.value
+          : this.aiClaudeModel,
+      aiClaudeEffort: data.aiClaudeEffort.present
+          ? data.aiClaudeEffort.value
+          : this.aiClaudeEffort,
+      aiCodexModel: data.aiCodexModel.present
+          ? data.aiCodexModel.value
+          : this.aiCodexModel,
+      aiCodexEffort: data.aiCodexEffort.present
+          ? data.aiCodexEffort.value
+          : this.aiCodexEffort,
+      aiOpencodeModel: data.aiOpencodeModel.present
+          ? data.aiOpencodeModel.value
+          : this.aiOpencodeModel,
+      aiOpencodeEffort: data.aiOpencodeEffort.present
+          ? data.aiOpencodeEffort.value
+          : this.aiOpencodeEffort,
     );
   }
 
@@ -957,45 +1258,113 @@ class Setting extends DataClass implements Insertable<Setting> {
     return (StringBuffer('Setting(')
           ..write('id: $id, ')
           ..write('retentionDays: $retentionDays, ')
-          ..write('themeMode: $themeMode')
+          ..write('themeMode: $themeMode, ')
+          ..write('aiEnabled: $aiEnabled, ')
+          ..write('aiProvider: $aiProvider, ')
+          ..write('aiClaudeModel: $aiClaudeModel, ')
+          ..write('aiClaudeEffort: $aiClaudeEffort, ')
+          ..write('aiCodexModel: $aiCodexModel, ')
+          ..write('aiCodexEffort: $aiCodexEffort, ')
+          ..write('aiOpencodeModel: $aiOpencodeModel, ')
+          ..write('aiOpencodeEffort: $aiOpencodeEffort')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, retentionDays, themeMode);
+  int get hashCode => Object.hash(
+    id,
+    retentionDays,
+    themeMode,
+    aiEnabled,
+    aiProvider,
+    aiClaudeModel,
+    aiClaudeEffort,
+    aiCodexModel,
+    aiCodexEffort,
+    aiOpencodeModel,
+    aiOpencodeEffort,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Setting &&
           other.id == this.id &&
           other.retentionDays == this.retentionDays &&
-          other.themeMode == this.themeMode);
+          other.themeMode == this.themeMode &&
+          other.aiEnabled == this.aiEnabled &&
+          other.aiProvider == this.aiProvider &&
+          other.aiClaudeModel == this.aiClaudeModel &&
+          other.aiClaudeEffort == this.aiClaudeEffort &&
+          other.aiCodexModel == this.aiCodexModel &&
+          other.aiCodexEffort == this.aiCodexEffort &&
+          other.aiOpencodeModel == this.aiOpencodeModel &&
+          other.aiOpencodeEffort == this.aiOpencodeEffort);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<int> id;
   final Value<int> retentionDays;
   final Value<String> themeMode;
+  final Value<bool> aiEnabled;
+  final Value<String> aiProvider;
+  final Value<String> aiClaudeModel;
+  final Value<String> aiClaudeEffort;
+  final Value<String> aiCodexModel;
+  final Value<String> aiCodexEffort;
+  final Value<String> aiOpencodeModel;
+  final Value<String> aiOpencodeEffort;
   const SettingsCompanion({
     this.id = const Value.absent(),
     this.retentionDays = const Value.absent(),
     this.themeMode = const Value.absent(),
+    this.aiEnabled = const Value.absent(),
+    this.aiProvider = const Value.absent(),
+    this.aiClaudeModel = const Value.absent(),
+    this.aiClaudeEffort = const Value.absent(),
+    this.aiCodexModel = const Value.absent(),
+    this.aiCodexEffort = const Value.absent(),
+    this.aiOpencodeModel = const Value.absent(),
+    this.aiOpencodeEffort = const Value.absent(),
   });
   SettingsCompanion.insert({
     this.id = const Value.absent(),
     this.retentionDays = const Value.absent(),
     this.themeMode = const Value.absent(),
+    this.aiEnabled = const Value.absent(),
+    this.aiProvider = const Value.absent(),
+    this.aiClaudeModel = const Value.absent(),
+    this.aiClaudeEffort = const Value.absent(),
+    this.aiCodexModel = const Value.absent(),
+    this.aiCodexEffort = const Value.absent(),
+    this.aiOpencodeModel = const Value.absent(),
+    this.aiOpencodeEffort = const Value.absent(),
   });
   static Insertable<Setting> custom({
     Expression<int>? id,
     Expression<int>? retentionDays,
     Expression<String>? themeMode,
+    Expression<bool>? aiEnabled,
+    Expression<String>? aiProvider,
+    Expression<String>? aiClaudeModel,
+    Expression<String>? aiClaudeEffort,
+    Expression<String>? aiCodexModel,
+    Expression<String>? aiCodexEffort,
+    Expression<String>? aiOpencodeModel,
+    Expression<String>? aiOpencodeEffort,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (retentionDays != null) 'retention_days': retentionDays,
       if (themeMode != null) 'theme_mode': themeMode,
+      if (aiEnabled != null) 'ai_enabled': aiEnabled,
+      if (aiProvider != null) 'ai_provider': aiProvider,
+      if (aiClaudeModel != null) 'ai_claude_model': aiClaudeModel,
+      if (aiClaudeEffort != null) 'ai_claude_effort': aiClaudeEffort,
+      if (aiCodexModel != null) 'ai_codex_model': aiCodexModel,
+      if (aiCodexEffort != null) 'ai_codex_effort': aiCodexEffort,
+      if (aiOpencodeModel != null) 'ai_opencode_model': aiOpencodeModel,
+      if (aiOpencodeEffort != null) 'ai_opencode_effort': aiOpencodeEffort,
     });
   }
 
@@ -1003,11 +1372,27 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<int>? id,
     Value<int>? retentionDays,
     Value<String>? themeMode,
+    Value<bool>? aiEnabled,
+    Value<String>? aiProvider,
+    Value<String>? aiClaudeModel,
+    Value<String>? aiClaudeEffort,
+    Value<String>? aiCodexModel,
+    Value<String>? aiCodexEffort,
+    Value<String>? aiOpencodeModel,
+    Value<String>? aiOpencodeEffort,
   }) {
     return SettingsCompanion(
       id: id ?? this.id,
       retentionDays: retentionDays ?? this.retentionDays,
       themeMode: themeMode ?? this.themeMode,
+      aiEnabled: aiEnabled ?? this.aiEnabled,
+      aiProvider: aiProvider ?? this.aiProvider,
+      aiClaudeModel: aiClaudeModel ?? this.aiClaudeModel,
+      aiClaudeEffort: aiClaudeEffort ?? this.aiClaudeEffort,
+      aiCodexModel: aiCodexModel ?? this.aiCodexModel,
+      aiCodexEffort: aiCodexEffort ?? this.aiCodexEffort,
+      aiOpencodeModel: aiOpencodeModel ?? this.aiOpencodeModel,
+      aiOpencodeEffort: aiOpencodeEffort ?? this.aiOpencodeEffort,
     );
   }
 
@@ -1023,6 +1408,30 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (themeMode.present) {
       map['theme_mode'] = Variable<String>(themeMode.value);
     }
+    if (aiEnabled.present) {
+      map['ai_enabled'] = Variable<bool>(aiEnabled.value);
+    }
+    if (aiProvider.present) {
+      map['ai_provider'] = Variable<String>(aiProvider.value);
+    }
+    if (aiClaudeModel.present) {
+      map['ai_claude_model'] = Variable<String>(aiClaudeModel.value);
+    }
+    if (aiClaudeEffort.present) {
+      map['ai_claude_effort'] = Variable<String>(aiClaudeEffort.value);
+    }
+    if (aiCodexModel.present) {
+      map['ai_codex_model'] = Variable<String>(aiCodexModel.value);
+    }
+    if (aiCodexEffort.present) {
+      map['ai_codex_effort'] = Variable<String>(aiCodexEffort.value);
+    }
+    if (aiOpencodeModel.present) {
+      map['ai_opencode_model'] = Variable<String>(aiOpencodeModel.value);
+    }
+    if (aiOpencodeEffort.present) {
+      map['ai_opencode_effort'] = Variable<String>(aiOpencodeEffort.value);
+    }
     return map;
   }
 
@@ -1031,7 +1440,15 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     return (StringBuffer('SettingsCompanion(')
           ..write('id: $id, ')
           ..write('retentionDays: $retentionDays, ')
-          ..write('themeMode: $themeMode')
+          ..write('themeMode: $themeMode, ')
+          ..write('aiEnabled: $aiEnabled, ')
+          ..write('aiProvider: $aiProvider, ')
+          ..write('aiClaudeModel: $aiClaudeModel, ')
+          ..write('aiClaudeEffort: $aiClaudeEffort, ')
+          ..write('aiCodexModel: $aiCodexModel, ')
+          ..write('aiCodexEffort: $aiCodexEffort, ')
+          ..write('aiOpencodeModel: $aiOpencodeModel, ')
+          ..write('aiOpencodeEffort: $aiOpencodeEffort')
           ..write(')'))
         .toString();
   }
@@ -1267,7 +1684,7 @@ class $$ClientsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ClientsTable, Client>(table),
                   $$ClientsTableReferences(db, table, e),
                 ),
               )
@@ -1586,7 +2003,7 @@ class $$EntriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$EntriesTable, Entry>(table),
                   $$EntriesTableReferences(db, table, e),
                 ),
               )
@@ -1890,7 +2307,7 @@ class $$SessionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SessionsTable, Session>(table),
                   $$SessionsTableReferences(db, table, e),
                 ),
               )
@@ -1959,12 +2376,28 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<int> id,
       Value<int> retentionDays,
       Value<String> themeMode,
+      Value<bool> aiEnabled,
+      Value<String> aiProvider,
+      Value<String> aiClaudeModel,
+      Value<String> aiClaudeEffort,
+      Value<String> aiCodexModel,
+      Value<String> aiCodexEffort,
+      Value<String> aiOpencodeModel,
+      Value<String> aiOpencodeEffort,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
       Value<int> id,
       Value<int> retentionDays,
       Value<String> themeMode,
+      Value<bool> aiEnabled,
+      Value<String> aiProvider,
+      Value<String> aiClaudeModel,
+      Value<String> aiClaudeEffort,
+      Value<String> aiCodexModel,
+      Value<String> aiCodexEffort,
+      Value<String> aiOpencodeModel,
+      Value<String> aiOpencodeEffort,
     });
 
 class $$SettingsTableFilterComposer
@@ -1988,6 +2421,46 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<String> get themeMode => $composableBuilder(
     column: $table.themeMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get aiEnabled => $composableBuilder(
+    column: $table.aiEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiProvider => $composableBuilder(
+    column: $table.aiProvider,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiClaudeModel => $composableBuilder(
+    column: $table.aiClaudeModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiClaudeEffort => $composableBuilder(
+    column: $table.aiClaudeEffort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiCodexModel => $composableBuilder(
+    column: $table.aiCodexModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiCodexEffort => $composableBuilder(
+    column: $table.aiCodexEffort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiOpencodeModel => $composableBuilder(
+    column: $table.aiOpencodeModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiOpencodeEffort => $composableBuilder(
+    column: $table.aiOpencodeEffort,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2015,6 +2488,46 @@ class $$SettingsTableOrderingComposer
     column: $table.themeMode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get aiEnabled => $composableBuilder(
+    column: $table.aiEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiProvider => $composableBuilder(
+    column: $table.aiProvider,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiClaudeModel => $composableBuilder(
+    column: $table.aiClaudeModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiClaudeEffort => $composableBuilder(
+    column: $table.aiClaudeEffort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiCodexModel => $composableBuilder(
+    column: $table.aiCodexModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiCodexEffort => $composableBuilder(
+    column: $table.aiCodexEffort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiOpencodeModel => $composableBuilder(
+    column: $table.aiOpencodeModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiOpencodeEffort => $composableBuilder(
+    column: $table.aiOpencodeEffort,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -2036,6 +2549,44 @@ class $$SettingsTableAnnotationComposer
 
   GeneratedColumn<String> get themeMode =>
       $composableBuilder(column: $table.themeMode, builder: (column) => column);
+
+  GeneratedColumn<bool> get aiEnabled =>
+      $composableBuilder(column: $table.aiEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get aiProvider => $composableBuilder(
+    column: $table.aiProvider,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiClaudeModel => $composableBuilder(
+    column: $table.aiClaudeModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiClaudeEffort => $composableBuilder(
+    column: $table.aiClaudeEffort,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiCodexModel => $composableBuilder(
+    column: $table.aiCodexModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiCodexEffort => $composableBuilder(
+    column: $table.aiCodexEffort,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiOpencodeModel => $composableBuilder(
+    column: $table.aiOpencodeModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiOpencodeEffort => $composableBuilder(
+    column: $table.aiOpencodeEffort,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -2069,23 +2620,64 @@ class $$SettingsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> retentionDays = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
+                Value<bool> aiEnabled = const Value.absent(),
+                Value<String> aiProvider = const Value.absent(),
+                Value<String> aiClaudeModel = const Value.absent(),
+                Value<String> aiClaudeEffort = const Value.absent(),
+                Value<String> aiCodexModel = const Value.absent(),
+                Value<String> aiCodexEffort = const Value.absent(),
+                Value<String> aiOpencodeModel = const Value.absent(),
+                Value<String> aiOpencodeEffort = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
                 retentionDays: retentionDays,
                 themeMode: themeMode,
+                aiEnabled: aiEnabled,
+                aiProvider: aiProvider,
+                aiClaudeModel: aiClaudeModel,
+                aiClaudeEffort: aiClaudeEffort,
+                aiCodexModel: aiCodexModel,
+                aiCodexEffort: aiCodexEffort,
+                aiOpencodeModel: aiOpencodeModel,
+                aiOpencodeEffort: aiOpencodeEffort,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> retentionDays = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
+                Value<bool> aiEnabled = const Value.absent(),
+                Value<String> aiProvider = const Value.absent(),
+                Value<String> aiClaudeModel = const Value.absent(),
+                Value<String> aiClaudeEffort = const Value.absent(),
+                Value<String> aiCodexModel = const Value.absent(),
+                Value<String> aiCodexEffort = const Value.absent(),
+                Value<String> aiOpencodeModel = const Value.absent(),
+                Value<String> aiOpencodeEffort = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
                 retentionDays: retentionDays,
                 themeMode: themeMode,
+                aiEnabled: aiEnabled,
+                aiProvider: aiProvider,
+                aiClaudeModel: aiClaudeModel,
+                aiClaudeEffort: aiClaudeEffort,
+                aiCodexModel: aiCodexModel,
+                aiCodexEffort: aiCodexEffort,
+                aiOpencodeModel: aiOpencodeModel,
+                aiOpencodeEffort: aiOpencodeEffort,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SettingsTable, Setting>(table),
+                  BaseReferences<_$AppDatabase, $SettingsTable, Setting>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
