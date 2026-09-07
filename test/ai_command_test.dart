@@ -275,4 +275,46 @@ void main() {
       expect(hasEnoughWordsForSummary(''), isFalse);
     });
   });
+
+  group('version command', () {
+    test('runs the bare binary with --version outside WSL', () {
+      final cmd = buildVersionCommand(
+        provider: AiProvider.codex,
+        wslMode: false,
+      );
+
+      expect(cmd.executable, 'codex');
+      expect(cmd.arguments, ['--version']);
+    });
+
+    test('goes through a login shell under WSL', () {
+      final cmd = buildVersionCommand(
+        provider: AiProvider.opencode,
+        wslMode: true,
+      );
+
+      expect(cmd.executable, 'wsl.exe');
+      expect(cmd.arguments, ['-e', 'bash', '-lc', "'opencode' '--version'"]);
+    });
+  });
+
+  group('missing CLI message', () {
+    test('names the binary', () {
+      expect(
+        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: false),
+        contains('claude'),
+      );
+    });
+
+    test('points at WSL Mode when it could be the cause', () {
+      expect(
+        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: true),
+        contains('WSL'),
+      );
+      expect(
+        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: false),
+        isNot(contains('WSL')),
+      );
+    });
+  });
 }

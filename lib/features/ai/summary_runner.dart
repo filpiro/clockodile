@@ -73,3 +73,29 @@ class AiRun {
     _process?.kill();
   }
 }
+
+/// True when [command] answers `--version` with a zero exit code. A spawn
+/// failure, a non-zero exit or a hang all mean "not usable here". Nothing is
+/// authenticated: that only shows up at generation time.
+/// Swappable so widget tests can exercise Salva without spawning anything.
+Future<bool> Function(AiCommand) isCliInstalled = realIsCliInstalled;
+
+Future<bool> realIsCliInstalled(AiCommand command) async {
+  try {
+    final process = await Process.start(command.executable, command.arguments);
+    // Drained so the pipes cannot fill and wedge a chatty CLI.
+    process.stdout.drain<void>();
+    process.stderr.drain<void>();
+    await process.stdin.close();
+    final exitCode = await process.exitCode.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        process.kill();
+        return -1;
+      },
+    );
+    return exitCode == 0;
+  } on ProcessException {
+    return false;
+  }
+}

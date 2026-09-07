@@ -83,15 +83,42 @@ AiCommand buildAiCommand({
   required String effort,
   required bool wslMode,
   required String workingDirectory,
+}) => _wrap(_argv(provider, model, effort), wslMode, workingDirectory);
+
+/// The cheapest possible "is this CLI here?": the binary and `--version`, with
+/// the same WSL wrapping a real run would get, so a pass here means a real run
+/// can at least start.
+AiCommand buildVersionCommand({
+  required AiProvider provider,
+  required bool wslMode,
+}) => _wrap([_binary(provider), '--version'], wslMode, null);
+
+String _binary(AiProvider provider) => switch (provider) {
+  AiProvider.claudeCode => 'claude',
+  AiProvider.codex => 'codex',
+  AiProvider.opencode => 'opencode',
+};
+
+/// The message shown when [provider]'s CLI does not answer `--version`.
+/// [suggestWsl] because on Windows a CLI installed inside WSL is by far the
+/// most common reason for this to fail.
+String cliMissingMessage({
+  required AiProvider provider,
+  required bool suggestWsl,
 }) {
-  final argv = _argv(provider, model, effort);
+  final binary = _binary(provider);
+  return suggestWsl
+      ? 'CLI "$binary" non trovata. Se è installata in WSL, attiva WSL Mode.'
+      : 'CLI "$binary" non trovata.';
+}
+
+AiCommand _wrap(List<String> argv, bool wslMode, String? workingDirectory) {
   if (!wslMode) return AiCommand(argv.first, argv.sublist(1));
   // A *login* shell is not optional: the CLIs live under paths that only the
   // shell's own startup files put on PATH (`wsl.exe -e claude` fails). See
   // ADR 0002.
   return AiCommand('wsl.exe', [
-    '--cd',
-    workingDirectory,
+    if (workingDirectory != null) ...['--cd', workingDirectory],
     '-e',
     'bash',
     '-lc',

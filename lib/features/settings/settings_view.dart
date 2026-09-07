@@ -8,6 +8,8 @@ import 'package:catui/catui.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../data/db/database.dart';
+import '../ai/summary_command.dart';
+import '../ai/summary_runner.dart';
 import 'cubit/theme_cubit.dart';
 
 class SettingsView extends StatefulWidget {
@@ -90,6 +92,28 @@ class _SettingsViewState extends State<SettingsView> {
     AiProvider.opencode => 'OpenCode',
   };
 
+  /// Runs the chosen provider's `--version` before anything is persisted, so
+  /// a missing CLI blocks the whole save rather than surfacing later on a Nota
+  /// full of pasted email. Shows the error itself; returns false when it did.
+  Future<bool> _cliIsThere() async {
+    final ok = await isCliInstalled(
+      buildVersionCommand(provider: _provider, wslMode: _wslMode),
+    );
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            cliMissingMessage(
+              provider: _provider,
+              suggestWsl: Platform.isWindows && !_wslMode,
+            ),
+          ),
+        ),
+      );
+    }
+    return ok;
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final invalid = _invalidAiField();
@@ -99,6 +123,8 @@ class _SettingsViewState extends State<SettingsView> {
       );
       return;
     }
+    if (_aiEnabled && !await _cliIsThere()) return;
+    if (!mounted) return;
     final days = int.parse(_controller.text);
     if (days < _storedDays) {
       final confirmed = await showDialog<bool>(

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:clockodile/data/db/database.dart';
+import 'package:clockodile/features/ai/summary_runner.dart';
 import 'package:clockodile/features/settings/cubit/theme_cubit.dart';
 import 'package:clockodile/features/settings/settings_view.dart';
 import 'package:drift/native.dart';
@@ -10,9 +11,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late AppDatabase db;
+  // Salva checks the CLI before writing; no test here wants a real spawn.
+  late bool cliPresent;
 
-  setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
-  tearDown(() => db.close());
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    cliPresent = true;
+    isCliInstalled = (_) async => cliPresent;
+  });
+  tearDown(() {
+    isCliInstalled = realIsCliInstalled;
+    return db.close();
+  });
 
   Future<void> openSettings(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -151,5 +161,33 @@ void main() {
     await salva(tester);
 
     expect(find.text('Impostazioni salvate'), findsOneWidget);
+  });
+
+  testWidgets('a missing CLI blocks the whole save', (tester) async {
+    cliPresent = false;
+    await openSettings(tester);
+    await tester.enterText(find.byType(TextFormField), '99');
+    await tester.tap(aiSwitch());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Codex'));
+    await tester.pumpAndSettle();
+
+    await salva(tester);
+
+    expect(find.textContaining('codex'), findsOneWidget);
+    final saved = await db.getSettings();
+    expect(saved.aiEnabled, isFalse);
+    // Retention did not half-apply either.
+    expect(saved.retentionDays, AppDatabase.defaultRetentionDays);
+  });
+
+  testWidgets('with AI off no CLI check runs', (tester) async {
+    cliPresent = false;
+    await openSettings(tester);
+    await tester.enterText(find.byType(TextFormField), '99');
+
+    await salva(tester);
+
+    expect((await db.getSettings()).retentionDays, 99);
   });
 }

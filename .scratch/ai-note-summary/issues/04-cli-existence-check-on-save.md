@@ -2,7 +2,7 @@
 
 **Blocked by:** 01 — AI section in Settings
 
-**Status:** ready-for-agent
+**Status:** done
 
 **What to build:**
 
