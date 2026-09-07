@@ -351,6 +351,8 @@ class _EntryPageState extends State<_EntryPage> {
             onChanged: (_) => setState(() {}), // the word gate moves live
             decoration: InputDecoration(
               labelText: 'Nota',
+              // Without it the label floats in the middle of a multi-line box.
+              alignLabelWithHint: true,
               border: const OutlineInputBorder(),
               contentPadding: EdgeInsets.fromLTRB(
                 12,
