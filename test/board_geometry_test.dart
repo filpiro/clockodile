@@ -50,7 +50,8 @@ void main() {
     ]);
     final (start, _) = boardAxis(rows)!;
     final firstBottom =
-        boardOffset(start, rows[0].normStart) + tileHeight(rows[0].normDuration);
+        boardOffset(start, rows[0].normStart) +
+        tileHeight(rows[0].normDuration);
     expect(firstBottom, 72); // 9:00 → 9:45
     expect(boardOffset(start, rows[1].normStart), 384); // 9:00 → 13:00
   });

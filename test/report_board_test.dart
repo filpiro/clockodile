@@ -17,9 +17,7 @@ void main() {
       row(4, at(14, 0), at(15, 30)),
     ]);
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: ReportBoard(groupByClient(rows))),
-      ),
+      MaterialApp(home: Scaffold(body: ReportBoard(groupByClient(rows)))),
     );
     expect(tester.takeException(), isNull);
     expect(find.text('Globex'), findsOneWidget);

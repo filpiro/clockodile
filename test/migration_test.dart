@@ -33,7 +33,7 @@ PRAGMA user_version = 4;
 
 void main() {
   test(
-    'a schema-4 database opens at 5 with every row and setting intact',
+    'a schema-4 database opens at 6 with every row and setting intact',
     () async {
       final raw = sqlite3.openInMemory();
       raw.execute(_schema4);
@@ -52,6 +52,7 @@ void main() {
       expect(settings.aiClaudeModel, 'sonnet');
       expect(settings.aiClaudeEffort, 'high');
       expect(settings.aiCodexModel, '');
+      expect(settings.aiWslMode, isFalse);
     },
   );
 }

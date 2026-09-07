@@ -2,7 +2,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** resolved
+**Status:** Done
 
 **What to build:**
 

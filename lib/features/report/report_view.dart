@@ -101,8 +101,15 @@ class ReportView extends StatelessWidget {
                           // neither can be deselected into an empty state.
                           for (final m in ReportMode.values)
                             ChoiceChip(
-                              label: Text(
+                              tooltip: m == ReportMode.grouped
+                                  ? 'Raggruppa per cliente'
+                                  : 'Ordine cronologico',
+                              label: Icon(
                                 m == ReportMode.grouped
+                                    ? LucideIcons.listClock
+                                    : LucideIcons.timeline,
+                                size: 18,
+                                semanticLabel: m == ReportMode.grouped
                                     ? 'Raggruppa per cliente'
                                     : 'Ordine cronologico',
                               ),
@@ -114,12 +121,14 @@ class ReportView extends StatelessWidget {
                         ],
                       ),
                     ),
-                    FilledButton.tonalIcon(
-                      icon: const Icon(LucideIcons.fileDown),
-                      label: const Text('Esporta CSV'),
-                      onPressed: state.rows.isEmpty
-                          ? null
-                          : () => runReportExport(context),
+                    Tooltip(
+                      message: 'Esporta CSV',
+                      child: FilledButton.tonal(
+                        onPressed: state.rows.isEmpty
+                            ? null
+                            : () => runReportExport(context),
+                        child: const Icon(LucideIcons.fileDown),
+                      ),
                     ),
                   ],
                 ),

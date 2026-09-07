@@ -13,33 +13,37 @@ void main() {
   Future<Entry> entryNamed(String note) async =>
       (await db.select(db.entries).get()).firstWhere((e) => e.note == note);
 
-  test('creating a second entry closes the first session; exactly one open',
-      () async {
-    await db.createEntry('Acme', 'a');
-    await db.createEntry('Globex', 'b');
+  test(
+    'creating a second entry closes the first session; exactly one open',
+    () async {
+      await db.createEntry('Acme', 'a');
+      await db.createEntry('Globex', 'b');
 
-    final sessions = await db.select(db.sessions).get();
-    expect(sessions.length, 2);
-    expect(sessions.where((s) => s.end == null).length, 1);
+      final sessions = await db.select(db.sessions).get();
+      expect(sessions.length, 2);
+      expect(sessions.where((s) => s.end == null).length, 1);
 
-    final active = await db.watchActiveEntry().first;
-    expect(active!.client.name, 'Globex');
-  });
+      final active = await db.watchActiveEntry().first;
+      expect(active!.client.name, 'Globex');
+    },
+  );
 
-  test('activation opens a new session and closes the previous open one',
-      () async {
-    await db.createEntry('Acme', 'first');
-    await db.createEntry('Globex', 'second');
-    final first = await entryNamed('first');
+  test(
+    'activation opens a new session and closes the previous open one',
+    () async {
+      await db.createEntry('Acme', 'first');
+      await db.createEntry('Globex', 'second');
+      final first = await entryNamed('first');
 
-    await db.activateEntry(first.id); // reactivation
+      await db.activateEntry(first.id); // reactivation
 
-    final sessions = await db.select(db.sessions).get();
-    expect(sessions.length, 3); // never edits past sessions, always inserts
-    expect(sessions.where((s) => s.end == null).length, 1);
-    final active = await db.watchActiveEntry().first;
-    expect(active!.entry.id, first.id);
-  });
+      final sessions = await db.select(db.sessions).get();
+      expect(sessions.length, 3); // never edits past sessions, always inserts
+      expect(sessions.where((s) => s.end == null).length, 1);
+      final active = await db.watchActiveEntry().first;
+      expect(active!.entry.id, first.id);
+    },
+  );
 
   test('activating the already-active entry is a no-op', () async {
     await db.createEntry('Acme', 'only');
@@ -116,46 +120,53 @@ void main() {
 
     final onlyYesterday = await db
         .watchClosedSessions(
-            from: DateTime(2026, 7, 10), to: DateTime(2026, 7, 11))
+          from: DateTime(2026, 7, 10),
+          to: DateTime(2026, 7, 11),
+        )
         .first;
     expect(onlyYesterday.length, 1);
 
     final onlyToday = await db
         .watchClosedSessions(
-            from: DateTime(2026, 7, 11), to: DateTime(2026, 7, 12))
+          from: DateTime(2026, 7, 11),
+          to: DateTime(2026, 7, 12),
+        )
         .first;
     expect(onlyToday, isEmpty); // today's session is still open
   });
 
-  test('purge keys off the newest session; active entry never purged',
-      () async {
-    final ancient = DateTime.now().subtract(const Duration(days: 400));
-    final recent = DateTime.now().subtract(const Duration(days: 5));
+  test(
+    'purge keys off the newest session; active entry never purged',
+    () async {
+      final ancient = DateTime.now().subtract(const Duration(days: 400));
+      final recent = DateTime.now().subtract(const Duration(days: 5));
 
-    // old-closed: single ancient session → purged
-    await db.createEntry('Acme', 'old-closed', startTime: ancient);
-    // revived: ancient session + recent one → newest is recent → kept whole
-    await db.createEntry('Acme', 'revived', startTime: ancient);
-    await db.stopOpenSession();
-    final revived = await entryNamed('revived');
-    await db.activateEntry(revived.id);
-    await db.stopOpenSession();
-    await db.updateSession(
+      // old-closed: single ancient session → purged
+      await db.createEntry('Acme', 'old-closed', startTime: ancient);
+      // revived: ancient session + recent one → newest is recent → kept whole
+      await db.createEntry('Acme', 'revived', startTime: ancient);
+      await db.stopOpenSession();
+      final revived = await entryNamed('revived');
+      await db.activateEntry(revived.id);
+      await db.stopOpenSession();
+      await db.updateSession(
         (await db.sessionsOfEntry(revived.id)).last.id,
         start: recent,
-        end: recent.add(const Duration(hours: 1)));
-    // old-open: ancient but active → kept
-    await db.createEntry('Acme', 'old-open', startTime: ancient);
+        end: recent.add(const Duration(hours: 1)),
+      );
+      // old-open: ancient but active → kept
+      await db.createEntry('Acme', 'old-open', startTime: ancient);
 
-    await db.purgeExpiredEntries(); // default 60 days
+      await db.purgeExpiredEntries(); // default 60 days
 
-    final notes = (await db.select(db.entries).get()).map((e) => e.note);
-    expect(notes, unorderedEquals(['revived', 'old-open']));
-    // revived keeps ALL its sessions — totals never shrink
-    expect((await db.sessionsOfEntry(revived.id)).length, 2);
-    // client survives even if all its entries were purgeable
-    expect((await db.select(db.clients).get()).length, 1);
-  });
+      final notes = (await db.select(db.entries).get()).map((e) => e.note);
+      expect(notes, unorderedEquals(['revived', 'old-open']));
+      // revived keeps ALL its sessions — totals never shrink
+      expect((await db.sessionsOfEntry(revived.id)).length, 2);
+      // client survives even if all its entries were purgeable
+      expect((await db.select(db.clients).get()).length, 1);
+    },
+  );
 
   test('retention setting round-trips and defaults to 60', () async {
     expect(await db.getRetentionDays(), 60);
@@ -172,20 +183,26 @@ void main() {
 
     await db.updateSession(session.id, start: session.start, end: null);
 
-    final row = await (db.select(db.sessions)
-          ..where((s) => s.id.equals(session.id)))
-        .getSingle();
+    final row = await (db.select(
+      db.sessions,
+    )..where((s) => s.id.equals(session.id))).getSingle();
     expect(row.end, isNotNull);
   });
 
   test('active entry total counts closed sessions only', () async {
-    await db.createEntry('Acme', 'tot',
-        startTime: DateTime.now().subtract(const Duration(hours: 2)));
+    await db.createEntry(
+      'Acme',
+      'tot',
+      startTime: DateTime.now().subtract(const Duration(hours: 2)),
+    );
     await db.stopOpenSession();
     final entry = await entryNamed('tot');
     final closed = (await db.sessionsOfEntry(entry.id)).single;
-    await db.updateSession(closed.id,
-        start: closed.start, end: closed.start.add(const Duration(hours: 1)));
+    await db.updateSession(
+      closed.id,
+      start: closed.start,
+      end: closed.start.add(const Duration(hours: 1)),
+    );
     await db.activateEntry(entry.id);
 
     final active = (await db.watchActiveEntry().first)!;

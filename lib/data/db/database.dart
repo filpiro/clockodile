@@ -98,7 +98,9 @@ class ClientWithCount {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'clockodile'));
 
-  AppDatabase.forTesting(super.executor);
+  // Avoid cleanup timers that cannot advance after a widget test finishes.
+  AppDatabase.forTesting(QueryExecutor executor)
+    : super(DatabaseConnection(executor, closeStreamsSynchronously: true));
 
   static const defaultRetentionDays = 60;
   static const minRetentionDays = 30;
