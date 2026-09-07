@@ -49,12 +49,28 @@ List<String> _argv(AiProvider provider, String model, String effort) =>
         '--effort',
         effort,
       ],
-      // ponytail: ticket 03 adds these; the runner turns the throw into the
-      // same error banner as any other failed generation.
-      AiProvider.codex || AiProvider.opencode => throw UnimplementedError(
-        'Provider ${provider.name} non ancora supportato',
-      ),
+      AiProvider.codex => [
+        'codex',
+        'exec',
+        '--json',
+        ..._flag('-m', model),
+        // Codex takes reasoning effort as a config override, not a flag.
+        if (effort.isNotEmpty) ...['-c', 'model_reasoning_effort=$effort'],
+      ],
+      AiProvider.opencode => [
+        'opencode',
+        'run',
+        '--format',
+        'json',
+        ..._flag('-m', model),
+        ..._flag('--variant', effort),
+      ],
     };
+
+/// An empty value means the CLI keeps its own default: pass nothing at all
+/// rather than the flag with an empty argument.
+List<String> _flag(String name, String value) =>
+    value.isEmpty ? const [] : [name, value];
 
 /// Single-quotes [value] for a POSIX shell, closing and reopening the quote
 /// around each embedded `'`. This is the actual defense against a hostile
@@ -89,7 +105,8 @@ AiCommand buildAiCommand({
 String? parseAiResult(AiProvider provider, String stdout) {
   final text = switch (provider) {
     AiProvider.claudeCode => _claudeResult(stdout),
-    AiProvider.codex || AiProvider.opencode => null,
+    AiProvider.codex => _codexResult(stdout) ?? stdout,
+    AiProvider.opencode => _opencodeResult(stdout) ?? stdout,
   };
   final trimmed = text?.trim() ?? '';
   return trimmed.isEmpty ? null : trimmed;
@@ -102,6 +119,44 @@ String? _claudeResult(String stdout) {
     return decoded is Map && decoded['result'] is String
         ? decoded['result'] as String
         : null;
+  } on FormatException {
+    return null;
+  }
+}
+
+/// `codex exec --json` prints a JSONL event stream. The summary is the *last*
+/// `agent_message` — earlier ones are the model thinking out loud. A line that
+/// does not parse is a line we did not understand, not a reason to give up.
+String? _codexResult(String stdout) {
+  String? last;
+  for (final line in const LineSplitter().convert(stdout)) {
+    if (line.trim().isEmpty) continue;
+    final event = _decodeMap(line);
+    if (event == null) continue;
+    // The message may sit at the top level or under `msg`, depending on the
+    // codex version; both spell the payload the same way.
+    final payload = event['msg'] is Map ? event['msg'] as Map : event;
+    if (payload['type'] == 'agent_message' && payload['message'] is String) {
+      last = payload['message'] as String;
+    }
+  }
+  return last;
+}
+
+/// `opencode run --format json` prints one object; no event stream to walk.
+String? _opencodeResult(String stdout) {
+  final decoded = _decodeMap(stdout);
+  if (decoded == null) return null;
+  for (final key in const ['text', 'result', 'summary', 'output']) {
+    if (decoded[key] is String) return decoded[key] as String;
+  }
+  return null;
+}
+
+Map<dynamic, dynamic>? _decodeMap(String source) {
+  try {
+    final decoded = jsonDecode(source.trim());
+    return decoded is Map ? decoded : null;
   } on FormatException {
     return null;
   }

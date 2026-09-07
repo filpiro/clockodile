@@ -120,6 +120,142 @@ void main() {
     });
   });
 
+  group('Codex argument list', () {
+    AiCommand codex({String model = 'gpt-5', String effort = 'high'}) =>
+        buildAiCommand(
+          provider: AiProvider.codex,
+          model: model,
+          effort: effort,
+          wslMode: false,
+          workingDirectory: '/tmp/x',
+        );
+
+    test('model and effort', () {
+      final cmd = codex();
+
+      expect(cmd.executable, 'codex');
+      expect(cmd.arguments, [
+        'exec',
+        '--json',
+        '-m',
+        'gpt-5',
+        '-c',
+        'model_reasoning_effort=high',
+      ]);
+    });
+
+    test('empty effort omits the override entirely', () {
+      expect(codex(effort: '').arguments, ['exec', '--json', '-m', 'gpt-5']);
+    });
+
+    test('empty model omits -m entirely', () {
+      expect(codex(model: '').arguments, [
+        'exec',
+        '--json',
+        '-c',
+        'model_reasoning_effort=high',
+      ]);
+    });
+  });
+
+  group('OpenCode argument list', () {
+    AiCommand opencode({
+      String model = 'anthropic/claude-sonnet-4',
+      String effort = 'high',
+    }) => buildAiCommand(
+      provider: AiProvider.opencode,
+      model: model,
+      effort: effort,
+      wslMode: false,
+      workingDirectory: '/tmp/x',
+    );
+
+    test('model and effort', () {
+      final cmd = opencode();
+
+      expect(cmd.executable, 'opencode');
+      expect(cmd.arguments, [
+        'run',
+        '--format',
+        'json',
+        '-m',
+        'anthropic/claude-sonnet-4',
+        '--variant',
+        'high',
+      ]);
+    });
+
+    test('empty effort omits --variant', () {
+      expect(opencode(effort: '').arguments, isNot(contains('--variant')));
+    });
+
+    test('empty model omits -m', () {
+      expect(opencode(model: '').arguments, [
+        'run',
+        '--format',
+        'json',
+        '--variant',
+        'high',
+      ]);
+    });
+  });
+
+  group('Codex stdout', () {
+    test('takes the last agent_message, not the first', () {
+      const stream =
+          '{"msg":{"type":"agent_message","message":"primo"}}\n'
+          '{"msg":{"type":"token_count","input":12}}\n'
+          '{"msg":{"type":"agent_message","message":"ultimo"}}\n';
+
+      expect(parseAiResult(AiProvider.codex, stream), 'ultimo');
+    });
+
+    test('reads a top-level event as well as a nested one', () {
+      expect(
+        parseAiResult(
+          AiProvider.codex,
+          '{"type":"agent_message","message":"piatto"}',
+        ),
+        'piatto',
+      );
+    });
+
+    test('skips malformed lines instead of aborting the parse', () {
+      const stream =
+          'not json\n'
+          '{"msg":{"type":"agent_message","message":"buona"}}\n'
+          '{"broken\n';
+
+      expect(parseAiResult(AiProvider.codex, stream), 'buona');
+    });
+
+    test('no parseable event falls back to the trimmed raw stdout', () {
+      expect(parseAiResult(AiProvider.codex, '  rumore  \n'), 'rumore');
+    });
+
+    test('nothing at all is nothing usable', () {
+      expect(parseAiResult(AiProvider.codex, '   \n '), isNull);
+    });
+  });
+
+  group('OpenCode stdout', () {
+    test('reads the object text', () {
+      expect(
+        parseAiResult(AiProvider.opencode, '{"text":"sintesi"}'),
+        'sintesi',
+      );
+    });
+
+    test('unparseable output falls back to the trimmed raw stdout', () {
+      expect(parseAiResult(AiProvider.opencode, ' sintesi \n'), 'sintesi');
+    });
+
+    test('empty output is nothing usable', () {
+      expect(parseAiResult(AiProvider.opencode, '{"text":"  "}'), isNull);
+      expect(parseAiResult(AiProvider.opencode, ''), isNull);
+    });
+  });
+
   group('the prompt', () {
     test('carries the note verbatim, quotes and backticks included', () {
       const email = 'Ciao,\n"urgente" — vedi `deploy.sh`\nGrazie';

@@ -2,7 +2,7 @@
 
 **Blocked by:** 02 — Generate a Note Summary with Claude Code
 
-**Status:** ready-for-agent
+**Status:** Done
 
 **What to build:**
 
@@ -39,15 +39,15 @@ returns `Token refresh failed: 401`. That is an authentication problem in the
 user's own CLI setup, not something this ticket fixes. It will appear as an
 ordinary generation-time error, which is the designed behaviour.
 
-- [ ] Choosing Codex in Settings and pressing the button produces a Note Summary
-- [ ] Choosing OpenCode in Settings and pressing the button produces a Note
+- [x] Choosing Codex in Settings and pressing the button produces a Note Summary
+- [x] Choosing OpenCode in Settings and pressing the button produces a Note
       Summary
-- [ ] Codex effort is passed as `-c model_reasoning_effort=<value>`; OpenCode
+- [x] Codex effort is passed as `-c model_reasoning_effort=<value>`; OpenCode
       effort as `--variant <value>`
-- [ ] An empty model or effort omits the flag rather than passing it empty
-- [ ] Failure handling, dimming, WSL Mode and the ten-word gate behave
+- [x] An empty model or effort omits the flag rather than passing it empty
+- [x] Failure handling, dimming, WSL Mode and the ten-word gate behave
       identically to Claude Code
-- [ ] Pure module tests cover: each provider's argument list with model and
+- [x] Pure module tests cover: each provider's argument list with model and
       effort set; flag omission when either is empty; Codex's JSONL yielding the
       **last** `agent_message`; malformed Codex lines skipped rather than
       aborting; Codex with no parseable line falling back to trimmed stdout;
