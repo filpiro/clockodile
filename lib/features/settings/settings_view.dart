@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +26,7 @@ class _SettingsViewState extends State<SettingsView> {
   AiProvider _provider = AiProvider.claudeCode;
   String _claudeModel = 'sonnet';
   String _claudeEffort = 'high';
+  bool _wslMode = false;
   // Free text, one pair per provider, so switching away and back keeps both.
   final _freeText = {
     for (final p in [AiProvider.codex, AiProvider.opencode])
@@ -49,6 +52,7 @@ class _SettingsViewState extends State<SettingsView> {
         _freeText[AiProvider.codex]!.effort.text = s.aiCodexEffort;
         _freeText[AiProvider.opencode]!.model.text = s.aiOpencodeModel;
         _freeText[AiProvider.opencode]!.effort.text = s.aiOpencodeEffort;
+        _wslMode = s.aiWslMode;
       });
     });
   }
@@ -136,6 +140,7 @@ class _SettingsViewState extends State<SettingsView> {
         aiOpencodeEffort: Value(
           _freeText[AiProvider.opencode]!.effort.text.trim(),
         ),
+        aiWslMode: Value(_wslMode),
       ),
     );
     await db.purgeExpiredEntries();
@@ -176,6 +181,17 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
                 const SizedBox(height: 16),
                 SizedBox(width: 480, child: _providerFields()),
+                // Windows only: elsewhere the CLIs are simply on PATH.
+                if (Platform.isWindows)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _wslMode,
+                    onChanged: (v) => setState(() => _wslMode = v),
+                    title: const Text('Modalità WSL'),
+                    subtitle: const Text(
+                      'Esegui la CLI in una shell di login WSL.',
+                    ),
+                  ),
               ],
             ),
           ),
@@ -244,7 +260,7 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
         key: _formKey,

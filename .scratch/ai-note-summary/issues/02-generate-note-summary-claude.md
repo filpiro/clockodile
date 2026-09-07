@@ -2,7 +2,7 @@
 
 **Blocked by:** 01 — AI section in Settings
 
-**Status:** ready-for-agent
+**Status:** Done
 
 **What to build:**
 
@@ -88,26 +88,26 @@ Report feature, where the pure rounding rules live apart from the view.
 The pure part is the single test seam. Nothing in this ticket's tests spawns a
 process.
 
-- [ ] Nota renders as a 3–8 line text area that grows then scrolls
-- [ ] Icon button sits at the field's bottom-right, inside the border, with text
+- [x] Nota renders as a 3–8 line text area that grows then scrolls
+- [x] Icon button sits at the field's bottom-right, inside the border, with text
       never running under it
-- [ ] Button is absent when AI is disabled in Settings
-- [ ] Button is visible but disabled below ten words, and toggles live while
+- [x] Button is absent when AI is disabled in Settings
+- [x] Button is visible but disabled below ten words, and toggles live while
       typing
-- [ ] Button is present in both create and edit mode
-- [ ] Pressing it dims the field to 50% and blocks input until the attempt ends
-- [ ] Success replaces the whole Nota and restores opacity and interaction
-- [ ] The prompt reaches the CLI over stdin and never appears on the command
+- [x] Button is present in both create and edit mode
+- [x] Pressing it dims the field to 50% and blocks input until the attempt ends
+- [x] Success replaces the whole Nota and restores opacity and interaction
+- [x] The prompt reaches the CLI over stdin and never appears on the command
       line
-- [ ] An email containing quotes, newlines and backticks summarises correctly
-- [ ] WSL Mode switch appears on Windows only, as the last row of the AI section
-- [ ] With WSL on the command runs through `bash -lc`; with WSL off no shell is
+- [x] An email containing quotes, newlines and backticks summarises correctly
+- [x] WSL Mode switch appears on Windows only, as the last row of the AI section
+- [x] With WSL on the command runs through `bash -lc`; with WSL off no shell is
       involved
-- [ ] Non-zero exit, 60s timeout, and blank result each leave the Nota untouched
+- [x] Non-zero exit, 60s timeout, and blank result each leave the Nota untouched
       and show the CLI's first stderr line
-- [ ] Leaving the page mid-generation kills the process
-- [ ] The CLI runs with a temporary working directory
-- [ ] Pure module tests cover: Claude's argument list for each model/effort
+- [x] Leaving the page mid-generation kills the process
+- [x] The CLI runs with a temporary working directory
+- [x] Pure module tests cover: Claude's argument list for each model/effort
       combination; the WSL command shape (`wsl.exe`, `--cd`, `-e`, `bash`,
       `-lc`, one command string); absence of any shell when WSL is off; single
       quotes escaped as `'\''`; a value containing `; rm -rf ~` unable to

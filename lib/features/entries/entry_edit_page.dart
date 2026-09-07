@@ -8,6 +8,8 @@ import 'package:catui/catui.dart';
 import '../../data/db/database.dart';
 import '../../shared/utils/format.dart';
 import '../../shared/widgets/client_field.dart';
+import '../ai/summary_command.dart';
+import '../ai/summary_runner.dart';
 import 'cubit/entries_cubit.dart';
 
 /// No [entry] → create a new Entry born active (no end field, spec).
@@ -55,12 +57,20 @@ class _EntryPageState extends State<_EntryPage> {
   DateTime _start = DateTime.now();
   // Edit mode only: the entry's sessions, loaded once.
   List<_EditableSession>? _sessions;
+  // Null until the settings load; the AI button is absent while it is.
+  Setting? _settings;
+  AiRun? _run;
 
   bool get _invalid => _sessions?.any((s) => s.invalid) ?? false;
+  bool get _aiOn => _settings?.aiEnabled ?? false;
+  bool get _generating => _run != null;
 
   @override
   void initState() {
     super.initState();
+    context.read<AppDatabase>().getSettings().then((s) {
+      if (mounted) setState(() => _settings = s);
+    });
     if (!widget.isCreate) {
       context.read<EntriesCubit>().sessionsOfEntry(widget.entry!.id).then((
         rows,
@@ -74,6 +84,8 @@ class _EntryPageState extends State<_EntryPage> {
 
   @override
   void dispose() {
+    // The CLI is agentic and may still be thinking; leaving kills it.
+    _run?.cancel();
     _client.dispose();
     _note.dispose();
     super.dispose();
@@ -122,6 +134,60 @@ class _EntryPageState extends State<_EntryPage> {
         SnackBar(content: Text('Salvataggio fallito: $err')),
       );
     }
+  }
+
+  /// Replaces the whole Nota with a one-line summary, or leaves it exactly as
+  /// it was and says why. There is no undo: the pasted email is still in the
+  /// user's mail client (ADR 0002).
+  Future<void> _summarise() async {
+    final s = _settings!;
+    final provider = AiProvider.values.firstWhere(
+      (p) => p.name == s.aiProvider,
+      orElse: () => AiProvider.claudeCode,
+    );
+    final (model, effort) = switch (provider) {
+      AiProvider.claudeCode => (s.aiClaudeModel, s.aiClaudeEffort),
+      AiProvider.codex => (s.aiCodexModel, s.aiCodexEffort),
+      AiProvider.opencode => (s.aiOpencodeModel, s.aiOpencodeEffort),
+    };
+    final messenger = ScaffoldMessenger.of(context);
+    final run = AiRun();
+    setState(() => _run = run);
+
+    String? failure;
+    String? summary;
+    try {
+      final out = await run.run(
+        (dir) => buildAiCommand(
+          provider: provider,
+          model: model,
+          effort: effort,
+          wslMode: s.aiWslMode,
+          workingDirectory: dir,
+        ),
+        buildSummaryPrompt(_note.text),
+      );
+      summary = out.exitCode == 0 ? parseAiResult(provider, out.stdout) : null;
+      // A non-zero exit, a timeout and a blank result are the same outcome.
+      if (summary == null) {
+        failure = _firstLine(out.stderr) ?? 'Nessun riassunto prodotto.';
+      }
+    } catch (err) {
+      failure = _firstLine('$err') ?? 'Generazione fallita.';
+    }
+    if (!mounted) return;
+    setState(() {
+      _run = null;
+      if (summary != null) _note.text = summary;
+    });
+    if (failure != null) {
+      messenger.showSnackBar(SnackBar(content: Text(failure)));
+    }
+  }
+
+  static String? _firstLine(String text) {
+    final line = text.trim().split('\n').first.trim();
+    return line.isEmpty ? null : line;
   }
 
   Future<void> _deleteSession(_EditableSession s) async {
@@ -267,6 +333,56 @@ class _EntryPageState extends State<_EntryPage> {
     );
   }
 
+  /// Grows from three lines to eight, then scrolls rather than pushing Salva
+  /// off screen. The AI button sits inside the border at the bottom right, in
+  /// a strip the content padding reserves — a `suffixIcon` would centre it
+  /// vertically and sit in the text's way.
+  Widget _noteField() {
+    const buttonStrip = 40.0;
+    return Stack(
+      children: [
+        Opacity(
+          opacity: _generating ? 0.5 : 1,
+          child: TextField(
+            controller: _note,
+            enabled: !_generating,
+            minLines: 3,
+            maxLines: 8,
+            onChanged: (_) => setState(() {}), // the word gate moves live
+            decoration: InputDecoration(
+              labelText: 'Nota',
+              border: const OutlineInputBorder(),
+              contentPadding: EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                _aiOn ? buttonStrip : 12,
+              ),
+            ),
+          ),
+        ),
+        // Absent entirely with AI off: the app looks exactly as it did before.
+        if (_aiOn)
+          Positioned(
+            right: 4,
+            bottom: 0,
+            child: IconButton(
+              tooltip: 'Riassumi la nota',
+              onPressed: _generating || !hasEnoughWordsForSummary(_note.text)
+                  ? null
+                  : _summarise,
+              icon: _generating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(LucideIcons.sparkles),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _body() {
     return Center(
       child: ConstrainedBox(
@@ -304,13 +420,7 @@ class _EntryPageState extends State<_EntryPage> {
                 for (final s in _sessions!) _sessionTile(s),
             ],
             const SizedBox(height: 16),
-            TextField(
-              controller: _note,
-              decoration: const InputDecoration(
-                labelText: 'Nota',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            _noteField(),
           ],
         ),
       ),

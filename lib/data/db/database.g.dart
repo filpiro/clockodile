@@ -925,6 +925,21 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _aiWslModeMeta = const VerificationMeta(
+    'aiWslMode',
+  );
+  @override
+  late final GeneratedColumn<bool> aiWslMode = GeneratedColumn<bool>(
+    'ai_wsl_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ai_wsl_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -938,6 +953,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     aiCodexEffort,
     aiOpencodeModel,
     aiOpencodeEffort,
+    aiWslMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1035,6 +1051,12 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('ai_wsl_mode')) {
+      context.handle(
+        _aiWslModeMeta,
+        aiWslMode.isAcceptableOrUnknown(data['ai_wsl_mode']!, _aiWslModeMeta),
+      );
+    }
     return context;
   }
 
@@ -1088,6 +1110,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.string,
         data['${effectivePrefix}ai_opencode_effort'],
       )!,
+      aiWslMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ai_wsl_mode'],
+      )!,
     );
   }
 
@@ -1113,6 +1139,9 @@ class Setting extends DataClass implements Insertable<Setting> {
   final String aiCodexEffort;
   final String aiOpencodeModel;
   final String aiOpencodeEffort;
+
+  /// Windows only: route every provider command through a WSL login shell.
+  final bool aiWslMode;
   const Setting({
     required this.id,
     required this.retentionDays,
@@ -1125,6 +1154,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.aiCodexEffort,
     required this.aiOpencodeModel,
     required this.aiOpencodeEffort,
+    required this.aiWslMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1140,6 +1170,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['ai_codex_effort'] = Variable<String>(aiCodexEffort);
     map['ai_opencode_model'] = Variable<String>(aiOpencodeModel);
     map['ai_opencode_effort'] = Variable<String>(aiOpencodeEffort);
+    map['ai_wsl_mode'] = Variable<bool>(aiWslMode);
     return map;
   }
 
@@ -1156,6 +1187,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       aiCodexEffort: Value(aiCodexEffort),
       aiOpencodeModel: Value(aiOpencodeModel),
       aiOpencodeEffort: Value(aiOpencodeEffort),
+      aiWslMode: Value(aiWslMode),
     );
   }
 
@@ -1176,6 +1208,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       aiCodexEffort: serializer.fromJson<String>(json['aiCodexEffort']),
       aiOpencodeModel: serializer.fromJson<String>(json['aiOpencodeModel']),
       aiOpencodeEffort: serializer.fromJson<String>(json['aiOpencodeEffort']),
+      aiWslMode: serializer.fromJson<bool>(json['aiWslMode']),
     );
   }
   @override
@@ -1193,6 +1226,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'aiCodexEffort': serializer.toJson<String>(aiCodexEffort),
       'aiOpencodeModel': serializer.toJson<String>(aiOpencodeModel),
       'aiOpencodeEffort': serializer.toJson<String>(aiOpencodeEffort),
+      'aiWslMode': serializer.toJson<bool>(aiWslMode),
     };
   }
 
@@ -1208,6 +1242,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     String? aiCodexEffort,
     String? aiOpencodeModel,
     String? aiOpencodeEffort,
+    bool? aiWslMode,
   }) => Setting(
     id: id ?? this.id,
     retentionDays: retentionDays ?? this.retentionDays,
@@ -1220,6 +1255,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     aiCodexEffort: aiCodexEffort ?? this.aiCodexEffort,
     aiOpencodeModel: aiOpencodeModel ?? this.aiOpencodeModel,
     aiOpencodeEffort: aiOpencodeEffort ?? this.aiOpencodeEffort,
+    aiWslMode: aiWslMode ?? this.aiWslMode,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -1250,6 +1286,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       aiOpencodeEffort: data.aiOpencodeEffort.present
           ? data.aiOpencodeEffort.value
           : this.aiOpencodeEffort,
+      aiWslMode: data.aiWslMode.present ? data.aiWslMode.value : this.aiWslMode,
     );
   }
 
@@ -1266,7 +1303,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('aiCodexModel: $aiCodexModel, ')
           ..write('aiCodexEffort: $aiCodexEffort, ')
           ..write('aiOpencodeModel: $aiOpencodeModel, ')
-          ..write('aiOpencodeEffort: $aiOpencodeEffort')
+          ..write('aiOpencodeEffort: $aiOpencodeEffort, ')
+          ..write('aiWslMode: $aiWslMode')
           ..write(')'))
         .toString();
   }
@@ -1284,6 +1322,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     aiCodexEffort,
     aiOpencodeModel,
     aiOpencodeEffort,
+    aiWslMode,
   );
   @override
   bool operator ==(Object other) =>
@@ -1299,7 +1338,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.aiCodexModel == this.aiCodexModel &&
           other.aiCodexEffort == this.aiCodexEffort &&
           other.aiOpencodeModel == this.aiOpencodeModel &&
-          other.aiOpencodeEffort == this.aiOpencodeEffort);
+          other.aiOpencodeEffort == this.aiOpencodeEffort &&
+          other.aiWslMode == this.aiWslMode);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -1314,6 +1354,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<String> aiCodexEffort;
   final Value<String> aiOpencodeModel;
   final Value<String> aiOpencodeEffort;
+  final Value<bool> aiWslMode;
   const SettingsCompanion({
     this.id = const Value.absent(),
     this.retentionDays = const Value.absent(),
@@ -1326,6 +1367,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.aiCodexEffort = const Value.absent(),
     this.aiOpencodeModel = const Value.absent(),
     this.aiOpencodeEffort = const Value.absent(),
+    this.aiWslMode = const Value.absent(),
   });
   SettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1339,6 +1381,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.aiCodexEffort = const Value.absent(),
     this.aiOpencodeModel = const Value.absent(),
     this.aiOpencodeEffort = const Value.absent(),
+    this.aiWslMode = const Value.absent(),
   });
   static Insertable<Setting> custom({
     Expression<int>? id,
@@ -1352,6 +1395,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<String>? aiCodexEffort,
     Expression<String>? aiOpencodeModel,
     Expression<String>? aiOpencodeEffort,
+    Expression<bool>? aiWslMode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1365,6 +1409,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (aiCodexEffort != null) 'ai_codex_effort': aiCodexEffort,
       if (aiOpencodeModel != null) 'ai_opencode_model': aiOpencodeModel,
       if (aiOpencodeEffort != null) 'ai_opencode_effort': aiOpencodeEffort,
+      if (aiWslMode != null) 'ai_wsl_mode': aiWslMode,
     });
   }
 
@@ -1380,6 +1425,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<String>? aiCodexEffort,
     Value<String>? aiOpencodeModel,
     Value<String>? aiOpencodeEffort,
+    Value<bool>? aiWslMode,
   }) {
     return SettingsCompanion(
       id: id ?? this.id,
@@ -1393,6 +1439,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       aiCodexEffort: aiCodexEffort ?? this.aiCodexEffort,
       aiOpencodeModel: aiOpencodeModel ?? this.aiOpencodeModel,
       aiOpencodeEffort: aiOpencodeEffort ?? this.aiOpencodeEffort,
+      aiWslMode: aiWslMode ?? this.aiWslMode,
     );
   }
 
@@ -1432,6 +1479,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (aiOpencodeEffort.present) {
       map['ai_opencode_effort'] = Variable<String>(aiOpencodeEffort.value);
     }
+    if (aiWslMode.present) {
+      map['ai_wsl_mode'] = Variable<bool>(aiWslMode.value);
+    }
     return map;
   }
 
@@ -1448,7 +1498,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('aiCodexModel: $aiCodexModel, ')
           ..write('aiCodexEffort: $aiCodexEffort, ')
           ..write('aiOpencodeModel: $aiOpencodeModel, ')
-          ..write('aiOpencodeEffort: $aiOpencodeEffort')
+          ..write('aiOpencodeEffort: $aiOpencodeEffort, ')
+          ..write('aiWslMode: $aiWslMode')
           ..write(')'))
         .toString();
   }
@@ -2384,6 +2435,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<String> aiCodexEffort,
       Value<String> aiOpencodeModel,
       Value<String> aiOpencodeEffort,
+      Value<bool> aiWslMode,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -2398,6 +2450,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<String> aiCodexEffort,
       Value<String> aiOpencodeModel,
       Value<String> aiOpencodeEffort,
+      Value<bool> aiWslMode,
     });
 
 class $$SettingsTableFilterComposer
@@ -2461,6 +2514,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<String> get aiOpencodeEffort => $composableBuilder(
     column: $table.aiOpencodeEffort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get aiWslMode => $composableBuilder(
+    column: $table.aiWslMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2528,6 +2586,11 @@ class $$SettingsTableOrderingComposer
     column: $table.aiOpencodeEffort,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get aiWslMode => $composableBuilder(
+    column: $table.aiWslMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -2587,6 +2650,9 @@ class $$SettingsTableAnnotationComposer
     column: $table.aiOpencodeEffort,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get aiWslMode =>
+      $composableBuilder(column: $table.aiWslMode, builder: (column) => column);
 }
 
 class $$SettingsTableTableManager
@@ -2628,6 +2694,7 @@ class $$SettingsTableTableManager
                 Value<String> aiCodexEffort = const Value.absent(),
                 Value<String> aiOpencodeModel = const Value.absent(),
                 Value<String> aiOpencodeEffort = const Value.absent(),
+                Value<bool> aiWslMode = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
                 retentionDays: retentionDays,
@@ -2640,6 +2707,7 @@ class $$SettingsTableTableManager
                 aiCodexEffort: aiCodexEffort,
                 aiOpencodeModel: aiOpencodeModel,
                 aiOpencodeEffort: aiOpencodeEffort,
+                aiWslMode: aiWslMode,
               ),
           createCompanionCallback:
               ({
@@ -2654,6 +2722,7 @@ class $$SettingsTableTableManager
                 Value<String> aiCodexEffort = const Value.absent(),
                 Value<String> aiOpencodeModel = const Value.absent(),
                 Value<String> aiOpencodeEffort = const Value.absent(),
+                Value<bool> aiWslMode = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
                 retentionDays: retentionDays,
@@ -2666,6 +2735,7 @@ class $$SettingsTableTableManager
                 aiCodexEffort: aiCodexEffort,
                 aiOpencodeModel: aiOpencodeModel,
                 aiOpencodeEffort: aiOpencodeEffort,
+                aiWslMode: aiWslMode,
               ),
           withReferenceMapper: (p0) => p0
               .map(

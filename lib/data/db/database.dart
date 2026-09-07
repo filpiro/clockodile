@@ -55,6 +55,9 @@ class Settings extends Table {
   TextColumn get aiOpencodeModel => text().withDefault(const Constant(''))();
   TextColumn get aiOpencodeEffort => text().withDefault(const Constant(''))();
 
+  /// Windows only: route every provider command through a WSL login shell.
+  BoolColumn get aiWslMode => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -101,7 +104,7 @@ class AppDatabase extends _$AppDatabase {
   static const minRetentionDays = 30;
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +140,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.aiCodexEffort);
         await m.addColumn(settings, settings.aiOpencodeModel);
         await m.addColumn(settings, settings.aiOpencodeEffort);
+      }
+      if (from < 6) {
+        await m.addColumn(settings, settings.aiWslMode);
       }
     },
   );
