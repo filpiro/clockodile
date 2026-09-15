@@ -94,3 +94,14 @@ List<ReportRow> groupByClient(List<ReportRow> rows) {
   }
   return [for (final group in byClient.values) ...group];
 }
+
+/// Normalized time per client id, for the grouped view's headers. Sums the
+/// same [ReportRow.normDuration] the footer total does, so the parts always
+/// add up to the whole.
+Map<int, Duration> clientTotals(List<ReportRow> rows) {
+  final totals = <int, Duration>{};
+  for (final r in rows) {
+    totals[r.client.id] = (totals[r.client.id] ?? Duration.zero) + r.normDuration;
+  }
+  return totals;
+}

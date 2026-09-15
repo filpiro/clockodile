@@ -381,8 +381,7 @@ class _EntryPageState extends State<_EntryPage> {
                 },
               )
             else ...[
-              Text('Sessioni', style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 4),
+              const CatSectionHeader.inline(title: 'Sessioni'),
               if (_sessions == null)
                 const Padding(
                   padding: EdgeInsets.all(12),

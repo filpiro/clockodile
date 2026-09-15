@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
-import '../../shared/utils/colors.dart';
+import '../../shared/widgets/client_dot.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/entries_cubit.dart';
 import 'entry_edit_page.dart';
@@ -180,10 +180,7 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
     final total = a.closedTotal + running;
     final hasPast = a.closedTotal > Duration.zero;
     return HoverTile(
-      leading: CircleAvatar(
-        radius: AppTokens.dotRadius,
-        backgroundColor: hexToColor(a.client.colorHex),
-      ),
+      leading: ClientDot(a.client.colorHex),
       title: Row(
         children: [
           Flexible(child: Text(a.client.name)),
@@ -239,17 +236,11 @@ class _DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = groups.fold(Duration.zero, (sum, g) => sum + g.total);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Row(
-        children: [
-          Text(
-            italianDayLabel(day),
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const Spacer(),
-          Text(formatHm(total), style: Theme.of(context).textTheme.titleSmall),
-        ],
+    return CatSectionHeader(
+      title: italianDayLabel(day),
+      trailing: Text(
+        formatHm(total),
+        style: Theme.of(context).textTheme.titleSmall,
       ),
     );
   }
@@ -273,10 +264,7 @@ class _EntryDayTile extends StatelessWidget {
       // Keyed by first session, not entry: an Entry spanning two days appears
       // twice in this list, and duplicate sibling keys throw.
       key: ValueKey(g.sessions.first.id),
-      leading: CircleAvatar(
-        radius: AppTokens.dotRadius,
-        backgroundColor: hexToColor(g.client.colorHex),
-      ),
+      leading: ClientDot(g.client.colorHex),
       title: Text(g.client.name),
       subtitle: Text(
         '$spans (${formatHm(g.total)})'

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/clients/cubit/clients_cubit.dart';
-import '../utils/colors.dart';
+import 'client_dot.dart';
 
 /// Client name input with autocomplete from 3 typed characters (spec 4.2).
 /// Resolution to an existing/new client happens at save time, not here.
@@ -97,12 +97,7 @@ class _ClientFieldState extends State<ClientField> {
                           selectedTileColor: Theme.of(
                             context,
                           ).colorScheme.surfaceContainerHighest,
-                          leading: CircleAvatar(
-                            radius: AppTokens.dotRadius,
-                            backgroundColor: hexToColor(
-                              clientColors[name] ?? '#888888',
-                            ),
-                          ),
+                          leading: ClientDot(clientColors[name]),
                           title: Text(name),
                           onTap: () => onSelected(name),
                         );

@@ -75,7 +75,7 @@ class _SettingsViewState extends State<SettingsView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('AI', style: Theme.of(context).textTheme.labelLarge),
+        const CatSectionHeader.inline(title: 'AI'),
         // Acts at once, like the theme: a cancelled or failed install leaves
         // state.enabled false, so the switch falls back by itself.
         SwitchListTile(
@@ -110,9 +110,8 @@ class _SettingsViewState extends State<SettingsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Impostazioni', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            Text('Tema', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
+            // The header brings its own gap above.
+            const CatSectionHeader.inline(title: 'Tema'),
             // Applied and persisted instantly, like the AI switch; only
             // retention waits for the button.
             BlocBuilder<ThemeCubit, ThemeMode>(
@@ -161,8 +160,8 @@ class _SettingsViewState extends State<SettingsView> {
                 },
               ),
             ),
-            const SizedBox(height: 24),
-            // The Local Model is Windows x64 only.
+            // The Local Model is Windows x64 only. The section header brings
+            // its own gap above.
             if (Platform.isWindows) ...[
               _aiSection(context),
               const SizedBox(height: 16),

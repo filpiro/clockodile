@@ -19,5 +19,15 @@ String colorToHex(Color color) {
   return '#${c(color.r)}${c(color.g)}${c(color.b)}'.toUpperCase();
 }
 
-Color hexToColor(String hex) =>
-    Color(0xFF000000 | int.parse(hex.substring(1), radix: 16));
+/// Neutral stand-in for a colour that isn't a `#RRGGBB` we can read — a client
+/// still being typed in the autocomplete, or a row whose stored hex predates
+/// the format. A grey dot beats a crash in the middle of a list build.
+const unknownClientColor = Color(0xFF888888);
+
+Color hexToColor(String? hex) {
+  if (hex == null || hex.length != 7 || !hex.startsWith('#')) {
+    return unknownClientColor;
+  }
+  final value = int.tryParse(hex.substring(1), radix: 16);
+  return value == null ? unknownClientColor : Color(0xFF000000 | value);
+}

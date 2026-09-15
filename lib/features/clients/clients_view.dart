@@ -6,6 +6,7 @@ import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
 import '../../shared/utils/colors.dart';
+import '../../shared/widgets/client_dot.dart';
 import 'cubit/clients_cubit.dart';
 
 class ClientsView extends StatelessWidget {
@@ -32,13 +33,10 @@ class ClientsView extends StatelessWidget {
                 HoverTile(
                   // Stateful row: keyed so hover doesn't survive a reorder.
                   key: ValueKey(c.client.id),
-                  leading: InkWell(
-                    customBorder: const CircleBorder(),
+                  leading: ClientDot(
+                    c.client.colorHex,
+                    size: ClientDotSize.tappable,
                     onTap: () => _pickColor(context, c.client),
-                    child: CircleAvatar(
-                      radius: AppTokens.dotRadiusMiddle,
-                      backgroundColor: hexToColor(c.client.colorHex),
-                    ),
                   ),
                   title: Text(c.client.name),
                   subtitle: Text('${c.entryCount} attività'),
@@ -105,9 +103,9 @@ class ClientsView extends StatelessWidget {
           title: const Text('Colore cliente'),
           content: Row(
             children: [
-              CircleAvatar(
-                radius: AppTokens.dotRadiusLarge,
-                backgroundColor: hslToColor(hue),
+              ClientDot.color(
+                hslToColor(hue),
+                size: ClientDotSize.large,
               ),
               Expanded(
                 child: Slider(

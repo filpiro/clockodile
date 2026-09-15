@@ -77,4 +77,18 @@ void main() {
     ]);
     expect(groupByClient(rows).map((r) => r.session.id).toList(), [1, 3, 2]);
   });
+
+  test('per-client totals sum to the footer total', () {
+    final rows = normalizeDay([
+      row(1, at(9, 0), at(9, 30), clientId: 1, client: 'Acme'),
+      row(2, at(9, 30), at(10, 0), clientId: 2, client: 'Globex'),
+      row(3, at(10, 0), at(10, 30), clientId: 1, client: 'Acme'),
+    ]);
+    final totals = clientTotals(rows);
+    expect(totals[1], const Duration(minutes: 60)); // two rows, one client
+    expect(totals[2], const Duration(minutes: 30));
+
+    final footer = rows.fold(Duration.zero, (sum, r) => sum + r.normDuration);
+    expect(totals.values.fold(Duration.zero, (a, b) => a + b), footer);
+  });
 }
