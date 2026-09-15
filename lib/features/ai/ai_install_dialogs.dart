@@ -17,30 +17,18 @@ Future<void> runAiInstall(
   final install = update ? cubit.update : cubit.enable;
   if (cubit.state.pendingBytes == 0) return install();
   final size = formatBytes(cubit.state.pendingBytes);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(update ? 'Aggiornare i file AI?' : "Attivare l'AI locale?"),
-      content: Text(
-        update
-            ? 'Serve un download di circa $size.'
-            : 'Clockodile scaricherà il motore llama.cpp e il modello Qwen3 '
-                  '1.7B (circa $size) nella cartella dell\'app. Il testo delle '
-                  'note non lascia mai questo computer.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Annulla'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Scarica'),
-        ),
-      ],
-    ),
+  final ok = await catConfirm(
+    context,
+    title: update ? 'Aggiornare i file AI?' : "Attivare l'AI locale?",
+    message: update
+        ? 'Serve un download di circa $size.'
+        : 'Clockodile scaricherà il motore llama.cpp e il modello Qwen3 '
+              '1.7B (circa $size) nella cartella dell\'app. Il testo delle '
+              'note non lascia mai questo computer.',
+    confirm: 'Scarica',
+    cancel: 'Annulla',
   );
-  if (ok != true || !context.mounted) return;
+  if (!ok || !context.mounted) return;
 
   final navigator = Navigator.of(context);
   // The modal stays open only to show a failure; success and cancel close it.
@@ -131,27 +119,17 @@ class _InstallModal extends StatelessWidget {
 
 /// Asks before removing the files; [AiCubit.deleteFiles] on Elimina.
 Future<void> confirmAiDelete(BuildContext context, AiCubit cubit) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Eliminare l'AI locale?"),
-      content: const Text(
+  final ok = await catConfirm(
+    context,
+    title: "Eliminare l'AI locale?",
+    message:
         'llama.cpp e il modello verranno rimossi da questo computer. '
         "Potrai riscaricarli riattivando l'AI.",
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Annulla'),
-        ),
-        DangerButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Elimina'),
-        ),
-      ],
-    ),
+    confirm: 'Elimina',
+    cancel: 'Annulla',
+    danger: true,
   );
-  if (ok == true) await cubit.deleteFiles();
+  if (ok) await cubit.deleteFiles();
 }
 
 /// The size "Elimina modello" frees.

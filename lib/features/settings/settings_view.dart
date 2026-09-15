@@ -47,27 +47,17 @@ class _SettingsViewState extends State<SettingsView> {
     if (!_formKey.currentState!.validate()) return;
     final days = int.parse(_controller.text);
     if (days < _storedDays) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Eliminare le attività più vecchie?'),
-          content: Text(
+      final confirmed = await catConfirm(
+        context,
+        title: 'Eliminare le attività più vecchie?',
+        message:
             'Le attività più vecchie di $days giorni verranno '
             'eliminate definitivamente.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annulla'),
-            ),
-            DangerButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Elimina'),
-            ),
-          ],
-        ),
+        confirm: 'Elimina',
+        cancel: 'Annulla',
+        danger: true,
       );
-      if (confirmed != true) return;
+      if (!confirmed) return;
     }
     if (!mounted) return;
     final db = context.read<AppDatabase>();
@@ -77,9 +67,7 @@ class _SettingsViewState extends State<SettingsView> {
     await db.purgeExpiredEntries();
     if (!mounted) return;
     setState(() => _storedDays = days);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Impostazioni salvate')));
+    catSnack(ScaffoldMessenger.of(context), 'Impostazioni salvate');
   }
 
   Widget _aiSection(BuildContext context) {

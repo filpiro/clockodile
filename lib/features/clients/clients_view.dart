@@ -26,6 +26,7 @@ class ClientsView extends StatelessWidget {
             return const EmptyState('Nessun cliente.');
           }
           return ListView(
+            padding: const EdgeInsets.only(bottom: AppTokens.fabClearance),
             children: [
               for (final c in clients)
                 HoverTile(
@@ -56,67 +57,39 @@ class ClientsView extends StatelessWidget {
   Future<void> _create(BuildContext context) async {
     final cubit = context.read<ClientsCubit>();
     final messenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Nuovo cliente'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nome'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Annulla'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(c, controller.text.trim()),
-            child: const Text('Crea'),
-          ),
-        ],
-      ),
+    final name = await catTextInput(
+      context,
+      title: 'Nuovo cliente',
+      label: 'Nome',
+      confirm: 'Crea',
+      cancel: 'Annulla',
     );
-    if (name == null || name.isEmpty) return;
+    if (name == null) return;
     try {
       await cubit.create(name);
-    } catch (err) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Creazione fallita: $err')),
-      );
+    } catch (_) {
+      // UNIQUE COLLATE NOCASE violation
+      catSnack(messenger, 'Esiste già un cliente chiamato "$name"');
     }
   }
 
   Future<void> _rename(BuildContext context, Client client) async {
     final cubit = context.read<ClientsCubit>();
     final messenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController(text: client.name);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Rinomina cliente'),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Annulla'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(c, controller.text.trim()),
-            child: const Text('Salva'),
-          ),
-        ],
-      ),
+    final name = await catTextInput(
+      context,
+      title: 'Rinomina cliente',
+      label: 'Nome',
+      confirm: 'Salva',
+      cancel: 'Annulla',
+      initial: client.name,
     );
-    if (name == null || name.isEmpty || name == client.name) return;
+    if (name == null || name == client.name) return;
     try {
       await cubit.rename(client.id, name);
     } catch (_) {
       // UNIQUE COLLATE NOCASE violation
-      messenger.showSnackBar(
-        SnackBar(content: Text('Esiste già un cliente chiamato "$name"')),
-      );
+      catSnack(messenger, 'Esiste già un cliente chiamato "$name"');
     }
   }
 
@@ -169,31 +142,19 @@ class ClientsView extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     if (c.entryCount > 0) {
       // spec 4.3: surface why deletion is blocked
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Impossibile eliminare "${c.client.name}": ${c.entryCount} attività usano questo cliente',
-          ),
-        ),
+      catSnack(
+        messenger,
+        'Impossibile eliminare "${c.client.name}": ${c.entryCount} attività usano questo cliente',
       );
       return;
     }
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (d) => AlertDialog(
-        title: Text('Eliminare "${c.client.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(d, false),
-            child: const Text('Annulla'),
-          ),
-          DangerButton(
-            onPressed: () => Navigator.pop(d, true),
-            child: const Text('Elimina'),
-          ),
-        ],
-      ),
+    final ok = await catConfirm(
+      context,
+      title: 'Eliminare "${c.client.name}"?',
+      confirm: 'Elimina',
+      cancel: 'Annulla',
+      danger: true,
     );
-    if (ok == true) await cubit.delete(c.client.id);
+    if (ok) await cubit.delete(c.client.id);
   }
 }

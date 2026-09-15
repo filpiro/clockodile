@@ -126,10 +126,8 @@ class _EntryPageState extends State<_EntryPage> {
         }
       }
       navigator.pop();
-    } catch (err) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Salvataggio fallito: $err')),
-      );
+    } catch (_) {
+      catSnack(messenger, 'Salvataggio fallito');
     }
   }
 
@@ -155,7 +153,7 @@ class _EntryPageState extends State<_EntryPage> {
       if (summary != null) _note.text = summary;
     });
     if (failure != null && failure is! AiCancelled) {
-      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
+      catSnack(messenger, failure.message);
     }
   }
 
@@ -167,10 +165,9 @@ class _EntryPageState extends State<_EntryPage> {
     if (ok) {
       setState(() => _sessions!.removeWhere((x) => x.id == s.id));
     } else {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text("Ultima sessione: elimina l'attività per rimuoverla."),
-        ),
+      catSnack(
+        messenger,
+        "Ultima sessione: elimina l'attività per rimuoverla.",
       );
     }
   }
@@ -329,7 +326,6 @@ class _EntryPageState extends State<_EntryPage> {
               labelText: 'Nota',
               // Without it the label floats in the middle of a multi-line box.
               alignLabelWithHint: true,
-              border: const OutlineInputBorder(),
               contentPadding: EdgeInsets.fromLTRB(
                 12,
                 12,

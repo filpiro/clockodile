@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
-import '../../shared/utils/colors.dart';
+import '../../shared/widgets/client_dot.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/report_cubit.dart';
 import 'normalize.dart';
@@ -19,13 +19,9 @@ Future<void> runReportExport(BuildContext context) async {
     final result = await cubit.exportCsv();
     if (result == null) return; // cancelled
     final (path, count) = result;
-    messenger.showSnackBar(
-      SnackBar(content: Text('Esportate $count sessioni in $path')),
-    );
-  } catch (err) {
-    messenger.showSnackBar(
-      SnackBar(content: Text('Esportazione fallita: $err')),
-    );
+    catSnack(messenger, 'Esportate $count sessioni in $path');
+  } catch (_) {
+    catSnack(messenger, 'Esportazione fallita');
   }
 }
 
@@ -33,9 +29,7 @@ Future<void> runReportExport(BuildContext context) async {
 /// the list rows and the board tiles.
 void copyNote(BuildContext context, String note) {
   Clipboard.setData(ClipboardData(text: note));
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(const SnackBar(content: Text('Nota copiata')));
+  catSnack(ScaffoldMessenger.of(context), 'Nota copiata');
 }
 
 class ReportView extends StatelessWidget {
@@ -60,6 +54,7 @@ class ReportView extends StatelessWidget {
           Duration.zero,
           (sum, r) => sum + r.normDuration,
         );
+        final perClient = clientTotals(state.rows);
         return Scaffold(
           body: Column(
             children: [
@@ -146,7 +141,10 @@ class ReportView extends StatelessWidget {
                       for (final (i, r) in state.rows.indexed) ...[
                         if (i == 0 ||
                             state.rows[i - 1].client.id != r.client.id)
-                          _ClientHeader(r),
+                          _ClientHeader(
+                            r,
+                            perClient[r.client.id] ?? Duration.zero,
+                          ),
                         _ReportTile(r),
                       ],
                     ],
@@ -175,21 +173,20 @@ class ReportView extends StatelessWidget {
 
 class _ClientHeader extends StatelessWidget {
   final ReportRow r;
-  const _ClientHeader(this.r);
+
+  /// This client's normalized time across the whole report, not just the run
+  /// below — the grouped order puts all of a client's rows in one run anyway.
+  final Duration total;
+  const _ClientHeader(this.r, this.total);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: AppTokens.dotRadiusSmall,
-            backgroundColor: hexToColor(r.client.colorHex),
-          ),
-          const SizedBox(width: 8),
-          Text(r.client.name, style: Theme.of(context).textTheme.titleSmall),
-        ],
+    return CatSectionHeader(
+      leading: ClientDot(r.client.colorHex, size: ClientDotSize.small),
+      title: r.client.name,
+      trailing: Text(
+        formatHm(total),
+        style: Theme.of(context).textTheme.titleSmall,
       ),
     );
   }
