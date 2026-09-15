@@ -52,10 +52,7 @@ class _ClientFieldState extends State<ClientField> {
           controller: textController,
           focusNode: focusNode,
           autofocus: widget.autofocus,
-          decoration: const InputDecoration(
-            labelText: 'Cliente',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Cliente'),
           onChanged: onChanged,
           onSubmitted: (_) => onSubmitted(),
         );
@@ -72,6 +69,9 @@ class _ClientFieldState extends State<ClientField> {
           alignment: Alignment.topLeft,
           child: Material(
             elevation: 4,
+            // Same corner as dialogs: the popup is another floating surface.
+            borderRadius: BorderRadius.circular(AppTokens.radius),
+            clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 240, maxWidth: 320),
               child: ListView(
@@ -93,10 +93,10 @@ class _ClientFieldState extends State<ClientField> {
                           dense: true,
                           selected: selected,
                           // Text color alone reads poorly; give the highlighted
-                          // option a real background.
+                          // option the same background a hovered list row gets.
                           selectedTileColor: Theme.of(
                             context,
-                          ).colorScheme.secondaryContainer,
+                          ).colorScheme.surfaceContainerHighest,
                           leading: CircleAvatar(
                             radius: AppTokens.dotRadius,
                             backgroundColor: hexToColor(

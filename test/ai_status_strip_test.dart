@@ -77,6 +77,8 @@ void main() {
     await openWith(tester, installed: false);
     expect(find.text('File AI mancanti o da aggiornare'), findsOneWidget);
     expect(find.text('Aggiorna (1,3 GB)'), findsOneWidget);
+    // A strip, not a bar: the action button must not inflate it to 48.
+    expect(height(tester), lessThan(48));
   });
 
   testWidgets('starting shows a spinner and no action', (tester) async {

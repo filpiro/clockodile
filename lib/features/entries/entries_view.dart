@@ -115,16 +115,24 @@ class EntriesView extends StatelessWidget {
                 child: state.rows.isEmpty && state.active == null
                     ? const EmptyState('Nessuna attività.')
                     : ListView(
+                        padding: const EdgeInsets.only(
+                          bottom: AppTokens.fabClearance,
+                        ),
                         children: [
                           for (final day in byDay.entries) ...[
                             _DayHeader(day.key, day.value.values.toList()),
                             for (final g in day.value.values) _EntryDayTile(g),
                           ],
                           if (state.canLoadMore)
-                            TextButton(
-                              onPressed: () =>
-                                  context.read<EntriesCubit>().loadMore(),
-                              child: const Text('Carica altre'),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Center(
+                                child: TextButton(
+                                  onPressed: () =>
+                                      context.read<EntriesCubit>().loadMore(),
+                                  child: const Text('Carica altre'),
+                                ),
+                              ),
                             ),
                         ],
                       ),
@@ -180,18 +188,10 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
         children: [
           Flexible(child: Text(a.client.name)),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              'in corso',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
+          CatTag(
+            'in corso',
+            background: scheme.primaryContainer,
+            foreground: scheme.onPrimaryContainer,
           ),
         ],
       ),
@@ -291,26 +291,16 @@ class _EntryDayTile extends StatelessWidget {
         DeleteIconButton(
           onPressed: () async {
             final cubit = context.read<EntriesCubit>();
-            final ok = await showDialog<bool>(
-              context: context,
-              builder: (c) => AlertDialog(
-                title: const Text("Eliminare l'attività?"),
-                content: const Text(
+            final ok = await catConfirm(
+              context,
+              title: "Eliminare l'attività?",
+              message:
                   'Verranno eliminate tutte le sue sessioni, anche in altri giorni.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(c, false),
-                    child: const Text('Annulla'),
-                  ),
-                  DangerButton(
-                    onPressed: () => Navigator.pop(c, true),
-                    child: const Text('Elimina'),
-                  ),
-                ],
-              ),
+              confirm: 'Elimina',
+              cancel: 'Annulla',
+              danger: true,
             );
-            if (ok == true) cubit.deleteEntry(g.entry.id);
+            if (ok) cubit.deleteEntry(g.entry.id);
           },
         ),
       ],

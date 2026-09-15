@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:catui/catui.dart';
 import 'package:flutter/material.dart';
 
 class HelpView extends StatelessWidget {
@@ -48,19 +49,7 @@ class HelpView extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 110,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(combo, textAlign: TextAlign.center),
-                    ),
+                    child: CatTag(combo, textAlign: TextAlign.center),
                   ),
                   const SizedBox(width: 16),
                   Text(description),

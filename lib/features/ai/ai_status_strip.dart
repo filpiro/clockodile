@@ -42,7 +42,8 @@ class AiStatusStrip extends StatelessWidget {
     };
     if (text.isEmpty) return const SizedBox.shrink();
 
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final isError = state.status == LocalAiStatus.error;
     final foreground = isError
         ? scheme.onErrorContainer
@@ -61,10 +62,23 @@ class AiStatusStrip extends StatelessWidget {
               const SizedBox(width: 8),
             ],
             Expanded(
-              child: Text(text, style: TextStyle(color: foreground)),
+              child: Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(color: foreground),
+              ),
             ),
             if (action != null)
-              TextButton(onPressed: onAction, child: Text(action)),
+              TextButton(
+                // Stock button padding turns the strip into a 48px bar; this
+                // keeps it a line of text with a link on the end.
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: theme.textTheme.bodySmall,
+                ),
+                onPressed: onAction,
+                child: Text(action),
+              ),
           ],
         ),
       ),
