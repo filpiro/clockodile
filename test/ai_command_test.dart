@@ -8,7 +8,7 @@ void main() {
     String effort = 'high',
     bool wsl = false,
   }) => buildAiCommand(
-    provider: AiProvider.claudeCode,
+    provider: AiProviderKind.claudeCode,
     model: model,
     effort: effort,
     wslMode: wsl,
@@ -63,7 +63,7 @@ void main() {
 
     test("a single quote is escaped as '\\''", () {
       final cmd = buildAiCommand(
-        provider: AiProvider.claudeCode,
+        provider: AiProviderKind.claudeCode,
         model: "it's",
         effort: 'high',
         wslMode: true,
@@ -75,7 +75,7 @@ void main() {
 
     test('a value carrying `; rm -rf ~` cannot terminate its argument', () {
       final cmd = buildAiCommand(
-        provider: AiProvider.claudeCode,
+        provider: AiProviderKind.claudeCode,
         model: "x'; rm -rf ~; echo '",
         effort: 'high',
         wslMode: true,
@@ -93,7 +93,7 @@ void main() {
   group('parsing Claude output', () {
     test("takes the JSON object's result field", () {
       final out = parseAiResult(
-        AiProvider.claudeCode,
+        AiProviderKind.claudeCode,
         '{"type":"result","result":"Cliente chiede sconto sul rinnovo.",'
         '"cost_usd":0.01}',
       );
@@ -103,27 +103,33 @@ void main() {
 
     test('trims surrounding whitespace', () {
       expect(
-        parseAiResult(AiProvider.claudeCode, '{"result":"  ciao  "}'),
+        parseAiResult(AiProviderKind.claudeCode, '{"result":"  ciao  "}'),
         'ciao',
       );
     });
 
     for (final raw in ['', '   \n\t ', '{"result":""}', '{"result":"  "}']) {
       test('nothing usable from ${raw.isEmpty ? '<empty>' : '"$raw"'}', () {
-        expect(parseAiResult(AiProvider.claudeCode, raw), isNull);
+        expect(parseAiResult(AiProviderKind.claudeCode, raw), isNull);
       });
     }
 
     test('unparseable stdout is nothing usable, not an empty string', () {
-      expect(parseAiResult(AiProvider.claudeCode, 'not json at all'), isNull);
-      expect(parseAiResult(AiProvider.claudeCode, '{"no_result":1}'), isNull);
+      expect(
+        parseAiResult(AiProviderKind.claudeCode, 'not json at all'),
+        isNull,
+      );
+      expect(
+        parseAiResult(AiProviderKind.claudeCode, '{"no_result":1}'),
+        isNull,
+      );
     });
   });
 
   group('Codex argument list', () {
     AiCommand codex({String model = 'gpt-5', String effort = 'high'}) =>
         buildAiCommand(
-          provider: AiProvider.codex,
+          provider: AiProviderKind.codex,
           model: model,
           effort: effort,
           wslMode: false,
@@ -163,7 +169,7 @@ void main() {
       String model = 'anthropic/claude-sonnet-4',
       String effort = 'high',
     }) => buildAiCommand(
-      provider: AiProvider.opencode,
+      provider: AiProviderKind.opencode,
       model: model,
       effort: effort,
       wslMode: false,
@@ -207,13 +213,13 @@ void main() {
           '{"msg":{"type":"token_count","input":12}}\n'
           '{"msg":{"type":"agent_message","message":"ultimo"}}\n';
 
-      expect(parseAiResult(AiProvider.codex, stream), 'ultimo');
+      expect(parseAiResult(AiProviderKind.codex, stream), 'ultimo');
     });
 
     test('reads a top-level event as well as a nested one', () {
       expect(
         parseAiResult(
-          AiProvider.codex,
+          AiProviderKind.codex,
           '{"type":"agent_message","message":"piatto"}',
         ),
         'piatto',
@@ -226,33 +232,33 @@ void main() {
           '{"msg":{"type":"agent_message","message":"buona"}}\n'
           '{"broken\n';
 
-      expect(parseAiResult(AiProvider.codex, stream), 'buona');
+      expect(parseAiResult(AiProviderKind.codex, stream), 'buona');
     });
 
     test('no parseable event falls back to the trimmed raw stdout', () {
-      expect(parseAiResult(AiProvider.codex, '  rumore  \n'), 'rumore');
+      expect(parseAiResult(AiProviderKind.codex, '  rumore  \n'), 'rumore');
     });
 
     test('nothing at all is nothing usable', () {
-      expect(parseAiResult(AiProvider.codex, '   \n '), isNull);
+      expect(parseAiResult(AiProviderKind.codex, '   \n '), isNull);
     });
   });
 
   group('OpenCode stdout', () {
     test('reads the object text', () {
       expect(
-        parseAiResult(AiProvider.opencode, '{"text":"sintesi"}'),
+        parseAiResult(AiProviderKind.opencode, '{"text":"sintesi"}'),
         'sintesi',
       );
     });
 
     test('unparseable output falls back to the trimmed raw stdout', () {
-      expect(parseAiResult(AiProvider.opencode, ' sintesi \n'), 'sintesi');
+      expect(parseAiResult(AiProviderKind.opencode, ' sintesi \n'), 'sintesi');
     });
 
     test('empty output is nothing usable', () {
-      expect(parseAiResult(AiProvider.opencode, '{"text":"  "}'), isNull);
-      expect(parseAiResult(AiProvider.opencode, ''), isNull);
+      expect(parseAiResult(AiProviderKind.opencode, '{"text":"  "}'), isNull);
+      expect(parseAiResult(AiProviderKind.opencode, ''), isNull);
     });
   });
 
@@ -279,7 +285,7 @@ void main() {
   group('version command', () {
     test('runs the bare binary with --version outside WSL', () {
       final cmd = buildVersionCommand(
-        provider: AiProvider.codex,
+        provider: AiProviderKind.codex,
         wslMode: false,
       );
 
@@ -289,7 +295,7 @@ void main() {
 
     test('goes through a login shell under WSL', () {
       final cmd = buildVersionCommand(
-        provider: AiProvider.opencode,
+        provider: AiProviderKind.opencode,
         wslMode: true,
       );
 
@@ -301,18 +307,27 @@ void main() {
   group('missing CLI message', () {
     test('names the binary', () {
       expect(
-        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: false),
+        cliMissingMessage(
+          provider: AiProviderKind.claudeCode,
+          suggestWsl: false,
+        ),
         contains('claude'),
       );
     });
 
     test('points at WSL Mode when it could be the cause', () {
       expect(
-        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: true),
+        cliMissingMessage(
+          provider: AiProviderKind.claudeCode,
+          suggestWsl: true,
+        ),
         contains('WSL'),
       );
       expect(
-        cliMissingMessage(provider: AiProvider.claudeCode, suggestWsl: false),
+        cliMissingMessage(
+          provider: AiProviderKind.claudeCode,
+          suggestWsl: false,
+        ),
         isNot(contains('WSL')),
       );
     });

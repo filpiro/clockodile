@@ -1,0 +1,93 @@
+{
+  "info": {
+    "_postman_id": "8d6b9e4e-2a7d-4b14-9f71-llama-server-local",
+    "name": "llama.cpp",
+    "description": "Collection per testare llama-server locale via API OpenAI-compatible. Importabile in Postman e Bruno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1"
+    },
+    {
+      "key": "port",
+      "value": "18080"
+    },
+    {
+      "key": "model",
+      "value": "Qwen3-1.7B-Q4_K_M"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}:{{port}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "port": "{{port}}",
+          "path": [
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Models",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}:{{port}}/v1/models",
+          "host": [
+            "{{base_url}}"
+          ],
+          "port": "{{port}}",
+          "path": [
+            "v1",
+            "models"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Chat Completion",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Rispondi solo con: OK\"\n    }\n  ],\n  \"temperature\": 0,\n  \"max_tokens\": 20\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}:{{port}}/v1/chat/completions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "port": "{{port}}",
+          "path": [
+            "v1",
+            "chat",
+            "completions"
+          ]
+        }
+      }
+    }
+  ]
+}

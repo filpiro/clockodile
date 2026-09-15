@@ -1,0 +1,6 @@
+Buongiorno,
+
+il form di contatto sul sito non invia più le email da ieri sera. Abbiamo perso almeno tre richieste di preventivo. Potete verificare il server SMTP e rimettere a posto entro oggi? Se serve le credenziali ve le mando in privato.
+
+Saluti,
+Marco Bianchi

@@ -40,7 +40,7 @@ class Settings extends Table {
 
   BoolColumn get aiEnabled => boolean().withDefault(const Constant(false))();
 
-  /// [AiProvider.name]
+  /// [AiProviderKind.name]
   TextColumn get aiProvider =>
       text().withDefault(const Constant('claudeCode'))();
 
@@ -62,8 +62,8 @@ class Settings extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// The local coding-agent CLI asked for Note summaries.
-enum AiProvider { claudeCode, codex, opencode }
+/// Which coding-agent CLI a hidden CLI AI Provider runs (see CliAiProvider).
+enum AiProviderKind { claudeCode, codex, opencode }
 
 /// Free-text model/effort values end up interpolated into a shell command, so
 /// anything a shell would read as syntax is refused. Empty means "no flag".

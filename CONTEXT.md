@@ -35,15 +35,23 @@ A portal-ready view of one day's closed Sessions, with all boundaries rounded to
 _Avoid_: Normalization page, export page, summary
 
 **Note Summary**:
-A short Italian line an AI writes to replace the text a user pasted into an Entry's Note — typically a client email condensed to its core request. Produced on demand, only when the user asks for it, by a coding-agent CLI already installed on the machine. It is not a second field: it overwrites the Note in place, the pasted source is not kept, and there is no undo. The user still has the original email wherever they copied it from.
-_Avoid_: AI note, generated note, abstract, condensation
+A short Italian line an AI writes to replace the text a user pasted into an Entry's Note — typically a client email condensed to its core request. Produced on demand, only when the user presses Riassumi, by the AI Provider — the Local Model by default. It is not a second field: it overwrites the Note in place, the pasted source is not kept, and there is no undo. The user still has the original email wherever they copied it from. Only a non-empty line counts; anything else is a failure that leaves the Note untouched. The one kind of summary in the app — the Report is never called a summary.
+_Avoid_: Summary (bare), AI note, generated note, abstract, condensation
 
 **AI Provider**:
-The local CLI a Note Summary is generated with — Claude Code, Codex, or OpenCode — configured once in Settings and used for every generation. Each provider carries its own model and effort settings, remembered separately so switching providers and back loses nothing. Clockodile never holds an API key or talks to a model directly; it spawns the CLI and reads its stdout, so authentication is whatever the user already set up for that CLI. A provider whose CLI is not on the machine cannot be saved.
-_Avoid_: Backend, engine, model, integration
+Whatever produces a Note Summary, behind one interface the UI talks to without knowing which it is. Given the Note's text it returns the Note Summary or a normalized failure with a short Italian message. The Local Model is the only one the user can reach; the coding-agent CLI providers (see AI Provider Kind) still exist behind the same interface but are hidden, and nothing ever falls back to them — that would silently send a client's text to a remote model.
+_Avoid_: Backend, engine, model, integration, service
+
+**AI Provider Kind**:
+Which coding-agent CLI a hidden CLI AI Provider runs — Claude Code, Codex, or OpenCode. A stored setting left over from before the Local Model; each kind keeps its own model and effort values. Never names the Local Model, which is not a kind of CLI.
+_Avoid_: Provider (for the enum), provider type, backend
+
+**Local Model**:
+The AI Provider that runs on the user's own machine: a small language model served by `llama-server` on localhost, started when the app opens and stopped when it closes. Its two files — the runtime and the model weights, about 1,3 GB together — are downloaded once, only after the user confirms, pinned to exact versions and checksum-verified. Turning AI off stops it but keeps the files; "Elimina modello" removes them. Note text never leaves the machine. Windows only.
+_Avoid_: Llama (bare), offline AI, embedded model, bundled model, SLM
 
 **WSL Mode**:
-A Windows-only setting routing every provider command through a WSL login shell instead of running it on Windows. Needed because the CLIs are commonly installed only inside WSL, under paths (`~/.local/bin`, `~/.nvm`, `~/.opencode/bin`) that exist on no Windows PATH and on no non-login WSL PATH either. Off means the CLI is executed directly; hidden entirely on macOS.
+A Windows-only setting routing every CLI provider command through a WSL login shell instead of running it on Windows. Needed because the CLIs are commonly installed only inside WSL, under paths (`~/.local/bin`, `~/.nvm`, `~/.opencode/bin`) that exist on no Windows PATH and on no non-login WSL PATH either. Off means the CLI is executed directly. Concerns only the hidden CLI providers — never the Local Model — and is no longer shown in Settings.
 _Avoid_: Linux mode, shell mode, compatibility mode
 
 ## Example dialogue
@@ -59,8 +67,10 @@ _Avoid_: Linux mode, shell mode, compatibility mode
 > **Dev:** I paste an email into the Note and generate a summary. Can I get the email back?
 > **Expert:** Not from Clockodile. The Note Summary overwrites the Note, nothing is kept, and there is no undo. The email is still in your mail client — that is the copy that matters.
 > **Dev:** Why is the generate button greyed out?
-> **Expert:** Either AI is off in Settings, in which case the button is not there at all, or the Note is under ten words. There is nothing to summarise in a line already short enough to be a note.
-> **Dev:** The CLI fails halfway through. What happens to my text?
-> **Expert:** Nothing. The Note is only ever written on success, and a blank result counts as a failure. The field unlocks, and the error line from the CLI is shown.
-> **Dev:** I saved Settings and it refused, saying the CLI was not found.
-> **Expert:** Clockodile ran `--version` for the chosen provider and got nothing back. On Windows this almost always means the CLI lives in WSL and WSL Mode is off. Nothing about your AI settings was saved.
+> **Expert:** Either AI is off in Settings, in which case the button is not there at all; or the Local Model is still starting — the strip at the bottom says so; or the Note is under ten words. There is nothing to summarise in a line already short enough to be a note.
+> **Dev:** The model fails halfway through. What happens to my text?
+> **Expert:** Nothing. The Note is only ever written on success, and an empty or malformed answer counts as a failure. The field unlocks and a short Italian message says what went wrong.
+> **Dev:** I updated Clockodile and the strip says the AI files need updating.
+> **Expert:** The new release pins a different runtime or model. Nothing downloads until you press Aggiorna and confirm the size — and only the file that changed is fetched.
+> **Dev:** Can I use Claude Code instead?
+> **Expert:** Not from Settings any more. The CLI providers still exist behind the AI Provider interface, but they are hidden, and a failing Local Model never falls back to them.

@@ -1,0 +1,13 @@
+Ciao Filippo,
+
+grazie per l'ultima release, il cliente e' contento. Ci sono pero' alcune cose da sistemare prima di mercoledi':
+
+- nella pagina prodotto aggiungere la frase "Spedizione gratuita sopra i 50 euro" sotto il titolo
+- per i prodotti B2B nascondere il prezzo quando l'utente non e' loggato
+- nella griglia della categoria i prodotti sono troppo attaccati, serve un po' di spazio in piu'
+- su mobile alcuni nomi prodotto lunghi vengono tagliati male, puoi controllare?
+
+Fammi sapere se hai dubbi, altrimenti ci sentiamo giovedi' per il rilascio.
+
+Grazie mille,
+Giulia

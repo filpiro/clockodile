@@ -1,33 +1,55 @@
+import 'dart:async';
+
 import 'package:clockodile/data/db/database.dart';
+import 'package:clockodile/features/ai/cubit/ai_cubit.dart';
 import 'package:clockodile/features/entries/cubit/entries_cubit.dart';
 import 'package:clockodile/features/entries/entry_edit_page.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'ai_fakes.dart';
+
 /// The Nota's AI button, up to the point of pressing it — no test here spawns
-/// a process. What pressing it *builds* is covered in ai_command_test.dart.
+/// a process or opens a socket; the Local Model is faked.
 void main() {
   late AppDatabase db;
+  late AiCubit ai;
+  late FakeRuntime runtime;
 
-  setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
-  tearDown(() => db.close());
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    runtime = FakeRuntime();
+    ai = fakeAiCubit(db, runtime: runtime);
+  });
+  tearDown(() async {
+    await ai.close();
+    await db.close();
+  });
 
-  /// Opens the create page (edit mode differs only in its sessions list).
-  Future<void> openPage(WidgetTester tester, {bool aiEnabled = false}) async {
-    await db.saveSettings(SettingsCompanion(aiEnabled: Value(aiEnabled)));
+  /// Turns AI on and waits until the Local Model reaches [status].
+  Future<void> aiTo(WidgetTester tester, LocalAiStatus status) =>
+      tester.runAsync(() async {
+        unawaited(ai.enable());
+        await ai.stream.firstWhere((s) => s.status == status);
+      });
+
+  /// Opens the create page, or the edit page for [entry].
+  Future<void> openPage(WidgetTester tester, {Entry? entry}) async {
     await tester.pumpWidget(
       RepositoryProvider.value(
         value: db,
-        child: BlocProvider(
-          create: (_) => EntriesCubit(db),
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => EntriesCubit(db)),
+            BlocProvider.value(value: ai),
+          ],
           child: MaterialApp(
             home: Builder(
               builder: (context) => Scaffold(
                 body: TextButton(
-                  onPressed: () => openEntryPage(context),
+                  onPressed: () => openEntryPage(context, entry: entry),
                   child: const Text('apri'),
                 ),
               ),
@@ -66,10 +88,24 @@ void main() {
     expect(aiButton(), findsNothing);
   });
 
-  testWidgets('with AI on the button toggles live around ten words', (
+  testWidgets('while the model starts the button shows but stays disabled', (
     tester,
   ) async {
-    await openPage(tester, aiEnabled: true);
+    runtime.outcomes.add(Completer<int>().future);
+    await aiTo(tester, LocalAiStatus.starting);
+    await openPage(tester);
+    await tester.enterText(noteField(), longNote);
+    await tester.pumpAndSettle();
+
+    expect(aiButton(), findsOneWidget);
+    expect(tester.widget<IconButton>(aiButton()).onPressed, isNull);
+  });
+
+  testWidgets('when ready the button toggles live around ten words', (
+    tester,
+  ) async {
+    await aiTo(tester, LocalAiStatus.ready);
+    await openPage(tester);
     expect(aiButton(), findsOneWidget); // visible, just disabled
     expect(tester.widget<IconButton>(aiButton()).onPressed, isNull);
 
@@ -87,29 +123,10 @@ void main() {
   });
 
   testWidgets('the button is present in edit mode too', (tester) async {
-    await db.saveSettings(const SettingsCompanion(aiEnabled: Value(true)));
+    await aiTo(tester, LocalAiStatus.ready);
     await db.createEntry('Acme', longNote, startTime: DateTime.now());
     final entry = await db.select(db.entries).getSingle();
-    await tester.pumpWidget(
-      RepositoryProvider.value(
-        value: db,
-        child: BlocProvider(
-          create: (_) => EntriesCubit(db),
-          child: MaterialApp(
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: TextButton(
-                  onPressed: () => openEntryPage(context, entry: entry),
-                  child: const Text('apri'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('apri'));
-    await tester.pumpAndSettle();
+    await openPage(tester, entry: entry);
 
     expect(aiButton(), findsOneWidget);
     expect(tester.widget<IconButton>(aiButton()).onPressed, isNotNull);
@@ -123,7 +140,8 @@ void main() {
   testWidgets('the text never runs under the button: padding reserves it', (
     tester,
   ) async {
-    await openPage(tester, aiEnabled: true);
+    await aiTo(tester, LocalAiStatus.ready);
+    await openPage(tester);
 
     final padding =
         tester.widget<TextField>(noteField()).decoration!.contentPadding

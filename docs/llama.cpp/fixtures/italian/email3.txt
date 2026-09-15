@@ -1,0 +1,12 @@
+Ciao,
+
+come d'accordo in call, per la dashboard admin servono queste modifiche:
+1. export CSV degli ordini filtrati per data
+2. aggiungere la colonna "stato pagamento" nella tabella ordini
+3. il login con Google non funziona su Safari, dà errore 400
+4. rendere il menu laterale richiudibile
+
+Per il punto 3 ti allego lo screenshot. Il resto può aspettare la settimana prossima.
+
+Grazie,
+Luca

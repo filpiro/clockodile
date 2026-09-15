@@ -1,0 +1,31 @@
+{
+  "model": "Qwen3-1.7B-Q4_K_M",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Write a very short Italian time-tracking note in telegram style.\n\nMaximum 15 words.\nUse terse keywords and short noun/action phrases.\nNo need for a complete sentence.\nKeep only the essential work requested.\nOmit greetings, filler, examples, quotes and non-essential details.\n\nText:\n\"\"\"\nCiao Filippo,\n\ngrazie per l'ultima release, il cliente e' contento. Ci sono pero' alcune cose da sistemare prima di mercoledi':\n\n- nella pagina prodotto aggiungere la frase \"Spedizione gratuita sopra i 50 euro\" sotto il titolo\n- per i prodotti B2B nascondere il prezzo quando l'utente non e' loggato\n- nella griglia della categoria i prodotti sono troppo attaccati, serve un po' di spazio in piu'\n- su mobile alcuni nomi prodotto lunghi vengono tagliati male, puoi controllare?\n\nFammi sapere se hai dubbi, altrimenti ci sentiamo giovedi' per il rilascio.\n\nGrazie mille,\nGiulia\n\"\"\""
+    }
+  ],
+  "temperature": 0,
+  "max_tokens": 128,
+  "cache_prompt": false,
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "summary",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

@@ -1131,7 +1131,7 @@ class Setting extends DataClass implements Insertable<Setting> {
   final String themeMode;
   final bool aiEnabled;
 
-  /// [AiProvider.name]
+  /// [AiProviderKind.name]
   final String aiProvider;
   final String aiClaudeModel;
   final String aiClaudeEffort;

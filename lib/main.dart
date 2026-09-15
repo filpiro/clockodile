@@ -8,6 +8,12 @@ import 'package:catui/catui.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/database.dart';
+import 'features/ai/ai_status_strip.dart';
+import 'features/ai/cubit/ai_cubit.dart';
+import 'features/ai/llama_config.dart';
+import 'features/ai/llama_installer.dart';
+import 'features/ai/llama_provider.dart';
+import 'features/ai/llama_runtime.dart';
 import 'features/clients/clients_view.dart';
 import 'features/clients/cubit/clients_cubit.dart';
 import 'features/entries/cubit/entries_cubit.dart';
@@ -21,6 +27,9 @@ import 'features/settings/settings_view.dart';
 import 'shared/theme.dart';
 
 const _instancePort = 38573;
+
+/// The AI status strip sits above the Navigator; it opens dialogs through this.
+final _navigatorKey = GlobalKey<NavigatorState>();
 
 /// Single-instance lock: the bound socket doubles as IPC — any incoming
 /// connection means a second instance launched, so come to front.
@@ -71,6 +80,7 @@ Future<void> main() async {
 
   final db = AppDatabase();
   final purge = db.purgeExpiredEntries();
+  final aiPaths = LlamaPaths.production();
   runApp(
     RepositoryProvider.value(
       value: db,
@@ -80,6 +90,18 @@ Future<void> main() async {
           BlocProvider(create: (_) => ClientsCubit(db)),
           BlocProvider(create: (_) => ReportCubit(db)),
           BlocProvider(create: (_) => ThemeCubit(db)),
+          // Not lazy: the Local Model starts when the app opens. Created
+          // after the instance lock, so a second instance never touches it.
+          BlocProvider(
+            lazy: false,
+            create: (_) => AiCubit(
+              db: db,
+              paths: aiPaths,
+              installer: LlamaInstaller(aiPaths),
+              runtime: LlamaRuntime(aiPaths),
+              providerFor: LlamaCppProvider.new,
+            )..init(),
+          ),
         ],
         child: ClockodileApp(purge: purge),
       ),
@@ -97,6 +119,7 @@ class ClockodileApp extends StatelessWidget {
     final themeMode = context.watch<ThemeCubit>().state;
     return MaterialApp(
       title: 'Clockodile',
+      navigatorKey: _navigatorKey,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
@@ -112,7 +135,8 @@ class ClockodileApp extends StatelessWidget {
         ...WidgetsApp.defaultActions,
         VoidCallbackIntent: VoidCallbackAction(),
       },
-      // Caption sits above the Navigator so it survives pushed routes.
+      // Caption and AI strip sit above the Navigator so they survive pushed
+      // routes.
       builder: (context, child) => Column(
         children: [
           SizedBox(
@@ -124,6 +148,7 @@ class ClockodileApp extends StatelessWidget {
             ),
           ),
           Expanded(child: child!),
+          AiStatusStrip(navigatorKey: _navigatorKey),
         ],
       ),
       home: FutureBuilder<void>(
@@ -143,11 +168,32 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WindowListener {
   static const _reportIndex = 2;
   static const _helpIndex = 3;
   static const _settingsIndex = 4;
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Close waits for the Local Model to be killed; Ctrl+W takes this path
+    // too. A crash skips it, and the PID file covers that on the next start.
+    windowManager.addListener(this);
+    windowManager.setPreventClose(true);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    await context.read<AiCubit>().shutdown();
+    await windowManager.destroy();
+  }
 
   /// Shortcuts act on the Attività screen: switch to it first, then run.
   /// CallbackShortcuts is focus-scoped, so an open modal dialog (own focus

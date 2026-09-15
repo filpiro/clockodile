@@ -1,0 +1,6 @@
+Hi,
+
+ho fatto un test sull'app: la push notification arriva due volte su Android, su iOS invece è ok. Inoltre il deploy di staging è fermo, la pipeline fallisce allo step di build con "out of memory". Riesci a guardarci domani mattina? Poi aggiorniamo il changelog.
+
+Thanks,
+Davide

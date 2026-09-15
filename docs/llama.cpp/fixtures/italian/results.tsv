@@ -1,0 +1,24 @@
+bartowski	email1	en	stop	{"summary": "add free shipping below 50€, hide price for B2B, add space in category grid, fix product name truncation on mobile"}
+bartowski	email1	it	stop	{ "summary": "aggiungere frase spedizione gratuita, nascondere prezzo B2B, spazio in griglia, tagli nome prodotto" }
+bartowski	email2	en	stop	{"summary": "smtp issue, fix needed"}
+bartowski	email2	it	stop	{ "summary": "Form contatto non invia email, 3 richieste perse. Verificare SMTP entro oggi." }
+bartowski	email3	en	stop	{ "summary": "csv export, stato pagamento, google login, menu close" }
+bartowski	email3	it	stop	{ "summary": "Modifiche dashboard admin: export CSV, colonna stato pagamento, login Google non funziona, menu laterale richiudibile." }
+bartowski	email4	en	stop	{"summary": "aggiornamento foto staff, cambio numero telefono"}
+bartowski	email4	it	stop	{"summary": "aggiornamento foto staff, cambio numero telefono"}
+bartowski	email5	en	stop	{"summary": "test app, push twice on Android, build fail out of memory"}
+bartowski	email5	it	stop	{
+  "summary": "Test app: push notification duplicato su Android, pipeline build fallisce con out of memory. Aggiorniamo changelog domani."
+}
+ggml-org	email1	en	stop	{"summary": "aggiungere frase prodotto, nascondere prezzo B2B, spazio categoria, tagli nome mobile"}
+ggml-org	email1	it	stop	{ "summary": "aggiungi frase, nascondi prezzo, aumenta spazio, correggi tagli" }
+ggml-org	email2	en	stop	{"summary": "SMTP issue, fix needed"}
+ggml-org	email2	it	stop	{
+  "summary": "Verifica server SMTP. Ripristina email. Credenziali se necessario."
+}
+ggml-org	email3	en	stop	{"summary": "Admin dashboard: export CSV, add stato pagamento, fix Google login, close sidebar"}
+ggml-org	email3	it	stop	{ "summary": "Modifiche dashboard admin: CSV, stato pagamento, login Google, menu richiudibile." }
+ggml-org	email4	en	stop	{"summary": "aggiornamento foto, numero telefono"}
+ggml-org	email4	it	stop	{ "summary": "aggiornamento foto, numero telefono" }
+ggml-org	email5	en	stop	{ "summary": "test app: push twice Android, build fail out of memory" }
+ggml-org	email5	it	stop	{ "summary": "Test app: push duplicato Android, build errore out of memory. Aggiornamento changelog domani." }

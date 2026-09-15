@@ -48,7 +48,7 @@ void main() {
       expect(settings.retentionDays, 90);
       expect(settings.themeMode, 'dark');
       expect(settings.aiEnabled, isFalse);
-      expect(settings.aiProvider, AiProvider.claudeCode.name);
+      expect(settings.aiProvider, AiProviderKind.claudeCode.name);
       expect(settings.aiClaudeModel, 'sonnet');
       expect(settings.aiClaudeEffort, 'high');
       expect(settings.aiCodexModel, '');

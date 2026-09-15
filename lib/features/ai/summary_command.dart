@@ -24,22 +24,22 @@ bool hasEnoughWordsForSummary(String note) =>
 
 String buildSummaryPrompt(String text) =>
     '''
-Summarize the following email into the shortest possible italian line for a
+Summarize the following text into the shortest possible italian line for a
 time-tracking note field (hard cap: 15 words, fewer is better—don't pad to
 reach the limit). Capture the core request or feedback. No greetings, no
 filler, no quotes—just the essence as a plain statement.
 
-Email:
 """
 $text
-"""''';
+"""
+''';
 
 /// The binary and its arguments, before any WSL wrapping. No prompt argument:
 /// the prompt travels over stdin, which removes both the command-line length
-/// limit and the escaping problem for the user's pasted email.
-List<String> _argv(AiProvider provider, String model, String effort) =>
+/// limit and the escaping problem for the user's pasted text.
+List<String> _argv(AiProviderKind provider, String model, String effort) =>
     switch (provider) {
-      AiProvider.claudeCode => [
+      AiProviderKind.claudeCode => [
         'claude',
         '-p',
         '--output-format',
@@ -49,7 +49,7 @@ List<String> _argv(AiProvider provider, String model, String effort) =>
         '--effort',
         effort,
       ],
-      AiProvider.codex => [
+      AiProviderKind.codex => [
         'codex',
         'exec',
         '--json',
@@ -57,7 +57,7 @@ List<String> _argv(AiProvider provider, String model, String effort) =>
         // Codex takes reasoning effort as a config override, not a flag.
         if (effort.isNotEmpty) ...['-c', 'model_reasoning_effort=$effort'],
       ],
-      AiProvider.opencode => [
+      AiProviderKind.opencode => [
         'opencode',
         'run',
         '--format',
@@ -78,7 +78,7 @@ List<String> _flag(String name, String value) =>
 String shellQuote(String value) => "'${value.replaceAll("'", r"'\''")}'";
 
 AiCommand buildAiCommand({
-  required AiProvider provider,
+  required AiProviderKind provider,
   required String model,
   required String effort,
   required bool wslMode,
@@ -89,21 +89,21 @@ AiCommand buildAiCommand({
 /// the same WSL wrapping a real run would get, so a pass here means a real run
 /// can at least start.
 AiCommand buildVersionCommand({
-  required AiProvider provider,
+  required AiProviderKind provider,
   required bool wslMode,
 }) => _wrap([_binary(provider), '--version'], wslMode, null);
 
-String _binary(AiProvider provider) => switch (provider) {
-  AiProvider.claudeCode => 'claude',
-  AiProvider.codex => 'codex',
-  AiProvider.opencode => 'opencode',
+String _binary(AiProviderKind provider) => switch (provider) {
+  AiProviderKind.claudeCode => 'claude',
+  AiProviderKind.codex => 'codex',
+  AiProviderKind.opencode => 'opencode',
 };
 
 /// The message shown when [provider]'s CLI does not answer `--version`.
 /// [suggestWsl] because on Windows a CLI installed inside WSL is by far the
 /// most common reason for this to fail.
 String cliMissingMessage({
-  required AiProvider provider,
+  required AiProviderKind provider,
   required bool suggestWsl,
 }) {
   final binary = _binary(provider);
@@ -129,11 +129,11 @@ AiCommand _wrap(List<String> argv, bool wslMode, String? workingDirectory) {
 /// The summary the CLI produced, or null for "nothing usable" — no output,
 /// blank output, or output this provider's format does not explain. Null and
 /// the empty string are deliberately different: only null is a failure.
-String? parseAiResult(AiProvider provider, String stdout) {
+String? parseAiResult(AiProviderKind provider, String stdout) {
   final text = switch (provider) {
-    AiProvider.claudeCode => _claudeResult(stdout),
-    AiProvider.codex => _codexResult(stdout) ?? stdout,
-    AiProvider.opencode => _opencodeResult(stdout) ?? stdout,
+    AiProviderKind.claudeCode => _claudeResult(stdout),
+    AiProviderKind.codex => _codexResult(stdout) ?? stdout,
+    AiProviderKind.opencode => _opencodeResult(stdout) ?? stdout,
   };
   final trimmed = text?.trim() ?? '';
   return trimmed.isEmpty ? null : trimmed;

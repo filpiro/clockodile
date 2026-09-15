@@ -67,6 +67,11 @@ class HelpView extends StatelessWidget {
                 ],
               ),
             ),
+          const SizedBox(height: 16),
+          const Text(
+            'AI locale: llama.cpp (MIT) e modello Qwen3-1.7B (Apache-2.0), '
+            'scaricati da GitHub e Hugging Face.',
+          ),
         ],
       ),
     );
