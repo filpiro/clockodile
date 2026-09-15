@@ -10,6 +10,7 @@ import 'package:drift/drift.dart' show Value;
 import '../../data/db/database.dart';
 import '../ai/ai_install_dialogs.dart';
 import '../ai/cubit/ai_cubit.dart';
+import '../ai/llama_config.dart';
 import 'cubit/theme_cubit.dart';
 
 class SettingsView extends StatefulWidget {
@@ -95,7 +96,12 @@ class _SettingsViewState extends State<SettingsView> {
           onChanged: (on) =>
               on ? runAiInstall(context, ai, update: false) : ai.disable(),
           title: const Text('Riassunto delle note'),
-          subtitle: const Text('Usa un modello locale su questo computer.'),
+          subtitle: const Text(
+            'Usa un modello locale su questo computer. Dopo '
+            '${AiConfig.sleepIdleSeconds} secondi senza richieste il modello '
+            'va in pausa: il riassunto successivo richiede qualche secondo '
+            'in più.',
+          ),
         ),
         if (ai.state.filesOnDisk)
           DangerButton(

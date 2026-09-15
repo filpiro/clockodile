@@ -173,6 +173,7 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
   static const _helpIndex = 3;
   static const _settingsIndex = 4;
   int _index = 0;
+  bool _closing = false;
 
   @override
   void initState() {
@@ -191,8 +192,15 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
 
   @override
   Future<void> onWindowClose() async {
+    // close() below re-emits this event.
+    if (_closing) return;
+    _closing = true;
     await context.read<AiCubit>().shutdown();
-    await windowManager.destroy();
+    // Not destroy(): on Windows it only posts WM_QUIT, so the engine tears
+    // down after the message loop is gone and the window hangs "Not
+    // responding" for ~10s. A real close destroys the window inside the loop.
+    await windowManager.setPreventClose(false);
+    await windowManager.close();
   }
 
   /// Shortcuts act on the Attività screen: switch to it first, then run.
