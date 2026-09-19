@@ -88,22 +88,6 @@ class _EntryPageState extends State<_EntryPage> {
     super.dispose();
   }
 
-  Future<DateTime?> _pick(DateTime initial) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (date == null || !mounted) return null;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time == null) return null;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
-  }
-
   Future<void> _save() async {
     final cubit = context.read<EntriesCubit>();
     final messenger = ScaffoldMessenger.of(context);
@@ -174,84 +158,61 @@ class _EntryPageState extends State<_EntryPage> {
 
   Widget _sessionTile(_EditableSession s) {
     final isLast = _sessions!.length <= 1;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                title: Row(
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _stamp('Inizio', s.start, (v) => s.start = v),
+                    Expanded(
+                      child: CatDateTimeField(
+                        label: 'Inizio',
+                        value: s.start,
+                        onChanged: (v) => setState(() => s.start = v),
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    s.end == null && s.wasOpen
-                        ? _openEnd(s)
-                        : _stamp('Fine', s.end!, (v) => s.end = v),
+                    Expanded(
+                      // Open session: "in corso" until set, never cleared.
+                      child: CatDateTimeField(
+                        label: 'Fine',
+                        placeholder: 'in corso',
+                        value: s.end,
+                        onChanged: (v) => setState(() => s.end = v),
+                      ),
+                    ),
                   ],
                 ),
-                subtitle: s.invalid
-                    ? Text(
-                        "La fine deve essere dopo l'inizio",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      )
-                    : (s.end == null
-                          ? null
-                          : Text(formatHm(s.end!.difference(s.start)))),
-              ),
+                if (s.invalid)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      "La fine deve essere dopo l'inizio",
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  )
+                else if (s.end != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(formatHm(s.end!.difference(s.start))),
+                  ),
+              ],
             ),
-            DeleteIconButton(
-              tooltip: isLast
-                  ? 'Ultima sessione — non eliminabile'
-                  : 'Elimina sessione',
-              onPressed: isLast ? null : () => _deleteSession(s),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _stamp(String label, DateTime value, void Function(DateTime) set) {
-    return Expanded(
-      child: InkWell(
-        onTap: () async {
-          final v = await _pick(value);
-          if (v != null) setState(() => set(v));
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
-            Text('${dmy(value)} ${hhmm(value)}'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Open session's end: empty and settable — manual close with custom
-  /// timestamp. Never clearable once set (no reopening).
-  Widget _openEnd(_EditableSession s) {
-    return Expanded(
-      child: InkWell(
-        onTap: () async {
-          final v = await _pick(DateTime.now());
-          if (v != null) setState(() => s.end = v);
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Fine', style: Theme.of(context).textTheme.labelSmall),
-            const Text('non impostata — in corso'),
-          ],
-        ),
+          ),
+          DeleteIconButton(
+            tooltip: isLast
+                ? 'Ultima sessione — non eliminabile'
+                : 'Elimina sessione',
+            onPressed: isLast ? null : () => _deleteSession(s),
+          ),
+        ],
       ),
     );
   }
@@ -281,11 +242,6 @@ class _EntryPageState extends State<_EntryPage> {
               widget.isCreate ? 'Nuova attività' : 'Modifica attività',
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Annulla'),
-              ),
-              const SizedBox(width: 8),
               FilledButton(
                 onPressed: canSave ? _save : null,
                 child: const Text('Salva'),
@@ -370,15 +326,10 @@ class _EntryPageState extends State<_EntryPage> {
             const SizedBox(height: 16),
             if (widget.isCreate)
               // End hidden entirely on create: new entries are born active.
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Inizio'),
-                subtitle: Text('${dmy(_start)} ${hhmm(_start)}'),
-                trailing: const Icon(LucideIcons.calendarClock),
-                onTap: () async {
-                  final v = await _pick(_start);
-                  if (v != null) setState(() => _start = v);
-                },
+              CatDateTimeField(
+                label: 'Inizio',
+                value: _start,
+                onChanged: (v) => setState(() => _start = v),
               )
             else ...[
               const CatSectionHeader.inline(title: 'Sessioni'),
