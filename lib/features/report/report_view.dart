@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/report_cubit.dart';
 import 'normalize.dart';
@@ -35,17 +36,6 @@ void copyNote(BuildContext context, String note) {
 class ReportView extends StatelessWidget {
   const ReportView({super.key});
 
-  Future<void> _pickDay(BuildContext context, ReportState state) async {
-    final cubit = context.read<ReportCubit>();
-    final day = await showDatePicker(
-      context: context,
-      initialDate: state.pickedDay ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (day != null) cubit.setDay(day);
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ReportCubit, ReportState>(
@@ -64,65 +54,38 @@ class ReportView extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Wrap(
-                        spacing: 8,
+                        spacing: 24,
+                        runSpacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          for (final f in [
-                            ReportFilter.today,
-                            ReportFilter.yesterday,
-                          ])
-                            ChoiceChip(
-                              label: Text(
-                                f == ReportFilter.today ? 'Oggi' : 'Ieri',
-                              ),
-                              showCheckmark: false,
-                              selected: state.filter == f,
-                              onSelected: (_) =>
-                                  context.read<ReportCubit>().setFilter(f),
-                            ),
-                          ChoiceChip(
-                            avatar: const Icon(LucideIcons.calendar, size: 16),
-                            showCheckmark: false,
-                            label: Text(
-                              state.pickedDay == null
-                                  ? 'Data'
-                                  : dmyShort(state.pickedDay!),
-                            ),
-                            selected: state.filter == ReportFilter.day,
-                            onSelected: (_) => _pickDay(context, state),
+                          DateFilterBar(
+                            filter: state.filter,
+                            pickedDay: state.pickedDay,
+                            onFilter: context.read<ReportCubit>().setFilter,
+                            onPickDay: context.read<ReportCubit>().setDay,
                           ),
-                          const SizedBox(width: 8),
-                          // Radio pair: selecting one deselects the other,
-                          // neither can be deselected into an empty state.
-                          for (final m in ReportMode.values)
-                            ChoiceChip(
-                              tooltip: m == ReportMode.grouped
-                                  ? 'Raggruppa per cliente'
-                                  : 'Ordine cronologico',
-                              label: Icon(
-                                m == ReportMode.grouped
-                                    ? LucideIcons.listClock
-                                    : LucideIcons.timeline,
-                                size: 18,
-                                semanticLabel: m == ReportMode.grouped
-                                    ? 'Raggruppa per cliente'
-                                    : 'Ordine cronologico',
-                              ),
-                              showCheckmark: false,
-                              selected: state.mode == m,
-                              onSelected: (_) =>
-                                  context.read<ReportCubit>().setMode(m),
-                            ),
+                          CatSegmented<ReportMode>(
+                            segments: const {
+                              ReportMode.grouped: 'Raggruppa per cliente',
+                              ReportMode.chronological: 'Ordine cronologico',
+                            },
+                            icons: const {
+                              ReportMode.grouped: LucideIcons.listClock,
+                              ReportMode.chronological: LucideIcons.timeline,
+                            },
+                            selected: state.mode,
+                            onChanged: context.read<ReportCubit>().setMode,
+                          ),
                         ],
                       ),
                     ),
                     Tooltip(
                       message: 'Esporta CSV',
-                      child: FilledButton.tonal(
+                      child: IconButton.filledTonal(
                         onPressed: state.rows.isEmpty
                             ? null
                             : () => runReportExport(context),
-                        child: const Icon(LucideIcons.fileDown),
+                        icon: const Icon(LucideIcons.fileDown),
                       ),
                     ),
                   ],

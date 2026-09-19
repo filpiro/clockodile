@@ -17,6 +17,7 @@ import 'features/ai/llama_runtime.dart';
 import 'features/clients/clients_view.dart';
 import 'features/clients/cubit/clients_cubit.dart';
 import 'features/entries/cubit/entries_cubit.dart';
+import 'shared/widgets/date_filter_bar.dart';
 import 'features/entries/entries_view.dart';
 import 'features/entries/entry_edit_page.dart';
 import 'features/help/help_view.dart';

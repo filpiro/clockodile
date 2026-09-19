@@ -8,6 +8,7 @@ import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
 import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/entries_cubit.dart';
 import 'entry_edit_page.dart';
@@ -27,17 +28,6 @@ class _EntryDayGroup {
 
 class EntriesView extends StatelessWidget {
   const EntriesView({super.key});
-
-  Future<void> _pickDay(BuildContext context, EntriesState state) async {
-    final cubit = context.read<EntriesCubit>();
-    final day = await showDatePicker(
-      context: context,
-      initialDate: state.pickedDay ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (day != null) cubit.setDay(day);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,48 +56,15 @@ class EntriesView extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final f in [
-                            DateFilter.today,
-                            DateFilter.yesterday,
-                          ])
-                            ChoiceChip(
-                              label: Text(
-                                f == DateFilter.today ? 'Oggi' : 'Ieri',
-                              ),
-                              showCheckmark: false,
-                              selected: state.filter == f,
-                              onSelected: (_) =>
-                                  context.read<EntriesCubit>().setFilter(f),
-                            ),
-                          ChoiceChip(
-                            avatar: const Icon(LucideIcons.calendar, size: 16),
-                            showCheckmark: false,
-                            label: Text(
-                              state.pickedDay == null
-                                  ? 'Data'
-                                  : dmyShort(state.pickedDay!),
-                            ),
-                            selected: state.filter == DateFilter.day,
-                            onSelected: (_) => _pickDay(context, state),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Tutte'),
-                            showCheckmark: false,
-                            selected: state.filter == DateFilter.all,
-                            onSelected: (_) => context
-                                .read<EntriesCubit>()
-                                .setFilter(DateFilter.all),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: DateFilterBar(
+                    filter: state.filter,
+                    pickedDay: state.pickedDay,
+                    showAll: true,
+                    onFilter: context.read<EntriesCubit>().setFilter,
+                    onPickDay: context.read<EntriesCubit>().setDay,
+                  ),
                 ),
               ),
               if (state.active != null) _ActiveEntryTile(state.active!),

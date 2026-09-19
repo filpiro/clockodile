@@ -7,16 +7,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/db/database.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/date_filter_bar.dart';
 import '../normalize.dart';
-
-enum ReportFilter { today, yesterday, day }
 
 /// How the day is presented. Rows, total and CSV are identical in both — the
 /// mode picks a renderer, nothing else. Not persisted across restarts.
 enum ReportMode { grouped, chronological }
 
 class ReportState {
-  final ReportFilter filter;
+  final DateFilter filter;
 
   /// Day selected via the picker chip; only applied when [filter] == day.
   final DateTime? pickedDay;
@@ -28,7 +27,7 @@ class ReportState {
   ReportState(this.filter, this.pickedDay, this.mode, this.rows);
 
   ReportState copyWith({
-    ReportFilter? filter,
+    DateFilter? filter,
     DateTime? pickedDay,
     ReportMode? mode,
     List<ReportRow>? rows,
@@ -43,9 +42,10 @@ class ReportState {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return switch (filter) {
-      ReportFilter.today => today,
-      ReportFilter.yesterday => today.subtract(const Duration(days: 1)),
-      ReportFilter.day => pickedDay!,
+      DateFilter.today => today,
+      DateFilter.yesterday => today.subtract(const Duration(days: 1)),
+      DateFilter.day => pickedDay!,
+      DateFilter.all => today, // unreachable: Report's bar has no Tutte
     };
   }
 }
@@ -56,12 +56,12 @@ class ReportCubit extends Cubit<ReportState> {
 
   ReportCubit(this.db)
     : super(
-        ReportState(ReportFilter.today, null, ReportMode.grouped, const []),
+        ReportState(DateFilter.today, null, ReportMode.grouped, const []),
       ) {
     _watch();
   }
 
-  void setFilter(ReportFilter filter) {
+  void setFilter(DateFilter filter) {
     emit(state.copyWith(filter: filter));
     _watch();
   }
@@ -69,7 +69,7 @@ class ReportCubit extends Cubit<ReportState> {
   void setDay(DateTime day) {
     emit(
       state.copyWith(
-        filter: ReportFilter.day,
+        filter: DateFilter.day,
         pickedDay: DateTime(day.year, day.month, day.day),
       ),
     );

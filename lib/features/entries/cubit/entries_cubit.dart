@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/db/database.dart';
+import '../../../shared/widgets/date_filter_bar.dart';
 
-enum DateFilter { today, yesterday, day, all }
 
 class EntriesState {
   final DateFilter filter;
