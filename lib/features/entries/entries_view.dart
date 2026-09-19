@@ -45,28 +45,25 @@ class EntriesView extends StatelessWidget {
               .sessions
               .add(r.session);
         }
-        return Scaffold(
-          floatingActionButton: FloatingActionButton(
+        return CatPage(
+          fab: FloatingActionButton(
             heroTag: null,
             tooltip: 'Nuova attività',
             onPressed: () => openEntryPage(context),
             child: const Icon(LucideIcons.plus),
           ),
+          toolbar: Align(
+            alignment: Alignment.centerLeft,
+            child: DateFilterBar(
+              filter: state.filter,
+              pickedDay: state.pickedDay,
+              showAll: true,
+              onFilter: context.read<EntriesCubit>().setFilter,
+              onPickDay: context.read<EntriesCubit>().setDay,
+            ),
+          ),
           body: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: DateFilterBar(
-                    filter: state.filter,
-                    pickedDay: state.pickedDay,
-                    showAll: true,
-                    onFilter: context.read<EntriesCubit>().setFilter,
-                    onPickDay: context.read<EntriesCubit>().setDay,
-                  ),
-                ),
-              ),
               if (state.active != null) _ActiveEntryTile(state.active!),
               Expanded(
                 child: state.rows.isEmpty && state.active == null

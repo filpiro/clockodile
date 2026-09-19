@@ -45,88 +45,70 @@ class ReportView extends StatelessWidget {
           (sum, r) => sum + r.normDuration,
         );
         final perClient = clientTotals(state.rows);
-        return Scaffold(
-          body: Column(
+        return CatPage(
+          toolbar: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
+              Expanded(
+                child: Wrap(
+                  spacing: 24,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 24,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          DateFilterBar(
-                            filter: state.filter,
-                            pickedDay: state.pickedDay,
-                            onFilter: context.read<ReportCubit>().setFilter,
-                            onPickDay: context.read<ReportCubit>().setDay,
-                          ),
-                          CatSegmented<ReportMode>(
-                            segments: const {
-                              ReportMode.grouped: 'Raggruppa per cliente',
-                              ReportMode.chronological: 'Ordine cronologico',
-                            },
-                            icons: const {
-                              ReportMode.grouped: LucideIcons.listClock,
-                              ReportMode.chronological: LucideIcons.timeline,
-                            },
-                            selected: state.mode,
-                            onChanged: context.read<ReportCubit>().setMode,
-                          ),
-                        ],
-                      ),
+                    DateFilterBar(
+                      filter: state.filter,
+                      pickedDay: state.pickedDay,
+                      onFilter: context.read<ReportCubit>().setFilter,
+                      onPickDay: context.read<ReportCubit>().setDay,
                     ),
-                    Tooltip(
-                      message: 'Esporta CSV',
-                      child: IconButton.filledTonal(
-                        onPressed: state.rows.isEmpty
-                            ? null
-                            : () => runReportExport(context),
-                        icon: const Icon(LucideIcons.fileDown),
-                      ),
+                    CatSegmented<ReportMode>(
+                      segments: const {
+                        ReportMode.grouped: 'Raggruppa per cliente',
+                        ReportMode.chronological: 'Ordine cronologico',
+                      },
+                      icons: const {
+                        ReportMode.grouped: LucideIcons.listClock,
+                        ReportMode.chronological: LucideIcons.timeline,
+                      },
+                      selected: state.mode,
+                      onChanged: context.read<ReportCubit>().setMode,
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: switch (state) {
-                  ReportState(rows: []) => const EmptyState(
-                    'Nessuna sessione nel giorno scelto.',
-                  ),
-                  ReportState(mode: ReportMode.chronological) => ReportBoard(
-                    state.rows,
-                  ),
-                  _ => ListView(
-                    children: [
-                      for (final (i, r) in state.rows.indexed) ...[
-                        if (i == 0 ||
-                            state.rows[i - 1].client.id != r.client.id)
-                          _ClientHeader(
-                            r,
-                            perClient[r.client.id] ?? Duration.zero,
-                          ),
-                        _ReportTile(r),
-                      ],
-                    ],
-                  ),
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    Text(
-                      'Totale normalizzato: ${formatHm(total)}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ],
+              Tooltip(
+                message: 'Esporta CSV',
+                child: IconButton.filledTonal(
+                  onPressed: state.rows.isEmpty
+                      ? null
+                      : () => runReportExport(context),
+                  icon: const Icon(LucideIcons.fileDown),
                 ),
               ),
             ],
+          ),
+          body: switch (state) {
+            ReportState(rows: []) => const EmptyState(
+              'Nessuna sessione nel giorno scelto.',
+            ),
+            ReportState(mode: ReportMode.chronological) => ReportBoard(
+              state.rows,
+            ),
+            _ => ListView(
+              children: [
+                for (final (i, r) in state.rows.indexed) ...[
+                  if (i == 0 || state.rows[i - 1].client.id != r.client.id)
+                    _ClientHeader(r, perClient[r.client.id] ?? Duration.zero),
+                  _ReportTile(r),
+                ],
+              ],
+            ),
+          },
+          footer: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'Totale normalizzato: ${formatHm(total)}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
         );
       },

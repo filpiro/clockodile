@@ -14,8 +14,8 @@ class ClientsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
+    return CatPage(
+      fab: FloatingActionButton(
         heroTag: null,
         tooltip: 'Nuovo cliente',
         onPressed: () => _create(context),
@@ -103,10 +103,7 @@ class ClientsView extends StatelessWidget {
           title: const Text('Colore cliente'),
           content: Row(
             children: [
-              ClientDot.color(
-                hslToColor(hue),
-                size: ClientDotSize.large,
-              ),
+              ClientDot.color(hslToColor(hue), size: ClientDotSize.large),
               Expanded(
                 child: Slider(
                   min: 0,

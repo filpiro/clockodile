@@ -92,7 +92,11 @@ class _SettingsViewState extends State<SettingsView> {
           ),
         ),
         if (ai.state.filesOnDisk)
-          DangerButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+              side: BorderSide(color: Theme.of(context).colorScheme.error),
+            ),
             onPressed: () => confirmAiDelete(context, ai),
             child: Text('Elimina modello ($installedSize)'),
           ),
@@ -102,71 +106,58 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Form(
+    return CatPage(
+      maxWidth: AppTokens.formMaxWidth,
+      scroll: true,
+      body: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Impostazioni', style: Theme.of(context).textTheme.titleLarge),
-            // The header brings its own gap above.
             const CatSectionHeader.inline(title: 'Tema'),
-            // Applied and persisted instantly, like the AI switch; only
-            // retention waits for the button.
+            // Applied and persisted instantly, like the AI switch.
             BlocBuilder<ThemeCubit, ThemeMode>(
-              builder: (context, mode) => SegmentedButton<ThemeMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: ThemeMode.light,
-                    label: Text('Chiaro'),
-                    icon: Icon(LucideIcons.sun),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.dark,
-                    label: Text('Scuro'),
-                    icon: Icon(LucideIcons.moon),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.system,
-                    label: Text('Sistema'),
-                    icon: Icon(LucideIcons.monitor),
-                  ),
-                ],
-                selected: {mode},
-                onSelectionChanged: (s) =>
-                    context.read<ThemeCubit>().setMode(s.single),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 320,
-              child: TextFormField(
-                controller: _controller,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Giorni di conservazione delle attività',
-                  helperText:
-                      'Le attività più vecchie vengono eliminate '
-                      "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
-                ),
-                validator: (value) {
-                  final days = int.tryParse(value ?? '');
-                  if (days == null || days < AppDatabase.minRetentionDays) {
-                    return 'Inserire almeno ${AppDatabase.minRetentionDays} giorni';
-                  }
-                  return null;
+              builder: (context, mode) => CatSegmented<ThemeMode>(
+                segments: const {
+                  ThemeMode.light: 'Chiaro',
+                  ThemeMode.dark: 'Scuro',
+                  ThemeMode.system: 'Sistema',
                 },
+                icons: const {
+                  ThemeMode.light: LucideIcons.sun,
+                  ThemeMode.dark: LucideIcons.moon,
+                  ThemeMode.system: LucideIcons.monitor,
+                },
+                selected: mode,
+                onChanged: context.read<ThemeCubit>().setMode,
               ),
             ),
-            // The Local Model is Windows x64 only. The section header brings
-            // its own gap above.
-            if (Platform.isWindows) ...[
-              _aiSection(context),
-              const SizedBox(height: 16),
-            ],
+            const CatSectionHeader.inline(title: 'Conservazione'),
+            // Retention is the only setting that waits for a button, so the
+            // button sits right under it.
+            TextFormField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onFieldSubmitted: (_) => _save(),
+              decoration: const InputDecoration(
+                labelText: 'Giorni di conservazione delle attività',
+                helperText:
+                    'Le attività più vecchie vengono eliminate '
+                    "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
+              ),
+              validator: (value) {
+                final days = int.tryParse(value ?? '');
+                if (days == null || days < AppDatabase.minRetentionDays) {
+                  return 'Inserire almeno ${AppDatabase.minRetentionDays} giorni';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppTokens.gutter),
             FilledButton(onPressed: _save, child: const Text('Salva')),
+            // The Local Model is Windows x64 only.
+            if (Platform.isWindows) _aiSection(context),
           ],
         ),
       ),

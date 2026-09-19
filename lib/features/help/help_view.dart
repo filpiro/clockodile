@@ -21,16 +21,12 @@ class HelpView extends StatelessWidget {
             'salva nella pagina di modifica attività',
       ),
     ];
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
+    return CatPage(
+      scroll: true,
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Scorciatoie da tastiera',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
+          const CatSectionHeader.inline(title: 'Scorciatoie da tastiera'),
           const Text(
             'Funzionano ovunque nella finestra: se necessario '
             'passano prima alla schermata Attività.',
