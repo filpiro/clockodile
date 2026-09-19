@@ -88,8 +88,6 @@ class _BoardTile extends StatefulWidget {
 }
 
 class _BoardTileState extends State<_BoardTile> {
-  bool _hover = false;
-
   @override
   Widget build(BuildContext context) {
     final r = widget.r;
@@ -108,85 +106,77 @@ class _BoardTileState extends State<_BoardTile> {
 
     return Tooltip(
       message: tooltip,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: GestureDetector(
-          // Same deal as the list rows: tap copies the note, no note no tap.
-          onTap: note.isEmpty ? null : () => copyNote(context, note),
-          // Same fade as HoverTile, so board hover reads like every other
-          // hoverable surface in the app.
-          child: TweenAnimationBuilder<double>(
-            duration: AppTokens.hoverFade,
-            tween: Tween(end: _hover ? 1.0 : 0.0),
-            // Height alone decides how much content survives: a short tile
-            // ends up showing only the client name. OverflowBox keeps that a
-            // clip rather than an overflow error. Built once — hover only
-            // repaints the fill.
-            child: degenerate
-                ? null
-                : ClipRect(
-                    child: OverflowBox(
-                      alignment: Alignment.topLeft,
-                      minHeight: 0,
-                      maxHeight: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+      child: GestureDetector(
+        // Same deal as the list rows: tap copies the note, no note no tap.
+        onTap: note.isEmpty ? null : () => copyNote(context, note),
+        child: HoverFade(
+          // Height alone decides how much content survives: a short tile
+          // ends up showing only the client name. OverflowBox keeps that a
+          // clip rather than an overflow error. Built once — hover only
+          // repaints the fill.
+          child: degenerate
+              ? null
+              : ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.topLeft,
+                    minHeight: 0,
+                    maxHeight: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.client.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge,
+                          ),
+                          Text(
+                            '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
+                            ' (${formatHm(r.normDuration)})',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          if (note.isNotEmpty)
                             Text(
-                              r.client.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelLarge,
-                            ),
-                            Text(
-                              '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
-                              ' (${formatHm(r.normDuration)})',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            if (note.isNotEmpty)
-                              Text(
-                                note,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
+                              note,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
                               ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
-            builder: (context, t, child) => Container(
-              decoration: BoxDecoration(
-                // A zero- or negative-length row has no room for borders: it
-                // is the hairline. Never hidden.
-                color: degenerate
-                    ? cs.error
-                    : Color.lerp(
-                        cs.surfaceContainer,
-                        cs.surfaceContainerHighest,
-                        t,
+                ),
+          builder: (context, t, _, child) => Container(
+            decoration: BoxDecoration(
+              // A zero- or negative-length row has no room for borders: it
+              // is the hairline. Never hidden.
+              color: degenerate
+                  ? cs.error
+                  : Color.lerp(
+                      cs.surfaceContainer,
+                      cs.surfaceContainerHighest,
+                      t,
+                    ),
+              // Borders inset the content without changing the box height,
+              // so contiguous tiles still sum to their combined duration.
+              border: degenerate
+                  ? null
+                  : Border(
+                      left: BorderSide(
+                        color: hexToColor(r.client.colorHex),
+                        width: 4,
                       ),
-                // Borders inset the content without changing the box height,
-                // so contiguous tiles still sum to their combined duration.
-                border: degenerate
-                    ? null
-                    : Border(
-                        left: BorderSide(
-                          color: hexToColor(r.client.colorHex),
-                          width: 4,
-                        ),
-                        top: BorderSide(color: cs.surface),
-                        bottom: BorderSide(color: cs.surface),
-                      ),
-              ),
-              child: child,
+                      top: BorderSide(color: cs.surface),
+                      bottom: BorderSide(color: cs.surface),
+                    ),
             ),
+            child: child,
           ),
         ),
       ),

@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/db/database.dart';
 import '../../../shared/widgets/date_filter_bar.dart';
 
-
 class EntriesState {
   final DateFilter filter;
 

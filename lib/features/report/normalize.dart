@@ -101,7 +101,8 @@ List<ReportRow> groupByClient(List<ReportRow> rows) {
 Map<int, Duration> clientTotals(List<ReportRow> rows) {
   final totals = <int, Duration>{};
   for (final r in rows) {
-    totals[r.client.id] = (totals[r.client.id] ?? Duration.zero) + r.normDuration;
+    totals[r.client.id] =
+        (totals[r.client.id] ?? Duration.zero) + r.normDuration;
   }
   return totals;
 }

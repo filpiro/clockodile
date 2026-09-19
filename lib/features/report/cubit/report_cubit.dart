@@ -55,9 +55,7 @@ class ReportCubit extends Cubit<ReportState> {
   StreamSubscription<List<SessionRow>>? _sub;
 
   ReportCubit(this.db)
-    : super(
-        ReportState(DateFilter.today, null, ReportMode.grouped, const []),
-      ) {
+    : super(ReportState(DateFilter.today, null, ReportMode.grouped, const [])) {
     _watch();
   }
 
