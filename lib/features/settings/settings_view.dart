@@ -118,6 +118,8 @@ class _SettingsViewState extends State<SettingsView> {
           children: [
             CatSection(
               title: 'Tema',
+              // First on the page.
+              spaceAbove: false,
               // Applied and persisted instantly, like the AI switch.
               children: [
                 BlocBuilder<ThemeCubit, ThemeMode>(

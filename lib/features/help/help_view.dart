@@ -50,7 +50,9 @@ class HelpView extends StatelessWidget {
                     child: CatTag(combo, textAlign: TextAlign.center),
                   ),
                   const SizedBox(width: 16),
-                  Text(description),
+                  // Expanded, not a bare Text: inside the page's width cap a
+                  // long description has to wrap instead of overflowing.
+                  Expanded(child: Text(description)),
                 ],
               ),
             ),
