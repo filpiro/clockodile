@@ -93,14 +93,20 @@ Behaviour and rationale live in `packages/catui/DESIGN.md`; this is only where e
 
 ## Impostazioni screen (`lib/features/settings/settings_view.dart`)
 
+The page has no width cap: the sections stretch to the window, the controls in them keep their natural width.
+
 | Component | Widget | Notes |
 |---|---|---|
-| Title | `Text` `titleLarge` | "Impostazioni" |
-| Theme switch | `SegmentedButton<ThemeMode>` | Chiaro/Scuro/Sistema with icons, instant apply |
-| Retention field | `TextFormField` (width 320) | digits only, helper + validator (min 30) |
+| Sections | `CatSection` ×3 | Tema, Conservazione, AI — each owns its title, description and spacing |
+| Theme switch | `CatSegmented<ThemeMode>` | Chiaro/Scuro/Sistema with icons, instant apply |
+| Retention field | `TextFormField` (capped at `formMaxWidth`) | digits only, validator (min 30); the helper text is the section's description |
 | Save button | `FilledButton` | "Salva"; retention-shrink confirm `AlertDialog` first, whose confirm is a `DangerButton` |
+| AI switch | `CatSettingRow` + `Switch` | "Riassunto delle note", instant apply, install dialog on enable |
+| Delete model | `OutlinedButton` (error colours) | only with files on disk; Windows-only section |
 
 ## Aiuto screen (`lib/features/help/help_view.dart`)
+
+Prose: capped at `AppTokens.formMaxWidth`.
 
 | Component | Widget | Notes |
 |---|---|---|

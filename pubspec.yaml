@@ -23,7 +23,7 @@ dependencies:
   catui:
     git:
       url: https://github.com/filpiro/catui
-      ref: '79c9a31'
+      ref: '23ca5aa'
 
 dev_dependencies:
   flutter_test:
