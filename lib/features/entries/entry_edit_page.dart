@@ -206,6 +206,9 @@ class _EntryPageState extends State<_EntryPage> {
               ],
             ),
           ),
+          // Without it the icon's 40px hover disc touches the end-time
+          // field's border.
+          const SizedBox(width: 16),
           DeleteIconButton(
             tooltip: isLast
                 ? 'Ultima sessione — non eliminabile'
