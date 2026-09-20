@@ -49,6 +49,15 @@ void main() {
       find.descendant(of: aiRow(), matching: find.byType(Switch));
   bool switchOn(WidgetTester tester) => tester.widget<Switch>(aiSwitch()).value;
 
+  /// The AI section sits below the fold in a test window, so the switch is
+  /// scrolled into view before it is tapped.
+  Future<void> tapAiSwitch(WidgetTester tester) async {
+    await tester.ensureVisible(aiSwitch());
+    await tester.pumpAndSettle();
+    await tester.tap(aiSwitch());
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('the switch is off by default', (tester) async {
     await openSettings(tester);
     expect(switchOn(tester), isFalse);
@@ -56,8 +65,7 @@ void main() {
 
   testWidgets('turning it on asks first, with the real size', (tester) async {
     await openSettings(tester);
-    await tester.tap(aiSwitch());
-    await tester.pumpAndSettle();
+    await tapAiSwitch(tester);
 
     expect(find.text("Attivare l'AI locale?"), findsOneWidget);
     expect(find.textContaining('1,3 GB'), findsOneWidget);
@@ -65,8 +73,7 @@ void main() {
 
   testWidgets('Annulla leaves it off and downloads nothing', (tester) async {
     await openSettings(tester);
-    await tester.tap(aiSwitch());
-    await tester.pumpAndSettle();
+    await tapAiSwitch(tester);
     await tester.tap(find.text('Annulla'));
     await tester.pumpAndSettle();
 
@@ -76,8 +83,7 @@ void main() {
 
   testWidgets('Scarica installs and the switch ends on', (tester) async {
     await openSettings(tester);
-    await tester.tap(aiSwitch());
-    await tester.pumpAndSettle();
+    await tapAiSwitch(tester);
     await tester.tap(find.text('Scarica'));
     await tester.pumpAndSettle();
 
@@ -91,8 +97,7 @@ void main() {
   ) async {
     writeInstalledFiles(ai.paths);
     await openSettings(tester);
-    await tester.tap(aiSwitch());
-    await tester.pumpAndSettle();
+    await tapAiSwitch(tester);
 
     expect(find.byType(AlertDialog), findsNothing);
     expect(installer.calls, 0);
