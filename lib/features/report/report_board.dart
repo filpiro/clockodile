@@ -108,7 +108,7 @@ class _BoardTileState extends State<_BoardTile> {
       message: tooltip,
       child: GestureDetector(
         // Same deal as the list rows: tap copies the note, no note no tap.
-        onTap: note.isEmpty ? null : () => copyNote(context, note),
+        onTap: note.isEmpty ? null : () => copyNote(note),
         child: HoverFade(
           // Height alone decides how much content survives: a short tile
           // ends up showing only the client name. OverflowBox keeps that a

@@ -5,10 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:catui/catui.dart';
+import 'package:sonner_toast/sonner_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/database.dart';
-import 'features/ai/ai_status_strip.dart';
+import 'features/ai/ai_toast.dart';
 import 'features/ai/cubit/ai_cubit.dart';
 import 'features/ai/llama_config.dart';
 import 'features/ai/llama_installer.dart';
@@ -26,10 +27,12 @@ import 'features/report/report_view.dart';
 import 'features/settings/cubit/theme_cubit.dart';
 import 'features/settings/settings_view.dart';
 import 'shared/theme.dart';
+import 'shared/widgets/app_toast.dart';
 
 const _instancePort = 38573;
 
-/// The AI status strip sits above the Navigator; it opens dialogs through this.
+/// The Local Model's toast sits above the Navigator; it opens dialogs through
+/// this.
 final _navigatorKey = GlobalKey<NavigatorState>();
 
 /// Single-instance lock: the bound socket doubles as IPC — any incoming
@@ -136,20 +139,26 @@ class ClockodileApp extends StatelessWidget {
         ...WidgetsApp.defaultActions,
         VoidCallbackIntent: VoidCallbackAction(),
       },
-      // Caption and AI strip sit above the Navigator so they survive pushed
-      // routes.
-      builder: (context, child) => Column(
+      // Caption, toasts and the Local Model listener sit above the Navigator so
+      // they survive pushed routes.
+      builder: (context, child) => Stack(
         children: [
-          SizedBox(
-            height: kWindowCaptionHeight,
-            child: WindowCaption(
-              title: const Text('Clockodile'),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              brightness: Theme.of(context).brightness,
-            ),
+          Column(
+            children: [
+              SizedBox(
+                height: kWindowCaptionHeight,
+                child: WindowCaption(
+                  title: const Text('Clockodile'),
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  brightness: Theme.of(context).brightness,
+                ),
+              ),
+              Expanded(
+                child: AiToastHost(navigatorKey: _navigatorKey, child: child!),
+              ),
+            ],
           ),
-          Expanded(child: child!),
-          AiStatusStrip(navigatorKey: _navigatorKey),
+          SonnerOverlay(key: Sonner.overlayKey, config: appToastConfig),
         ],
       ),
       home: FutureBuilder<void>(

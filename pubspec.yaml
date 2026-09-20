@@ -17,6 +17,9 @@ dependencies:
   flutter_bloc: ^9.1.1
   flutter_localizations:
     sdk: flutter
+  # Toast overlay, motion and swipe only — it ships no UI, so the card is ours
+  # and this stays out of catui.
+  sonner_toast: ^2.0.2
   window_manager: ^0.5.2
   # House style: theme, design tokens, atomic widgets.
   # Re-exports catppuccin_flutter and lucide_icons_flutter.

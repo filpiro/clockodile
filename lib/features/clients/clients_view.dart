@@ -5,6 +5,7 @@ import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
 import '../../shared/utils/colors.dart';
+import '../../shared/widgets/app_toast.dart';
 import '../../shared/widgets/client_dot.dart';
 import 'cubit/clients_cubit.dart';
 
@@ -53,7 +54,6 @@ class ClientsView extends StatelessWidget {
 
   Future<void> _create(BuildContext context) async {
     final cubit = context.read<ClientsCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     final name = await catTextInput(
       context,
       title: 'Nuovo cliente',
@@ -66,13 +66,12 @@ class ClientsView extends StatelessWidget {
       await cubit.create(name);
     } catch (_) {
       // UNIQUE COLLATE NOCASE violation
-      catSnack(messenger, 'Esiste già un cliente chiamato "$name"');
+      showToast('Esiste già un cliente chiamato "$name"');
     }
   }
 
   Future<void> _rename(BuildContext context, Client client) async {
     final cubit = context.read<ClientsCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     final name = await catTextInput(
       context,
       title: 'Rinomina cliente',
@@ -86,7 +85,7 @@ class ClientsView extends StatelessWidget {
       await cubit.rename(client.id, name);
     } catch (_) {
       // UNIQUE COLLATE NOCASE violation
-      catSnack(messenger, 'Esiste già un cliente chiamato "$name"');
+      showToast('Esiste già un cliente chiamato "$name"');
     }
   }
 
@@ -133,11 +132,9 @@ class ClientsView extends StatelessWidget {
 
   Future<void> _delete(BuildContext context, ClientWithCount c) async {
     final cubit = context.read<ClientsCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     if (c.entryCount > 0) {
       // spec 4.3: surface why deletion is blocked
-      catSnack(
-        messenger,
+      showToast(
         'Impossibile eliminare "${c.client.name}": ${c.entryCount} attività usano questo cliente',
       );
       return;

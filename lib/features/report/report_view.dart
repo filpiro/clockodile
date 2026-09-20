@@ -6,30 +6,30 @@ import 'package:catui/catui.dart';
 
 import '../../shared/widgets/client_dot.dart';
 import '../../shared/widgets/date_filter_bar.dart';
+import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/report_cubit.dart';
 import 'normalize.dart';
 import 'report_board.dart';
 
-/// Export with snackbar feedback — used by the page button and Ctrl+S.
+/// Export with toast feedback — used by the page button and Ctrl+S.
 Future<void> runReportExport(BuildContext context) async {
   final cubit = context.read<ReportCubit>();
-  final messenger = ScaffoldMessenger.of(context);
   try {
     final result = await cubit.exportCsv();
     if (result == null) return; // cancelled
     final (path, count) = result;
-    catSnack(messenger, 'Esportate $count sessioni in $path');
+    showToast('Esportate $count sessioni in $path');
   } catch (_) {
-    catSnack(messenger, 'Esportazione fallita');
+    showToast('Esportazione fallita');
   }
 }
 
 /// Copies an Entry note for pasting into the portal — the tap action shared by
 /// the list rows and the board tiles.
-void copyNote(BuildContext context, String note) {
+void copyNote(String note) {
   Clipboard.setData(ClipboardData(text: note));
-  catSnack(ScaffoldMessenger.of(context), 'Nota copiata');
+  showToast('Nota copiata');
 }
 
 class ReportView extends StatelessWidget {
@@ -149,7 +149,7 @@ class _ReportTile extends StatelessWidget {
       key: ValueKey(r.session.id),
       dense: true,
       // No note, no tap.
-      onTap: note.isEmpty ? null : () => copyNote(context, note),
+      onTap: note.isEmpty ? null : () => copyNote(note),
       // No color dot: the client header above every run already carries it.
       title: Text(
         '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'

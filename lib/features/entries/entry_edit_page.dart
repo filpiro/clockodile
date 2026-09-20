@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
+import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
 import '../../shared/widgets/client_field.dart';
 import '../ai/ai_provider.dart';
@@ -90,7 +91,6 @@ class _EntryPageState extends State<_EntryPage> {
 
   Future<void> _save() async {
     final cubit = context.read<EntriesCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     try {
       if (widget.isCreate) {
@@ -111,7 +111,7 @@ class _EntryPageState extends State<_EntryPage> {
       }
       navigator.pop();
     } catch (_) {
-      catSnack(messenger, 'Salvataggio fallito');
+      showToast('Salvataggio fallito');
     }
   }
 
@@ -120,7 +120,6 @@ class _EntryPageState extends State<_EntryPage> {
   /// user's mail client (ADR 0002).
   Future<void> _summarise() async {
     final ai = context.read<AiCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     final cancel = Completer<void>();
     setState(() => _cancel = cancel);
 
@@ -137,22 +136,18 @@ class _EntryPageState extends State<_EntryPage> {
       if (summary != null) _note.text = summary;
     });
     if (failure != null && failure is! AiCancelled) {
-      catSnack(messenger, failure.message);
+      showToast(failure.message);
     }
   }
 
   Future<void> _deleteSession(_EditableSession s) async {
     final cubit = context.read<EntriesCubit>();
-    final messenger = ScaffoldMessenger.of(context);
     final ok = await cubit.deleteSession(s.id);
     if (!mounted) return;
     if (ok) {
       setState(() => _sessions!.removeWhere((x) => x.id == s.id));
     } else {
-      catSnack(
-        messenger,
-        "Ultima sessione: elimina l'attività per rimuoverla.",
-      );
+      showToast("Ultima sessione: elimina l'attività per rimuoverla.");
     }
   }
 
