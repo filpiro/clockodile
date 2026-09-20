@@ -115,20 +115,85 @@ void main() {
     expect(find.text('Elimina modello (1,3 GB)'), findsOneWidget);
   });
 
-  testWidgets('Salva writes retention and leaves aiEnabled alone', (
+  /// The selected segment is the filled one.
+  String selectedRetention(WidgetTester tester) => tester
+      .widget<Text>(
+        find.descendant(
+          of: find.descendant(
+            of: find.byType(CatSegmented<int>),
+            matching: find.byType(FilledButton),
+          ),
+          matching: find.byType(Text),
+        ),
+      )
+      .data!;
+
+  Future<void> pickRetention(WidgetTester tester, String label) async {
+    final segment = find.text(label);
+    await tester.ensureVisible(segment);
+    await tester.pumpAndSettle();
+    await tester.tap(segment);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('the three choices are there, no save button', (tester) async {
+    await openSettings(tester);
+    expect(find.byType(CatSegmented<int>), findsOneWidget);
+    for (final label in ['30 giorni', '45 giorni', '60 giorni']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(find.widgetWithText(FilledButton, 'Salva'), findsNothing);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
+  testWidgets('growing it writes at once and leaves aiEnabled alone', (
     tester,
   ) async {
-    await db.saveSettings(const SettingsCompanion(aiEnabled: Value(true)));
+    await db.saveSettings(
+      const SettingsCompanion(aiEnabled: Value(true), retentionDays: Value(45)),
+    );
     await openSettings(tester);
-    await tester.enterText(find.byType(TextFormField), '99');
-    final salva = find.widgetWithText(FilledButton, 'Salva');
-    await tester.ensureVisible(salva);
-    await tester.tap(salva);
+    await pickRetention(tester, '60 giorni');
+
+    expect(find.byType(AlertDialog), findsNothing);
+    final saved = await db.getSettings();
+    expect(saved.retentionDays, 60);
+    expect(saved.aiEnabled, isTrue);
+  });
+
+  testWidgets('shrinking it asks first, then writes and purges', (
+    tester,
+  ) async {
+    await db.saveSettings(const SettingsCompanion(retentionDays: Value(45)));
+    // Inside 45 days, outside 30: only the shrink purges it.
+    await db.createEntry(
+      'Acme',
+      'vecchia',
+      startTime: DateTime.now().subtract(const Duration(days: 40)),
+    );
+    await db.stopOpenSession();
+    await openSettings(tester);
+    await pickRetention(tester, '30 giorni');
+
+    expect(find.text('Eliminare le attività più vecchie?'), findsOneWidget);
+    await tester.tap(find.text('Elimina'));
     await tester.pumpAndSettle();
 
-    final saved = await db.getSettings();
-    expect(saved.retentionDays, 99);
-    expect(saved.aiEnabled, isTrue);
+    expect((await db.getSettings()).retentionDays, 30);
+    expect(await db.select(db.entries).get(), isEmpty);
+  });
+
+  testWidgets('cancelling a shrink leaves the stored value alone', (
+    tester,
+  ) async {
+    await db.saveSettings(const SettingsCompanion(retentionDays: Value(45)));
+    await openSettings(tester);
+    await pickRetention(tester, '30 giorni');
+    await tester.tap(find.text('Annulla'));
+    await tester.pumpAndSettle();
+
+    expect((await db.getSettings()).retentionDays, 45);
+    expect(selectedRetention(tester), '45 giorni');
   });
 
   testWidgets('sections fill the window, the theme picker does not', (

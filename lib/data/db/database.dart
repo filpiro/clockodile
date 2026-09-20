@@ -103,7 +103,6 @@ class AppDatabase extends _$AppDatabase {
     : super(DatabaseConnection(executor, closeStreamsSynchronously: true));
 
   static const defaultRetentionDays = 60;
-  static const minRetentionDays = 30;
 
   @override
   int get schemaVersion => 6;

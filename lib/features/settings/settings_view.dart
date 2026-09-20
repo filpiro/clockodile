@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 // `show` keeps drift's Column/Table off Flutter's.
@@ -21,32 +20,30 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  final _controller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  int _storedDays = AppDatabase.defaultRetentionDays;
+  // Single user, single machine: the stored value is always one of these.
+  static const _retentionChoices = {
+    30: '30 giorni',
+    45: '45 giorni',
+    60: '60 giorni',
+  };
+
+  // Null until the stored value lands; the control waits rather than show a
+  // guess a tap would then compare against.
+  int? _storedDays;
 
   @override
   void initState() {
     super.initState();
     context.read<AppDatabase>().getSettings().then((s) {
       if (!mounted) return;
-      setState(() {
-        _storedDays = s.retentionDays;
-        _controller.text = '${s.retentionDays}';
-      });
+      setState(() => _storedDays = s.retentionDays);
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    final days = int.parse(_controller.text);
-    if (days < _storedDays) {
+  Future<void> _setRetention(int days) async {
+    final stored = _storedDays;
+    if (stored == null || days == stored) return;
+    if (days < stored) {
       final confirmed = await catConfirm(
         context,
         title: 'Eliminare le attività più vecchie?',
@@ -67,7 +64,6 @@ class _SettingsViewState extends State<SettingsView> {
     await db.purgeExpiredEntries();
     if (!mounted) return;
     setState(() => _storedDays = days);
-    catSnack(ScaffoldMessenger.of(context), 'Impostazioni salvate');
   }
 
   Widget _aiSection(BuildContext context) {
@@ -111,74 +107,51 @@ class _SettingsViewState extends State<SettingsView> {
       // No cap: a settings page is sections, not prose. The sections stretch,
       // the controls inside them keep their own width.
       scroll: true,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            CatSection(
-              title: 'Tema',
-              // First on the page.
-              spaceAbove: false,
-              // Applied and persisted instantly, like the AI switch.
-              children: [
-                BlocBuilder<ThemeCubit, ThemeMode>(
-                  builder: (context, mode) => CatSegmented<ThemeMode>(
-                    segments: const {
-                      ThemeMode.light: 'Chiaro',
-                      ThemeMode.dark: 'Scuro',
-                      ThemeMode.system: 'Sistema',
-                    },
-                    icons: const {
-                      ThemeMode.light: LucideIcons.sun,
-                      ThemeMode.dark: LucideIcons.moon,
-                      ThemeMode.system: LucideIcons.monitor,
-                    },
-                    selected: mode,
-                    onChanged: context.read<ThemeCubit>().setMode,
-                  ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CatSection(
+            title: 'Tema',
+            // First on the page.
+            spaceAbove: false,
+            // Applied and persisted instantly, like the AI switch.
+            children: [
+              BlocBuilder<ThemeCubit, ThemeMode>(
+                builder: (context, mode) => CatSegmented<ThemeMode>(
+                  segments: const {
+                    ThemeMode.light: 'Chiaro',
+                    ThemeMode.dark: 'Scuro',
+                    ThemeMode.system: 'Sistema',
+                  },
+                  icons: const {
+                    ThemeMode.light: LucideIcons.sun,
+                    ThemeMode.dark: LucideIcons.moon,
+                    ThemeMode.system: LucideIcons.monitor,
+                  },
+                  selected: mode,
+                  onChanged: context.read<ThemeCubit>().setMode,
                 ),
-              ],
-            ),
-            CatSection(
-              title: 'Conservazione',
-              // Last wherever the AI section doesn't render.
-              divider: Platform.isWindows,
-              description:
-                  'Le attività più vecchie vengono eliminate '
-                  "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
-              // Retention is the only setting that waits for a button, so the
-              // button sits right under it.
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppTokens.formMaxWidth,
-                  ),
-                  child: TextFormField(
-                    controller: _controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onFieldSubmitted: (_) => _save(),
-                    decoration: const InputDecoration(
-                      labelText: 'Giorni di conservazione delle attività',
-                    ),
-                    validator: (value) {
-                      final days = int.tryParse(value ?? '');
-                      if (days == null || days < AppDatabase.minRetentionDays) {
-                        return 'Inserire almeno '
-                            '${AppDatabase.minRetentionDays} giorni';
-                      }
-                      return null;
-                    },
-                  ),
+              ),
+            ],
+          ),
+          CatSection(
+            title: 'Conservazione',
+            // Last wherever the AI section doesn't render.
+            divider: Platform.isWindows,
+            description: "Le attività più vecchie vengono eliminate all'avvio.",
+            // Persisted on pick, like the theme.
+            children: [
+              if (_storedDays case final days?)
+                CatSegmented<int>(
+                  segments: _retentionChoices,
+                  selected: days,
+                  onChanged: _setRetention,
                 ),
-                FilledButton(onPressed: _save, child: const Text('Salva')),
-              ],
-            ),
-            // The Local Model is Windows x64 only.
-            if (Platform.isWindows) _aiSection(context),
-          ],
-        ),
+            ],
+          ),
+          // The Local Model is Windows x64 only.
+          if (Platform.isWindows) _aiSection(context),
+        ],
       ),
     );
   }

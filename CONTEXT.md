@@ -27,7 +27,7 @@ The Entry owning the Open Session. At most one at a time; derived, never stored.
 _Avoid_: Open entry, active task, current task
 
 **Retention Period**:
-How long an Entry is kept, counted in days from the start of its most recent Session. User-configurable, default 60 days, minimum 30, can never be disabled. An Entry whose newest Session started before the cutoff is purged together with all its Sessions; the Active Entry is never purged, whatever its age. Sessions are never purged individually — an Entry's total never silently shrinks.
+How long an Entry is kept, counted in days from the start of its most recent Session. Chosen from 30, 45 or 60 days, default 60, can never be disabled. An Entry whose newest Session started before the cutoff is purged together with all its Sessions; the Active Entry is never purged, whatever its age. Sessions are never purged individually — an Entry's total never silently shrinks.
 _Avoid_: Lifetime, rotation, expiry
 
 **Report**:
