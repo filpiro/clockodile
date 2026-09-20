@@ -8,6 +8,7 @@ const appToastConfig = SonnerConfig(
   alignment: Alignment.bottomCenter,
   width: 380,
   maxVisibleToasts: 1,
+  outerPadding: EdgeInsets.only(bottom: AppTokens.gutter),
 );
 
 const _toastLife = Duration(seconds: 4);

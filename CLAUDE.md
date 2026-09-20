@@ -18,10 +18,6 @@ pws -c dart pub get
 **Do not** run Flutter/Dart commands directly from WSL.
 
 
-# Rules
-
-- Before editing any file, read it first. Before modifying a function, use `ast-grep` to retrive all callers. Research before you edit.
-
 ## Agent skills
 
 ### Issue tracker
