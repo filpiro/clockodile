@@ -1,3 +1,4 @@
+import 'package:catui/catui.dart';
 import 'package:clockodile/data/db/database.dart';
 import 'package:clockodile/features/ai/cubit/ai_cubit.dart';
 import 'package:clockodile/features/settings/cubit/theme_cubit.dart';
@@ -43,10 +44,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Finder aiRow() => find.widgetWithText(CatSettingRow, 'Riassunto delle note');
   Finder aiSwitch() =>
-      find.widgetWithText(SwitchListTile, 'Riassunto delle note');
-  bool switchOn(WidgetTester tester) =>
-      tester.widget<SwitchListTile>(aiSwitch()).value;
+      find.descendant(of: aiRow(), matching: find.byType(Switch));
+  bool switchOn(WidgetTester tester) => tester.widget<Switch>(aiSwitch()).value;
 
   testWidgets('the switch is off by default', (tester) async {
     await openSettings(tester);
@@ -123,6 +124,23 @@ void main() {
     final saved = await db.getSettings();
     expect(saved.retentionDays, 99);
     expect(saved.aiEnabled, isTrue);
+  });
+
+  testWidgets('sections fill the window, the theme picker does not', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openSettings(tester);
+
+    final page = tester.getSize(find.byType(SettingsView)).width;
+    final section = tester.getSize(find.byType(CatSection).first).width;
+    expect(section, closeTo(page - AppTokens.pagePadding * 2, 1));
+    expect(
+      tester.getSize(find.byType(CatSegmented<ThemeMode>)).width,
+      lessThan(section),
+    );
   });
 
   testWidgets('no provider, model or WSL controls are left', (tester) async {

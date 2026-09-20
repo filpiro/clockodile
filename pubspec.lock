@@ -117,8 +117,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "96484a6"
-      resolved-ref: "96484a63beaea78f5826fe500806939f136093eb"
+      ref: "79c9a31"
+      resolved-ref: "79c9a31f16d40650c8b51274b467cf0a47d85bd6"
       url: "https://github.com/filpiro/catui"
     source: git
     version: "0.1.0"

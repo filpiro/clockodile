@@ -22,6 +22,8 @@ class HelpView extends StatelessWidget {
       ),
     ];
     return CatPage(
+      // Prose: it keeps its column instead of running the window's width.
+      maxWidth: AppTokens.formMaxWidth,
       scroll: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

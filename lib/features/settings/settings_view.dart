@@ -72,23 +72,22 @@ class _SettingsViewState extends State<SettingsView> {
 
   Widget _aiSection(BuildContext context) {
     final ai = context.watch<AiCubit>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return CatSection(
+      title: 'AI',
       children: [
-        const CatSectionHeader.inline(title: 'AI'),
         // Acts at once, like the theme: a cancelled or failed install leaves
         // state.enabled false, so the switch falls back by itself.
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: ai.state.enabled,
-          onChanged: (on) =>
-              on ? runAiInstall(context, ai, update: false) : ai.disable(),
-          title: const Text('Riassunto delle note'),
-          subtitle: const Text(
-            'Usa un modello locale su questo computer. Dopo '
-            '${AiConfig.sleepIdleSeconds} secondi senza richieste il modello '
-            'va in pausa: il riassunto successivo richiede qualche secondo '
-            'in più.',
+        CatSettingRow(
+          title: 'Riassunto delle note',
+          description:
+              'Usa un modello locale su questo computer. Dopo '
+              '${AiConfig.sleepIdleSeconds} secondi senza richieste il modello '
+              'va in pausa: il riassunto successivo richiede qualche secondo '
+              'in più.',
+          trailing: Switch(
+            value: ai.state.enabled,
+            onChanged: (on) =>
+                on ? runAiInstall(context, ai, update: false) : ai.disable(),
           ),
         ),
         if (ai.state.filesOnDisk)
@@ -107,55 +106,69 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return CatPage(
-      maxWidth: AppTokens.formMaxWidth,
+      // No cap: a settings page is sections, not prose. The sections stretch,
+      // the controls inside them keep their own width.
       scroll: true,
       body: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const CatSectionHeader.inline(title: 'Tema'),
-            // Applied and persisted instantly, like the AI switch.
-            BlocBuilder<ThemeCubit, ThemeMode>(
-              builder: (context, mode) => CatSegmented<ThemeMode>(
-                segments: const {
-                  ThemeMode.light: 'Chiaro',
-                  ThemeMode.dark: 'Scuro',
-                  ThemeMode.system: 'Sistema',
-                },
-                icons: const {
-                  ThemeMode.light: LucideIcons.sun,
-                  ThemeMode.dark: LucideIcons.moon,
-                  ThemeMode.system: LucideIcons.monitor,
-                },
-                selected: mode,
-                onChanged: context.read<ThemeCubit>().setMode,
-              ),
+            CatSection(
+              title: 'Tema',
+              // Applied and persisted instantly, like the AI switch.
+              children: [
+                BlocBuilder<ThemeCubit, ThemeMode>(
+                  builder: (context, mode) => CatSegmented<ThemeMode>(
+                    segments: const {
+                      ThemeMode.light: 'Chiaro',
+                      ThemeMode.dark: 'Scuro',
+                      ThemeMode.system: 'Sistema',
+                    },
+                    icons: const {
+                      ThemeMode.light: LucideIcons.sun,
+                      ThemeMode.dark: LucideIcons.moon,
+                      ThemeMode.system: LucideIcons.monitor,
+                    },
+                    selected: mode,
+                    onChanged: context.read<ThemeCubit>().setMode,
+                  ),
+                ),
+              ],
             ),
-            const CatSectionHeader.inline(title: 'Conservazione'),
-            // Retention is the only setting that waits for a button, so the
-            // button sits right under it.
-            TextFormField(
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onFieldSubmitted: (_) => _save(),
-              decoration: const InputDecoration(
-                labelText: 'Giorni di conservazione delle attività',
-                helperText:
-                    'Le attività più vecchie vengono eliminate '
-                    "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
-              ),
-              validator: (value) {
-                final days = int.tryParse(value ?? '');
-                if (days == null || days < AppDatabase.minRetentionDays) {
-                  return 'Inserire almeno ${AppDatabase.minRetentionDays} giorni';
-                }
-                return null;
-              },
+            CatSection(
+              title: 'Conservazione',
+              description:
+                  'Le attività più vecchie vengono eliminate '
+                  "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
+              // Retention is the only setting that waits for a button, so the
+              // button sits right under it.
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppTokens.formMaxWidth,
+                  ),
+                  child: TextFormField(
+                    controller: _controller,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onFieldSubmitted: (_) => _save(),
+                    decoration: const InputDecoration(
+                      labelText: 'Giorni di conservazione delle attività',
+                    ),
+                    validator: (value) {
+                      final days = int.tryParse(value ?? '');
+                      if (days == null || days < AppDatabase.minRetentionDays) {
+                        return 'Inserire almeno '
+                            '${AppDatabase.minRetentionDays} giorni';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                FilledButton(onPressed: _save, child: const Text('Salva')),
+              ],
             ),
-            const SizedBox(height: AppTokens.gutter),
-            FilledButton(onPressed: _save, child: const Text('Salva')),
             // The Local Model is Windows x64 only.
             if (Platform.isWindows) _aiSection(context),
           ],
