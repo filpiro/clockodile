@@ -74,6 +74,8 @@ class _SettingsViewState extends State<SettingsView> {
     final ai = context.watch<AiCubit>();
     return CatSection(
       title: 'AI',
+      // Last on the page.
+      divider: false,
       children: [
         // Acts at once, like the theme: a cancelled or failed install leaves
         // state.enabled false, so the switch falls back by itself.
@@ -138,6 +140,8 @@ class _SettingsViewState extends State<SettingsView> {
             ),
             CatSection(
               title: 'Conservazione',
+              // Last wherever the AI section doesn't render.
+              divider: Platform.isWindows,
               description:
                   'Le attività più vecchie vengono eliminate '
                   "all'avvio. Minimo ${AppDatabase.minRetentionDays} giorni.",
