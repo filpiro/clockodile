@@ -2,7 +2,7 @@
 
 **What to build:** The report runs on shadcn. The board keeps its own geometry and tile hover; bars are `primary` on `border` gridlines; each label has a small identicon; the tooltip is shadcn `Tooltip`.
 
-**Blocked by:** 01 — Client identicon; 05 — Shell + Aiuto
+**Blocked by:** ~~01 — Client identicon~~; 05 — Shell + Aiuto
 
 **Status:** ready-for-agent
 

@@ -2,7 +2,7 @@
 
 **What to build:** The client list runs on shadcn with 32px identicons; create, rename and delete work.
 
-**Blocked by:** 01 — Client identicon; 05 — Shell + Aiuto; 06 — AppListRow + EmptyState
+**Blocked by:** ~~01 — Client identicon~~; 05 — Shell + Aiuto; 06 — AppListRow + EmptyState
 
 **Status:** ready-for-agent
 

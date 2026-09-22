@@ -2,7 +2,7 @@
 
 **What to build:** The Attività list and the entry editor run on shadcn: dense rows, header button instead of the FAB, client field on `AutoComplete`, date filter on top.
 
-**Blocked by:** 01 — Client identicon; 05 — Shell + Aiuto; 06 — AppListRow + EmptyState; 07 — DateField + single-date filter
+**Blocked by:** ~~01 — Client identicon~~; 05 — Shell + Aiuto; 06 — AppListRow + EmptyState; 07 — DateField + single-date filter
 
 **Status:** ready-for-agent
 

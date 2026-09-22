@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Model:** Opus, effort high — changes the real database; a miss can lose data
 
@@ -16,4 +16,4 @@ Spec: `../../shadcn-migration/spec.md` (phase 0)
 - [x] Drift migration drops only the colour column; migration test proves all rows survive
 - [x] Colour helpers, the colour control on Clienti, the client dot widget and the colour test are deleted
 - [x] Full `pws -c flutter test` green (catui still present, so the whole suite runs here)
-- [ ] Eyeballed on Windows against a **copy** of the real database file
+- [x] Eyeballed on Windows against a **copy** of the real database file
