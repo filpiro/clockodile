@@ -170,8 +170,12 @@ class _TitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget button(IconData icon, VoidCallback onPressed) => IconButton(
-      variance: ButtonStyle.ghostIcon(),
+    Widget button(
+      IconData icon,
+      VoidCallback onPressed, {
+      AbstractButtonStyle variance = const ButtonStyle.ghostIcon(),
+    }) => IconButton(
+      variance: variance,
       density: ButtonDensity.icon,
       size: ButtonSize.small,
       icon: Icon(icon),
@@ -194,8 +198,20 @@ class _TitleBar extends StatelessWidget {
             ),
           ),
           button(LucideIcons.minus, windowManager.minimize),
+          const Gap(8),
           button(LucideIcons.square, _toggleMaximize),
-          button(LucideIcons.x, windowManager.close),
+          const Gap(8),
+          // White on red, as shadcn's own destructive button does.
+          button(
+            LucideIcons.x,
+            windowManager.close,
+            variance: const ButtonStyle.ghostIcon()
+                .withBackgroundColor(
+                  hoverColor: Theme.of(context).colorScheme.destructive,
+                )
+                .withForegroundColor(hoverColor: Colors.white),
+          ),
+          const Gap(4),
         ],
       ),
     );
