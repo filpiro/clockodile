@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort medium — largest screen, but fully specified
+
 Spec: `../../shadcn-migration/spec.md` (phase 4; reference branch `prototype/07-attivita-shadcn`)
 
 - [ ] Entry editor stays a pushed route, content capped at the form max width

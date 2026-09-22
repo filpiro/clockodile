@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 3; `style/components.md` § 4)
 
 - [ ] Shared date field over shadcn's form field with the date picker dialog

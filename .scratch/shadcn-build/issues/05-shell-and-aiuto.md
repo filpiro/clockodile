@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 2 and Aiuto from phase 4; ticket 04 of the map)
 
 - [ ] Navigation stays an index + `IndexedStack`; the entry editor stays a pushed route

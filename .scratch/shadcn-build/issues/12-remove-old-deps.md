@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort high — all surprises from the other tickets land here
+
 Spec: `../../shadcn-migration/spec.md` (phase 5)
 
 - [ ] `catui`, `sonner_toast`, `flutter_localizations` and `uses-material-design` removed from pubspec

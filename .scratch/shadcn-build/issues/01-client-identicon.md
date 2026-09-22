@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort high — changes the real database; a miss can lose data
+
 Spec: `../../shadcn-migration/spec.md` (phase 0)
 
 - [ ] Identicon drawn by our own painter using `crypto`; no new dependency

@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 3; `style/components.md` § 2)
 
 - [ ] Row hover through a `Clickable` decoration (muted fill, medium radius), as the ticket 07 prototype did

@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort high — every other ticket builds on it
+
 Spec: `../../shadcn-migration/spec.md` (phase 1, sections 1 and 5)
 
 - [ ] `shadcn_flutter: ^0.0.54` added; SDK floor `^3.13.0`

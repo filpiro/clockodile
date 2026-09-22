@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort medium — board layout and tooltip are tricky, but specified
+
 Spec: `../../shadcn-migration/spec.md` (phase 4 (Report board))
 
 - [ ] Board geometry unchanged; tiles do not use the list row

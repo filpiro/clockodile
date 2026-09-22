@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 6)
 
 - [ ] ADR 0005: catui dropped for direct shadcn_flutter; coherence held by the conventions doc (~10 lines)

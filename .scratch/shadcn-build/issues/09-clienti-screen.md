@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 4)
 
 - [ ] No colour control anywhere

@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort low — follows clear rules in the spec
+
 Spec: `../../shadcn-migration/spec.md` (phase 1; ticket 09 of the map)
 
 - [ ] In-repo `ShadcnLocalizationsIt extends ShadcnLocalizationsEn`, hard-coded strings, overriding only the ~40 strings we show

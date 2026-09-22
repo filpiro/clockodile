@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Model:** Opus, effort high — toast stack logic is easy to get wrong
+
 Spec: `../../shadcn-migration/spec.md` (phase 1; ticket 10 of the map)
 
 - [ ] `showToast` keeps its signature; the 7 call sites are untouched
