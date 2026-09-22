@@ -173,6 +173,7 @@ class _TitleBar extends StatelessWidget {
     Widget button(IconData icon, VoidCallback onPressed) => IconButton(
       variance: ButtonStyle.ghostIcon(),
       density: ButtonDensity.icon,
+      size: ButtonSize.small,
       icon: Icon(icon),
       onPressed: onPressed,
     );
