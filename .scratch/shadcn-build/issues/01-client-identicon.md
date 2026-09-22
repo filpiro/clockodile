@@ -10,10 +10,10 @@
 
 Spec: `../../shadcn-migration/spec.md` (phase 0)
 
-- [ ] Identicon drawn by our own painter using `crypto`; no new dependency
-- [ ] Two sizes: small (~20px) and normal (~32px)
-- [ ] Renaming a client does not change its identicon
-- [ ] Drift migration drops only the colour column; migration test proves all rows survive
-- [ ] Colour helpers, the colour control on Clienti, the client dot widget and the colour test are deleted
-- [ ] Full `pws -c flutter test` green (catui still present, so the whole suite runs here)
+- [x] Identicon drawn by our own painter using `crypto`; no new dependency
+- [x] Two sizes: small (~20px) and normal (~32px)
+- [x] Renaming a client does not change its identicon
+- [x] Drift migration drops only the colour column; migration test proves all rows survive
+- [x] Colour helpers, the colour control on Clienti, the client dot widget and the colour test are deleted
+- [x] Full `pws -c flutter test` green (catui still present, so the whole suite runs here)
 - [ ] Eyeballed on Windows against a **copy** of the real database file

@@ -18,9 +18,6 @@ class ClientsCubit extends Cubit<List<ClientWithCount>> {
 
   Future<void> rename(int id, String name) => db.renameClient(id, name);
 
-  Future<void> setColor(int id, String colorHex) =>
-      db.setClientColor(id, colorHex);
-
   /// False = blocked because entries exist (spec 4.3).
   Future<bool> delete(int id) => db.deleteClient(id);
 

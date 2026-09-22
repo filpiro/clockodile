@@ -4,9 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
-import '../../shared/utils/colors.dart';
 import '../../shared/widgets/app_toast.dart';
-import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/identicon.dart';
 import 'cubit/clients_cubit.dart';
 
 class ClientsView extends StatelessWidget {
@@ -33,11 +32,7 @@ class ClientsView extends StatelessWidget {
                 HoverTile(
                   // Stateful row: keyed so hover doesn't survive a reorder.
                   key: ValueKey(c.client.id),
-                  leading: ClientDot(
-                    c.client.colorHex,
-                    size: ClientDotSize.tappable,
-                    onTap: () => _pickColor(context, c.client),
-                  ),
+                  leading: Identicon(c.client.id),
                   title: Text(c.client.name),
                   subtitle: Text('${c.entryCount} attività'),
                   onTap: () => _rename(context, c.client),
@@ -86,47 +81,6 @@ class ClientsView extends StatelessWidget {
     } catch (_) {
       // UNIQUE COLLATE NOCASE violation
       showToast('Esiste già un cliente chiamato "$name"');
-    }
-  }
-
-  Future<void> _pickColor(BuildContext context, Client client) async {
-    final cubit = context.read<ClientsCubit>();
-    // ponytail: hue slider with fixed S/L instead of a full color picker —
-    // keeps the readability-by-construction guarantee and avoids a dependency.
-    var hue = HSLColor.fromColor(hexToColor(client.colorHex)).hue;
-    final picked = await showDialog<double>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, setState) => AlertDialog(
-          title: const Text('Colore cliente'),
-          content: Row(
-            children: [
-              ClientDot.color(hslToColor(hue), size: ClientDotSize.large),
-              Expanded(
-                child: Slider(
-                  min: 0,
-                  max: 360,
-                  value: hue,
-                  onChanged: (v) => setState(() => hue = v),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: const Text('Annulla'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(c, hue),
-              child: const Text('Salva'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) {
-      await cubit.setColor(client.id, colorToHex(hslToColor(picked)));
     }
   }
 

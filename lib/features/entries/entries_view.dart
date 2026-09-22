@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
-import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/identicon.dart';
 import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/entries_cubit.dart';
@@ -133,7 +133,7 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
     final total = a.closedTotal + running;
     final hasPast = a.closedTotal > Duration.zero;
     return HoverTile(
-      leading: ClientDot(a.client.colorHex),
+      leading: Identicon(a.client.id, size: Identicon.small),
       title: Row(
         children: [
           Flexible(child: Text(a.client.name)),
@@ -217,7 +217,7 @@ class _EntryDayTile extends StatelessWidget {
       // Keyed by first session, not entry: an Entry spanning two days appears
       // twice in this list, and duplicate sibling keys throw.
       key: ValueKey(g.sessions.first.id),
-      leading: ClientDot(g.client.colorHex),
+      leading: Identicon(g.client.id, size: Identicon.small),
       title: Text(g.client.name),
       subtitle: Text(
         '$spans (${formatHm(g.total)})'

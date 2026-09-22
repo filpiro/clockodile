@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
-import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/identicon.dart';
 import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
@@ -126,7 +126,7 @@ class _ClientHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CatSectionHeader(
-      leading: ClientDot(r.client.colorHex, size: ClientDotSize.small),
+      leading: Identicon(r.client.id, size: Identicon.small),
       title: r.client.name,
       trailing: Text(
         formatHm(total),

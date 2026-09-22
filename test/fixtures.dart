@@ -13,7 +13,7 @@ SessionRow row(
   return SessionRow(
     Session(id: id, entryId: id, start: start, end: end),
     Entry(id: id, clientId: clientId, note: note),
-    Client(id: clientId, name: client, colorHex: '#000000'),
+    Client(id: clientId, name: client),
   );
 }
 

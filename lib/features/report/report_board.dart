@@ -1,8 +1,8 @@
 import 'package:catui/catui.dart';
 import 'package:flutter/material.dart';
 
-import '../../shared/utils/colors.dart';
 import '../../shared/utils/format.dart';
+import '../../shared/widgets/identicon.dart';
 import 'board_geometry.dart';
 import 'normalize.dart';
 import 'report_view.dart';
@@ -127,11 +127,19 @@ class _BoardTileState extends State<_BoardTile> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            r.client.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelLarge,
+                          Row(
+                            children: [
+                              Identicon(r.client.id, size: Identicon.small),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  r.client.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelLarge,
+                                ),
+                              ),
+                            ],
                           ),
                           Text(
                             '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
@@ -168,10 +176,7 @@ class _BoardTileState extends State<_BoardTile> {
               border: degenerate
                   ? null
                   : Border(
-                      left: BorderSide(
-                        color: hexToColor(r.client.colorHex),
-                        width: 4,
-                      ),
+                      left: BorderSide(color: cs.primary, width: 4),
                       top: BorderSide(color: cs.surface),
                       bottom: BorderSide(color: cs.surface),
                     ),

@@ -1,15 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-import '../../shared/utils/colors.dart';
-
 part 'database.g.dart';
 
 class Clients extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name =>
       text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
-  TextColumn get colorHex => text()();
 }
 
 /// An Entry (UI "Attività") is a named item of work against one Client.
@@ -105,7 +102,7 @@ class AppDatabase extends _$AppDatabase {
   static const defaultRetentionDays = 60;
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -144,6 +141,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 6) {
         await m.addColumn(settings, settings.aiWslMode);
+      }
+      if (from < 7) {
+        // The client colour gave way to the identicon (ADR 0004). Drop only
+        // that column: no table rebuild, so no row can be lost.
+        await m.dropColumn(clients, 'color_hex');
       }
     },
   );
@@ -273,7 +275,7 @@ class AppDatabase extends _$AppDatabase {
     sessions,
   )..where((s) => s.end.isNull())).write(SessionsCompanion(end: Value(at)));
 
-  /// Case-insensitive match on name; creates with a generated color if absent.
+  /// Case-insensitive match on name; creates the client if absent.
   Future<Client> matchOrCreateClient(String name) async {
     name = name.trim();
     final existing =
@@ -281,10 +283,8 @@ class AppDatabase extends _$AppDatabase {
               ..where((c) => c.name.collate(Collate.noCase).equals(name)))
             .getSingleOrNull();
     if (existing != null) return existing;
-    final id = await into(clients).insert(
-      ClientsCompanion.insert(name: name, colorHex: randomClientColorHex()),
-    );
-    return Client(id: id, name: name, colorHex: '');
+    final id = await into(clients).insert(ClientsCompanion.insert(name: name));
+    return Client(id: id, name: name);
   }
 
   // ---- sessions list ----
@@ -403,11 +403,6 @@ class AppDatabase extends _$AppDatabase {
   Future<void> renameClient(int id, String name) =>
       (update(clients)..where((c) => c.id.equals(id))).write(
         ClientsCompanion(name: Value(name.trim())),
-      );
-
-  Future<void> setClientColor(int id, String colorHex) =>
-      (update(clients)..where((c) => c.id.equals(id))).write(
-        ClientsCompanion(colorHex: Value(colorHex)),
       );
 
   /// Returns false (and deletes nothing) if the client has linked entries.
