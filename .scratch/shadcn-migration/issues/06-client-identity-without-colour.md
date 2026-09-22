@@ -1,7 +1,7 @@
 # Client identity after colour: dropping colorHex for dicebear identicons
 
 Type: grilling
-Status: open
+Status: resolved
 Blocked by: ~~02~~ (resolved — see `../research/02-dicebear.md`)
 Map: ../map.md
 
@@ -22,3 +22,13 @@ Decide:
 - **Docs.** `CONTEXT.md`'s Client definition changes; decide whether this earns an ADR alongside 0001–0003.
 
 Use `/grilling` and `/domain-modeling`.
+
+## Answer
+
+- **Own identicon, not dicebear.** A hash → mirrored grid → `CustomPainter`, using `crypto` (already a direct dep). No new packages, no licence question, no caching needed. It draws inside shadcn `Avatar`'s slot, so the "SVG is not an `ImageProvider`" problem disappears.
+- **Seed = client id.** A rename never changes the picture. Name normalisation is moot.
+- **`colorHex` leaves the schema** via a Drift migration that drops only that column. **The user's database is never cleared or recreated**: every client, entry and session row survives; only the stored colour values are lost. `migration_test.dart` must prove rows survive. Deleted with it: `randomClientColorHex()`, `hexToColor()`, `unknownClientColor`, `setClientColor()`, the colour control in `clients_view`, `colors_test.dart`, colour in `fixtures.dart`.
+- **Two avatar sizes replace `ClientDot`'s four**: small (~20px) in entry rows, group headers and report labels; normal (~32px) in the clients list. None in the client field's `AutoComplete` dropdown (accepted in ticket 05).
+- **Report board**: bars stay one `primary` colour (ticket 05). Clients are told apart by their label, with the small identicon beside it. No legend.
+- **Creating a client**: the user still types and chooses the name. The random-colour step is removed; nothing replaces it.
+- **Docs**: `CONTEXT.md` Client definition updated (done). ADR [0004](../../../docs/adr/0004-client-identicon-replaces-colour.md) written.

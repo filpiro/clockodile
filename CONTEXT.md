@@ -7,7 +7,7 @@ Called Clockodile
 ## Language
 
 **Client**:
-The party a time entry is tracked against. Has a name (unique, case-insensitive) and a color.
+The party a time entry is tracked against. Has a name (unique, case-insensitive), which the user chooses. Shown with an identicon generated from the client itself — never chosen by the user, and unchanged by a rename.
 _Avoid_: Tag, project, category
 
 **Entry**:
