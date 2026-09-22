@@ -32,13 +32,13 @@ A locked migration plan at `.scratch/shadcn-migration/spec.md`: the component-by
 - [The mapping table, and the conventions that replace the house layer](issues/05-component-mapping-and-coherence.md) — the full table and the coherence rules now live in [`style/components.md`](../../style/components.md), rewritten; `AppTokens` dissolves into `ThemeData` leaving `formMaxWidth` as the repo's only shared constant; two shared widgets total (`AppListRow`, `EmptyState`); row actions are always visible and muted, so the hover-reveal composition is deleted; sections stay flat, the FAB is deleted for a header button, segmented controls become mutually-exclusive `Toggle`s, and the date filter drops `Tutte` for an always-one-date model.
 - [Client identity after colour: dropping colorHex for identicons](issues/06-client-identity-without-colour.md) — own ~30-line `CustomPainter` identicon seeded by client id, no dicebear; `colorHex` column dropped by migration with all other rows kept; two sizes (20/32px); report keeps `primary` bars with identicon beside the label; ADR 0004.
 - [Spike Attività on shadcn to prove the theme and the mapping](issues/07-prototype-one-screen.md) — mapping holds with 3 doc fixes (no `theme.padding*`, Toggle not `compact`, `DatePicker` is a dialog); rows get denser (51.5px vs ~72); hover survives via a `Clickable` decoration in `AppListRow`; no `ComponentTheme` needed; radius locked `0.7`, blur off because it is invisible behind Solid.
+- [Italian: shadcn ships English strings only](issues/09-italian-localization.md) — in-repo `ShadcnLocalizationsIt extends ShadcnLocalizationsEn` overriding only the ~40 strings we show (pickers, Cancel/Save, text-field context menu); `DatePicker` replaced by a shared `DateField` over `ObjectFormField` showing `dmyShort()` because shadcn's US date order is an unoverridable extension; `flutter_localizations` removed.
+- [The AI toast: persistent, self-updating, opens dialogs](issues/10-ai-toast.md) — no live counter existed (progress is in the install modal); shadcn's native stack replaces our sticky/hand-back bookkeeping; shadcn defaults (bottomRight, 320px, stack of 3); helper borrows `navigatorKey.currentContext` so the 7 callers do not change; AI toast is closed and raised again per state with `Duration(days: 365)`; `navigatorKey` hand-off stays (confirmed from source: toast builds above the Navigator).
+- [Assemble spec.md: the phased build order](issues/08-write-the-spec.md) — **destination reached**: [`spec.md`](spec.md) written; identicon first, then root/theme/toast/Italian → shell → shared widgets → screens → dep removal → docs; `sdk: ^3.13.0`; report board keeps its geometry with a shadcn `Tooltip`; ADR 0005 in the docs phase.
 
 ## Not yet specified
 
-- **Report board internals.** Colour is settled (`primary` bars on `border` gridlines), but `report_board.dart` + `board_geometry.dart` are hand-laid-out `Positioned` tiles with their own tooltip and hover language — how much of that geometry survives, and whether the tiles adopt `AppListRow`'s interaction rules, is still unclear.
-- **Doc rewrites.** `style/components.md` is done (rewritten as the conventions doc). `CLAUDE.md` still names catui and client colour. `CONTEXT.md` Client and ADR 0004 are done (ticket 06).
-- **What happens to the `catui` repo itself** once this app stops consuming it — a question for that repo, revisited only after this map closes.
-- **Per-screen ticket slicing** for the execution effort: the phased build order is decided here, but the actual screen tickets belong to the next effort.
+Nothing. The way is clear.
 
 ## Out of scope
 
@@ -46,3 +46,5 @@ A locked migration plan at `.scratch/shadcn-migration/spec.md`: the component-by
 - Any change to timer, session or entry domain logic beyond what dropping client colour forces — **with one named exception**: the date filter collapses to a single `DateTime day` and `DateFilter.all` plus its pagination is removed, decided in ticket 05. Runtime state only, no schema change.
 - Mobile and web targets. This is a Windows desktop app.
 - Golden-test infrastructure.
+- What happens to the `catui` repo itself once this app stops consuming it — a question for that repo, not this app.
+- Per-screen ticket slicing — belongs to the execution effort that starts from `spec.md`.

@@ -144,16 +144,34 @@ Flat, not carded: a title (`.h4()`), an optional `.muted().small()` description,
 content, then a `Divider`. A settings row is `Basic(title:, subtitle:, trailing:)` used
 directly — no widget, no width cap of its own.
 
+### Italian
+
+The app is Italian-only; shadcn ships English only. `lib/shadcn_it.dart` holds
+`ShadcnLocalizationsIt extends ShadcnLocalizationsEn` plus its delegate, passed as
+`ShadcnApp(localizationsDelegates: [ShadcnLocalizationsIt.delegate])` — ours comes first,
+so it wins. It overrides only the strings that reach our screens: month and weekday
+names, `datePickerSelectYear`, `buttonCancel`/`buttonSave`, `timeHour`/`timeMinute`, the
+picker placeholders, and the text-field context menu (`menuCut`, `menuCopy`, …). A string
+it misses renders English; it never crashes.
+
+**After any shadcn upgrade, diff `lib/l10n/shadcn_en.arb` in the package for new strings.**
+
+Dates in the UI go through `lib/shared/utils/format.dart` (`dmy`, `dmyShort`, `hhmm`),
+never through shadcn's `formatDateTime`. Times from `TimePicker` already render `09:05`,
+24-hour. No `intl`, no `flutter_localizations`. Decided in
+[wayfinder ticket 09](../.scratch/shadcn-migration/issues/09-italian-localization.md).
+
 ---
 
 ## 2. Shared widgets
 
-The whole list. Two files.
+The whole list. Three files.
 
 | Widget | Why it exists |
 |---|---|
 | `AppListRow` (`lib/shared/widgets/app_list_row.dart`) | `Clickable` + `Basic`, with `onEdit`/`onDelete` rendering the action pair (icon, style, tooltip, hit target). 5 call sites, and it owns the row interaction language. Rows needing something else pass `trailing:` instead. |
 | `EmptyState` (`lib/shared/widgets/empty_state.dart`) | Survives unchanged apart from `.muted()` text. shadcn has no equivalent. |
+| `DateField` (`lib/shared/widgets/date_field.dart`) | `ObjectFormField<DateTime>` + shadcn's `DatePickerDialog`, displaying `dmyShort()` ("22/09/26"). Exists because `DatePicker` hard-codes US order ("September 22, 2026") in a `ShadcnLocalizations` *extension*, which no translation can override. Two call sites, but a correctness fix, not a style choice. |
 
 Plus one constant, `formMaxWidth = 560`.
 
@@ -179,7 +197,7 @@ wrapping a plain `TextField`.
 | `CatSettingRow` | `Basic(title:, subtitle:, trailing:)` |
 | `CatSegmented` | `Toggle`s, mutually exclusive |
 | `CatTag` | `Badge` family — **except** the Aiuto key-caps, which become `KeyboardDisplay` |
-| `CatDateTimeField` | `DatePicker` + `TimePicker` side by side. Not typeable; we never typed them |
+| `CatDateTimeField` | `DateField` + `TimePicker` side by side. Not typeable; we never typed them |
 | `ClientDot` | `Avatar` — identity handled by wayfinder ticket 06 |
 | `catConfirm` | `AlertDialog` + `showOverlay(context, DialogConfiguration(), ...)`, confirm = `DestructiveButton` when destructive |
 | `catTextInput` | Same, hand-composed with a `TextField`. No helper exists |
@@ -210,14 +228,14 @@ wrapping a plain `TextField`.
 | `LinearProgressIndicator` | `Progress`, or `Scaffold.loadingProgress` |
 | `VerticalDivider` | `Divider` — the rail divider dies with the rail anyway |
 | `SnackBar` | a toast |
-| `showDatePicker` / `showTimePicker` | `DatePicker` / `TimePicker` widgets. **No imperative form exists** |
+| `showDatePicker` / `showTimePicker` | `DateField` / `TimePicker` widgets. **No imperative form exists** |
 | `Theme.of(context)` | `Theme.of(context)` — shadcn's, returning shadcn `ThemeData` |
 
 ### Third-party
 
 | Retired | Becomes |
 |---|---|
-| `sonner_toast` | `showToast()` + `ToastLayer`, already installed under `ShadcnApp`. Persistence and live updates are wayfinder ticket 10 |
+| `sonner_toast` | `showToast()` + `ToastLayer`, already installed under `ShadcnApp`. Native stack, shadcn defaults (bottomRight, 320px); helper borrows `navigatorKey.currentContext`; AI toast uses `showDuration: Duration(days: 365)` and is closed and raised again on each state change. See wayfinder ticket 10 |
 | `catppuccin_flutter` | Gone — see wayfinder ticket 06 |
 
 ---
@@ -228,7 +246,7 @@ The one behaviour change this migration makes, because the control could not be 
 without deciding it.
 
 The bar is a **date filter**, and there is always exactly one effective date.
-A `DatePicker` is permanently visible; `Oggi` and `Ieri` are `Toggle` shortcuts beside it
+A `DateField` is permanently visible; `Oggi` and `Ieri` are `Toggle` shortcuts beside it
 in the same `Wrap`. They are mutually exclusive in both directions:
 
 - picking a custom date clears Oggi/Ieri;
@@ -248,13 +266,13 @@ The cubit collapses `DateFilter filter` + `DateTime? pickedDay` into a single
 `DateTime day`; the toggles derive their `value` by comparing it to today/yesterday. The
 invalid state becomes unrepresentable.
 
-A date *range* (two `DatePicker`s) is a plausible future want and explicitly not now.
+A date *range* (two `DateField`s) is a plausible future want and explicitly not now.
 
 ### Known losses, accepted
 
 - `AutoComplete` takes `List<String>` suggestions, so **no leading dot or avatar in the
   client dropdown**. Client colour was decorative; it is gone regardless.
-- `DatePicker`/`TimePicker` open a dialog by default on desktop (`mode:` can make it a popover), **not keyboard-typeable**. We never
+- `DateField`/`TimePicker` open a dialog by default on desktop (`mode:` can make it a popover), **not keyboard-typeable**. We never
   typed them, and splitting date from time is an improvement: editing a time no longer
   forces a walk through the date step.
 - No hover reveal on row actions. They are always visible and muted — better for

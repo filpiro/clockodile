@@ -1,7 +1,7 @@
 # Italian: shadcn ships English strings only
 
 Type: grilling
-Status: open
+Status: resolved
 Blocked by: ~~01~~ (resolved — see `../research/01-shadcn-app-and-theme.md`)
 Map: ../map.md
 
@@ -17,3 +17,28 @@ Decide:
 - **Date and time formatting** — whether shadcn's pickers format via `intl`/locale or need explicit format strings passed. This is the other half of the map's old "Italian date/time formatting" fog patch.
 
 Use `/grilling`.
+
+## Resolution
+
+The conventions now live in [`style/components.md` § Italian](../../../style/components.md) and the `DateField` row of § 2. This is the decision record.
+
+**English that reaches our screens** if nothing is done (read from the `shadcn_flutter 0.0.54` source):
+
+- `DatePicker` dialog — month names, weekday abbreviations, `datePickerSelectYear`, and `buttonCancel`/`buttonSave` (`ObjectFormField` dialog footer, `form/form_field.dart:454-460`).
+- `TimePicker` dialog — `timeHour`, `timeMinute`, plus the same Cancel/Save.
+- Picker placeholders — `placeholderDatePicker`, `placeholderTimePicker`.
+- The right-click menu of **every** `TextField` — `menuCut`, `menuCopy`, `menuPaste`, `menuSelectAll`, `menuUndo`, `menuRedo`, `menuDelete`.
+- `DatePicker`'s field text — `formatDateTime` builds `'${getMonth(m)} $d, $y'` (US order). It is an **extension** on `ShadcnLocalizations` (`locale/shadcn_localizations_extensions.dart:67`), so it is statically dispatched: no subclass can change it. Translated, it would read "settembre 22, 2026".
+- Times are already fine: `formatTimeOfDay` pads and defaults to 24-hour — "09:05".
+
+Dialog buttons are ours everywhere else (`AlertDialog` actions are app code), so this is small, not everywhere.
+
+**Decisions**
+
+1. **Fix: subclass, in repo.** `lib/shadcn_it.dart` — `ShadcnLocalizationsIt extends ShadcnLocalizationsEn` overriding only the ~40 strings above, plus its delegate. `ShadcnApp` puts app delegates *before* `ShadcnLocalizations.delegate` (`shadcn_app.dart:392-397`), so ours wins. Extending the English class means a string we miss renders English instead of failing to compile. No upstream ARB, no avoiding components.
+2. **Strings hard-coded in Dart**, like every other Italian string in the app. No ARB, no codegen. Drift guard is a written rule: after a shadcn upgrade, diff the package's `lib/l10n/shadcn_en.arb`.
+3. **`DatePicker` is not used directly.** A shared `DateField` (`lib/shared/widgets/date_field.dart`) wraps `ObjectFormField<DateTime>` with shadcn's `DatePickerDialog` as editor and shows `dmyShort()` from `lib/shared/utils/format.dart` — "22/09/26", matching the filter chip today. Two call sites (entry editor, date filter); it breaks the three-call-site rule on purpose, because it is a correctness fix.
+4. **`flutter_localizations` leaves `pubspec.yaml`.** Only `GlobalMaterialLocalizations.delegates` needed it; Material is gone. `main.dart` keeps `locale: Locale('it')` and `supportedLocales: [Locale('it')]`, and `localizationsDelegates` becomes `[ShadcnLocalizationsIt.delegate]`. shadcn still depends on it transitively; that is its business. `lib/` does not use `intl`, and does not start to.
+5. **Date/time formatting** stays in `format.dart`; shadcn's `formatDateTime` is never shown.
+
+No new tickets. Nothing ruled out of scope.
