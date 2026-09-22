@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 // `show` keeps drift's Column/Table off Flutter's.
 import 'package:drift/drift.dart' show Value;
+import 'package:shadcn_flutter/shadcn_flutter.dart' show ThemeMode;
 
 import '../../data/db/database.dart';
 import '../ai/ai_install_dialogs.dart';

@@ -1,12 +1,16 @@
-import 'package:catui/catui.dart';
 import 'package:clockodile/shared/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 void main() {
-  // Guards the accent that moved out of catui: the package now defaults to
-  // mauve, so if this app ever stops passing green nothing else would notice.
-  test('both brightnesses use the flavor green as primary', () {
-    expect(lightTheme.colorScheme.primary, catppuccin.latte.green);
-    expect(darkTheme.colorScheme.primary, catppuccin.mocha.green);
+  // Guards the locked knobs: green accent on Slate, radius 0.7, in both
+  // brightnesses — nothing else would notice if one drifted.
+  test('both brightnesses use the green accent and radius 0.7', () {
+    for (final theme in [lightTheme, darkTheme]) {
+      expect(theme.colorScheme.primary, Colors.green);
+      expect(theme.radius, 0.7);
+    }
+    expect(lightTheme.colorScheme.brightness, Brightness.light);
+    expect(darkTheme.colorScheme.brightness, Brightness.dark);
   });
 }

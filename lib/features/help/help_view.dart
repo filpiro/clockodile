@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:catui/catui.dart';
 import 'package:flutter/material.dart';
 
+import '../../shared/theme.dart';
+
 class HelpView extends StatelessWidget {
   const HelpView({super.key});
 
@@ -23,7 +25,7 @@ class HelpView extends StatelessWidget {
     ];
     return CatPage(
       // Prose: it keeps its column instead of running the window's width.
-      maxWidth: AppTokens.formMaxWidth,
+      maxWidth: formMaxWidth,
       scroll: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

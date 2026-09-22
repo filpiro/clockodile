@@ -28,7 +28,7 @@ void main() {
             BlocProvider(create: (_) => EntriesCubit(db)),
             BlocProvider(create: (_) => ClientsCubit(db)),
           ],
-          child: ClockodileApp(purge: db.purgeExpiredEntries()),
+          child: const ClockodileApp(),
         ),
       ),
     );

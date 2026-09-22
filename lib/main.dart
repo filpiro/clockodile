@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+// ponytail: Material only for the old shell; ticket 05 replaces it.
+import 'package:flutter/material.dart' as m show IconButton, Scaffold;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:sonner_toast/sonner_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -71,7 +72,7 @@ Future<void> main() async {
   await windowManager.ensureInitialized();
   await _acquireInstanceLockOrExit();
 
-  // Native title bar hidden: WindowCaption below draws a themed one instead.
+  // Native title bar hidden: _TitleBar below draws a themed one instead.
   const options = WindowOptions(
     size: Size(900, 640),
     center: true,
@@ -83,7 +84,8 @@ Future<void> main() async {
   });
 
   final db = AppDatabase();
-  final purge = db.purgeExpiredEntries();
+  // A delete on a local file: milliseconds, and the window is still hidden.
+  await db.purgeExpiredEntries();
   final aiPaths = LlamaPaths.production();
   runApp(
     RepositoryProvider.value(
@@ -107,21 +109,19 @@ Future<void> main() async {
             )..init(),
           ),
         ],
-        child: ClockodileApp(purge: purge),
+        child: const ClockodileApp(),
       ),
     ),
   );
 }
 
 class ClockodileApp extends StatelessWidget {
-  const ClockodileApp({super.key, required this.purge});
-
-  final Future<void> purge;
+  const ClockodileApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeMode = context.watch<ThemeCubit>().state;
-    return MaterialApp(
+    return ShadcnApp(
       title: 'Clockodile',
       navigatorKey: _navigatorKey,
       theme: lightTheme,
@@ -145,14 +145,7 @@ class ClockodileApp extends StatelessWidget {
         children: [
           Column(
             children: [
-              SizedBox(
-                height: kWindowCaptionHeight,
-                child: WindowCaption(
-                  title: const Text('Clockodile'),
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  brightness: Theme.of(context).brightness,
-                ),
-              ),
+              const _TitleBar(),
               Expanded(
                 child: AiToastHost(navigatorKey: _navigatorKey, child: child!),
               ),
@@ -161,11 +154,48 @@ class ClockodileApp extends StatelessWidget {
           SonnerOverlay(key: Sonner.overlayKey, config: appToastConfig),
         ],
       ),
-      home: FutureBuilder<void>(
-        future: purge,
-        builder: (context, snap) => snap.connectionState == ConnectionState.done
-            ? const HomeShell()
-            : const Scaffold(body: Center(child: CircularProgressIndicator())),
+      home: const HomeShell(),
+    );
+  }
+}
+
+/// Drag to move, double-click to maximise, and the three window buttons.
+/// Hand-made: window_manager's WindowCaption is a Material widget.
+class _TitleBar extends StatelessWidget {
+  const _TitleBar();
+
+  Future<void> _toggleMaximize() async => await windowManager.isMaximized()
+      ? windowManager.unmaximize()
+      : windowManager.maximize();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget button(IconData icon, VoidCallback onPressed) => IconButton(
+      variance: ButtonStyle.ghostIcon(),
+      density: ButtonDensity.icon,
+      icon: Icon(icon),
+      onPressed: onPressed,
+    );
+    return Container(
+      height: kWindowCaptionHeight,
+      color: Theme.of(context).colorScheme.background,
+      child: Row(
+        children: [
+          Expanded(
+            child: DragToMoveArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: const Text('Clockodile').small().muted(),
+                ),
+              ),
+            ),
+          ),
+          button(LucideIcons.minus, windowManager.minimize),
+          button(LucideIcons.square, _toggleMaximize),
+          button(LucideIcons.x, windowManager.close),
+        ],
       ),
     );
   }
@@ -222,7 +252,7 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
   }
 
   Widget _navButton(int index, IconData icon, String tooltip) {
-    return IconButton(
+    return m.IconButton(
       tooltip: tooltip,
       iconSize: 20,
       isSelected: _index == index,
@@ -257,7 +287,7 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
       },
       child: Focus(
         autofocus: true,
-        child: Scaffold(
+        child: m.Scaffold(
           body: Row(
             children: [
               // Uniform sidebar: every destination is the same icon-only

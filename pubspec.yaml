@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.13.0
 
 dependencies:
   crypto: ^3.0.6
@@ -15,6 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  shadcn_flutter: ^0.0.54
   flutter_localizations:
     sdk: flutter
   # Toast overlay, motion and swipe only — it ships no UI, so the card is ours

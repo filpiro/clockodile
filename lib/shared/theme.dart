@@ -1,15 +1,18 @@
-import 'package:catui/catui.dart';
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-/// Clockodile's accent. catui defaults to the palette's mauve; green is this
-/// app's choice, stated here rather than in the package so a second app can
-/// pick its own without touching the house style.
-///
-/// Taken per flavor rather than fixed, so it tracks the brightness: latte's
-/// green is dark, mocha's is light, and both carry [Flavor.base] as foreground.
-/// secondary is left to catui.
-ThemeData _theme(Flavor flavor, Brightness brightness) =>
-    catTheme(flavor, brightness, primary: flavor.green);
+/// Locked knobs (ticket 07): Slate base, green accent, radius 0.7, reduced
+/// density, solid surfaces with no blur. Both brightnesses share them.
+ThemeData _theme(ColorScheme base) => ThemeData(
+  colorScheme: base.green,
+  radius: 0.7,
+  density: Density.reducedDensity,
+  surfaceOpacity: 1.0,
+  surfaceBlur: null,
+);
 
-final ThemeData lightTheme = _theme(catppuccin.latte, Brightness.light);
-final ThemeData darkTheme = _theme(catppuccin.mocha, Brightness.dark);
+final ThemeData lightTheme = _theme(ColorSchemes.lightSlate);
+final ThemeData darkTheme = _theme(ColorSchemes.darkSlate);
+
+/// Max width of forms and prose. The only shared layout constant; everything
+/// else comes from the theme or is a file-local `const`.
+const double formMaxWidth = 560;

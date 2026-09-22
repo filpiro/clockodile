@@ -5,9 +5,10 @@ import 'package:clockodile/features/settings/cubit/theme_cubit.dart';
 import 'package:clockodile/features/settings/settings_view.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' show ThemeMode;
 
 import 'ai_fakes.dart';
 

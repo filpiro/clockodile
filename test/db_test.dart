@@ -176,6 +176,10 @@ void main() {
     expect(await db.getRetentionDays(), 30);
   });
 
+  test('theme mode defaults to dark', () async {
+    expect(await db.getThemeMode(), 'dark');
+  });
+
   test('updateSession never reopens: absent end keeps stored value', () async {
     await db.createEntry('Acme', '');
     await db.stopOpenSession();

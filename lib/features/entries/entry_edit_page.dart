@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:catui/catui.dart';
 
 import '../../data/db/database.dart';
+import '../../shared/theme.dart';
 import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
 import '../../shared/widgets/client_field.dart';
@@ -312,7 +313,7 @@ class _EntryPageState extends State<_EntryPage> {
   Widget _body() {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: AppTokens.formMaxWidth),
+        constraints: const BoxConstraints(maxWidth: formMaxWidth),
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [

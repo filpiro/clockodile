@@ -33,7 +33,7 @@ class Settings extends Table {
   IntColumn get retentionDays => integer().withDefault(const Constant(60))();
 
   /// 'light' | 'dark' | 'system'
-  TextColumn get themeMode => text().withDefault(const Constant('system'))();
+  TextColumn get themeMode => text().withDefault(const Constant('dark'))();
 
   BoolColumn get aiEnabled => boolean().withDefault(const Constant(false))();
 
@@ -172,7 +172,7 @@ class AppDatabase extends _$AppDatabase {
   /// 'light' | 'dark' | 'system'
   Future<String> getThemeMode() async {
     final row = await select(settings).getSingleOrNull();
-    return row?.themeMode ?? 'system';
+    return row?.themeMode ?? 'dark';
   }
 
   Future<void> setThemeMode(String mode) =>

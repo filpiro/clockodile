@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' show ThemeMode;
 
 import '../../../data/db/database.dart';
 
@@ -7,7 +7,7 @@ import '../../../data/db/database.dart';
 class ThemeCubit extends Cubit<ThemeMode> {
   final AppDatabase db;
 
-  ThemeCubit(this.db) : super(ThemeMode.system) {
+  ThemeCubit(this.db) : super(ThemeMode.dark) {
     db.getThemeMode().then((v) => emit(_parse(v)));
   }
 
@@ -18,7 +18,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
 
   static ThemeMode _parse(String v) => switch (v) {
     'light' => ThemeMode.light,
-    'dark' => ThemeMode.dark,
-    _ => ThemeMode.system,
+    'system' => ThemeMode.system,
+    _ => ThemeMode.dark,
   };
 }
