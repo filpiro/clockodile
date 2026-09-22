@@ -2,7 +2,7 @@
 
 **What to build:** Every shadcn string the user can see is Italian: picker dialogs, Cancel/Save, placeholders, and the right-click menu of every text field.
 
-**Blocked by:** 02 — ShadcnApp root
+**Blocked by:** ~~02 — ShadcnApp root~~
 
 **Status:** ready-for-agent
 

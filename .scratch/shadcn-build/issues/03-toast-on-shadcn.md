@@ -2,7 +2,7 @@
 
 **What to build:** Message toasts and the AI toast use shadcn's native toast stack: bottom-right, stack of 3, a message stacks over the AI toast and the AI toast shows again when it closes. The AI toast closes and is raised again on each AI state change. Callers do not change.
 
-**Blocked by:** 02 — ShadcnApp root
+**Blocked by:** ~~02 — ShadcnApp root~~
 
 **Status:** ready-for-agent
 

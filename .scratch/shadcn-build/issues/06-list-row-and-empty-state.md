@@ -2,7 +2,7 @@
 
 **What to build:** The two shared widgets exist on shadcn: the list row (hover fill, always-visible muted actions) and the empty state.
 
-**Blocked by:** 02 — ShadcnApp root
+**Blocked by:** ~~02 — ShadcnApp root~~
 
 **Status:** ready-for-agent
 

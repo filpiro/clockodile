@@ -2,7 +2,7 @@
 
 **What to build:** The window shows the shadcn icon-only navigation rail with Impostazioni and Aiuto pinned at the bottom. Aiuto is converted and is the first real screen visible inside the new shell.
 
-**Blocked by:** 02 — ShadcnApp root
+**Blocked by:** ~~02 — ShadcnApp root~~
 
 **Status:** ready-for-agent
 
