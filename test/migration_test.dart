@@ -87,4 +87,21 @@ void main() {
       expect(settings.aiWslMode, isFalse);
     },
   );
+
+  // Seen on a real file: the colour was already gone but user_version was
+  // still behind (an older build opening the file writes its own version
+  // back), so the drop ran again and threw.
+  test(
+    'an old version whose client colour is already gone still opens',
+    () async {
+      final raw = sqlite3.openInMemory();
+      raw.execute(_schema4);
+      raw.execute('ALTER TABLE clients DROP COLUMN color_hex');
+      final db = AppDatabase.forTesting(NativeDatabase.opened(raw));
+      addTearDown(db.close);
+
+      expect(await db.select(db.clients).get(), hasLength(2));
+      expect(raw.userVersion, 7);
+    },
+  );
 }

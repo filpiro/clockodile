@@ -144,8 +144,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         // The client colour gave way to the identicon (ADR 0004). Drop only
-        // that column: no table rebuild, so no row can be lost.
-        await m.dropColumn(clients, 'color_hex');
+        // that column: no table rebuild, so no row can be lost. Guarded: an
+        // older build opening an upgraded file writes its own lower
+        // user_version back, so this can run again on a file without it.
+        final columns = await customSelect(
+          "SELECT 1 FROM pragma_table_info('clients') WHERE name = 'color_hex'",
+        ).get();
+        if (columns.isNotEmpty) await m.dropColumn(clients, 'color_hex');
       }
     },
   );
@@ -153,9 +158,9 @@ class AppDatabase extends _$AppDatabase {
   /// The single settings row, always present (see [migration]'s beforeOpen).
   Future<Setting> getSettings() => select(settings).getSingle();
 
-  Future<void> saveSettings(SettingsCompanion values) => into(
-    settings,
-  ).insertOnConflictUpdate(values.copyWith(id: const Value(1)));
+  Future<void> saveSettings(SettingsCompanion values) =>
+      into(settings)
+          .insertOnConflictUpdate(values.copyWith(id: const Value(1)));
 
   // ---- retention ----
 
@@ -164,8 +169,8 @@ class AppDatabase extends _$AppDatabase {
     return row?.retentionDays ?? defaultRetentionDays;
   }
 
-  Future<void> setRetentionDays(int days) =>
-      into(settings).insertOnConflictUpdate(
+  Future<void> setRetentionDays(int days) => into(settings)
+      .insertOnConflictUpdate(
         SettingsCompanion(id: const Value(1), retentionDays: Value(days)),
       );
 
@@ -175,8 +180,8 @@ class AppDatabase extends _$AppDatabase {
     return row?.themeMode ?? 'dark';
   }
 
-  Future<void> setThemeMode(String mode) =>
-      into(settings).insertOnConflictUpdate(
+  Future<void> setThemeMode(String mode) => into(settings)
+      .insertOnConflictUpdate(
         SettingsCompanion(id: const Value(1), themeMode: Value(mode)),
       );
 
@@ -262,9 +267,8 @@ class AppDatabase extends _$AppDatabase {
       if (open?.entryId == entryId) return; // already active
       final now = DateTime.now();
       await _closeOpenSession(now);
-      await into(
-        sessions,
-      ).insert(SessionsCompanion.insert(entryId: entryId, start: now));
+      await into(sessions)
+          .insert(SessionsCompanion.insert(entryId: entryId, start: now));
     });
   }
 
