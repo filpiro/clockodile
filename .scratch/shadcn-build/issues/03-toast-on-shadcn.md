@@ -4,14 +4,14 @@
 
 **Blocked by:** ~~02 — ShadcnApp root~~
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Model:** Opus, effort high — toast stack logic is easy to get wrong
 
 Spec: `../../shadcn-migration/spec.md` (phase 1; ticket 10 of the map)
 
-- [ ] `showToast` keeps its signature; the 7 call sites are untouched
-- [ ] Sticky/generation bookkeeping, the sonner overlay and its config are deleted
-- [ ] Navigator key reachable from the toast helper; dialogs opened from the toast still work
-- [ ] AI toast test on a `ShadcnApp` harness: messages stack, 5s timer
-- [ ] `pws -c flutter analyze` has no errors
+- [x] `showToast` keeps its signature; the 7 call sites are untouched
+- [x] Sticky/generation bookkeeping, the sonner overlay and its config are deleted
+- [x] Navigator key reachable from the toast helper; dialogs opened from the toast still work
+- [x] AI toast test on a `ShadcnApp` harness: messages stack, 5s timer
+- [x] `pws -c flutter analyze` has no errors
