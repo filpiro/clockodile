@@ -4,14 +4,14 @@
 
 **Blocked by:** ~~02 — ShadcnApp root~~
 
-**Status:** ready-for-agent
+**Status:** done — commits 80d278b, d8a6295
 
 **Model:** Opus, effort low — follows clear rules in the spec
 
 Spec: `../../shadcn-migration/spec.md` (phase 2 and Aiuto from phase 4; ticket 04 of the map)
 
-- [ ] Navigation stays an index + `IndexedStack`; the entry editor stays a pushed route
-- [ ] Keyboard shortcuts unchanged
-- [ ] Aiuto converted; help view test green
-- [ ] `pws -c flutter analyze` has no errors
-- [ ] Eyeballed: rail selection, Aiuto renders, title bar works, light and dark
+- [x] Navigation stays an index + `IndexedStack`; the entry editor stays a pushed route
+- [x] Keyboard shortcuts unchanged
+- [x] Aiuto converted; help view test green
+- [x] `pws -c flutter analyze` has no errors
+- [x] Eyeballed: rail selection, Aiuto renders, title bar works, light and dark
