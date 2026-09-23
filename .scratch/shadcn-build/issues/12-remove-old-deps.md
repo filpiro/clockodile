@@ -11,6 +11,7 @@
 Spec: `../../shadcn-migration/spec.md` (phase 5)
 
 - [ ] `catui`, `sonner_toast`, `flutter_localizations` and `uses-material-design` removed from pubspec
+- [ ] `lib/main.dart`: `localizationsDelegates` is only `[ShadcnLocalizationsIt.delegate]` — drop `...GlobalMaterialLocalizations.delegates` (kept by ticket 04 while Material widgets remain)
 - [ ] No file in lib, test or integration_test names catui, catppuccin, sonner or imports `package:flutter/material.dart`
 - [ ] `pws -c flutter analyze` has no errors
 - [ ] Full `pws -c flutter test` green
