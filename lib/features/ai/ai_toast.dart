@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../shared/widgets/app_toast.dart';
@@ -67,7 +67,7 @@ class _AiToastHostState extends State<AiToastHost> {
       LocalAiStatus.installing ||
       LocalAiStatus.ready => ('', null, null, false),
     };
-    // Single slot, so a resolved state clears the toast outright.
+    // A resolved state has nothing to say: its toast goes.
     if (text.isEmpty) {
       dismissToast();
     } else {

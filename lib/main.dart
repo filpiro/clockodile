@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:sonner_toast/sonner_toast.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/database.dart';
@@ -31,10 +30,6 @@ import 'shared/theme.dart';
 import 'shared/widgets/app_toast.dart';
 
 const _instancePort = 38573;
-
-/// The Local Model's toast sits above the Navigator; it opens dialogs through
-/// this.
-final _navigatorKey = GlobalKey<NavigatorState>();
 
 /// Single-instance lock: the bound socket doubles as IPC — any incoming
 /// connection means a second instance launched, so come to front.
@@ -123,7 +118,7 @@ class ClockodileApp extends StatelessWidget {
     final themeMode = context.watch<ThemeCubit>().state;
     return ShadcnApp(
       title: 'Clockodile',
-      navigatorKey: _navigatorKey,
+      navigatorKey: navigatorKey,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
@@ -139,19 +134,14 @@ class ClockodileApp extends StatelessWidget {
         ...WidgetsApp.defaultActions,
         VoidCallbackIntent: VoidCallbackAction(),
       },
-      // Caption, toasts and the Local Model listener sit above the Navigator so
-      // they survive pushed routes.
-      builder: (context, child) => Stack(
+      // Caption and the Local Model listener sit above the Navigator so they
+      // survive pushed routes. Toasts are ShadcnApp's own layer, above both.
+      builder: (context, child) => Column(
         children: [
-          Column(
-            children: [
-              const _TitleBar(),
-              Expanded(
-                child: AiToastHost(navigatorKey: _navigatorKey, child: child!),
-              ),
-            ],
+          const _TitleBar(),
+          Expanded(
+            child: AiToastHost(navigatorKey: navigatorKey, child: child!),
           ),
-          SonnerOverlay(key: Sonner.overlayKey, config: appToastConfig),
         ],
       ),
       home: const HomeShell(),
