@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' as m show IconButton, Scaffold;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'shadcn_it.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -124,7 +125,10 @@ class ClockodileApp extends StatelessWidget {
       themeMode: themeMode,
       locale: const Locale('it'),
       supportedLocales: const [Locale('it')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      localizationsDelegates: const [
+        ShadcnLocalizationsIt.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.keyW, control: true):
