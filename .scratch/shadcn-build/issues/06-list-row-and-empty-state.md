@@ -4,13 +4,13 @@
 
 **Blocked by:** ~~02 — ShadcnApp root~~
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Model:** Opus, effort low — follows clear rules in the spec
 
 Spec: `../../shadcn-migration/spec.md` (phase 3; `style/components.md` § 2)
 
-- [ ] Row hover through a `Clickable` decoration (muted fill, medium radius), as the ticket 07 prototype did
-- [ ] Row actions always visible and muted; no hover-reveal
-- [ ] Widget tests for both
-- [ ] `pws -c flutter analyze` has no errors
+- [x] Row hover through a `Clickable` decoration (muted fill, medium radius), as the ticket 07 prototype did
+- [x] Row actions always visible and muted; no hover-reveal
+- [x] Widget tests for both
+- [x] `pws -c flutter analyze` has no errors
