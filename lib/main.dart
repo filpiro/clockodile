@@ -5,7 +5,6 @@ import 'package:flutter/material.dart' as m show IconButton, Scaffold;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'shadcn_it.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -29,6 +28,7 @@ import 'features/settings/cubit/theme_cubit.dart';
 import 'features/settings/settings_view.dart';
 import 'shared/theme.dart';
 import 'shared/widgets/app_toast.dart';
+import 'shadcn_it.dart';
 
 const _instancePort = 38573;
 
