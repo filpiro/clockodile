@@ -298,7 +298,6 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<SessionRow>> watchClosedSessions({
     DateTime? from,
     DateTime? to,
-    int? limit,
   }) {
     final query =
         (select(sessions)
@@ -315,7 +314,6 @@ class AppDatabase extends _$AppDatabase {
               innerJoin(entries, entries.id.equalsExp(sessions.entryId)),
               innerJoin(clients, clients.id.equalsExp(entries.clientId)),
             ]);
-    if (limit != null) query.limit(limit);
     return query.watch().map(
       (rows) => rows
           .map(

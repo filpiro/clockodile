@@ -22,7 +22,6 @@ class HelpView extends StatelessWidget {
       (mod(LogicalKeyboardKey.keyT), "Termina l'attività in corso"),
       (mod(LogicalKeyboardKey.digit1), 'Filtro Oggi'),
       (mod(LogicalKeyboardKey.digit2), 'Filtro Ieri'),
-      (mod(LogicalKeyboardKey.digit3), 'Filtro Tutte'),
       (
         mod(LogicalKeyboardKey.keyS),
         'Esporta CSV normalizzato (pagina Report); '

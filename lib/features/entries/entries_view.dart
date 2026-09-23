@@ -54,11 +54,8 @@ class EntriesView extends StatelessWidget {
           toolbar: Align(
             alignment: Alignment.centerLeft,
             child: DateFilterBar(
-              filter: state.filter,
-              pickedDay: state.pickedDay,
-              showAll: true,
-              onFilter: context.read<EntriesCubit>().setFilter,
-              onPickDay: context.read<EntriesCubit>().setDay,
+              day: state.day,
+              onDay: context.read<EntriesCubit>().setDay,
             ),
           ),
           body: Column(
@@ -76,17 +73,6 @@ class EntriesView extends StatelessWidget {
                             _DayHeader(day.key, day.value.values.toList()),
                             for (final g in day.value.values) _EntryDayTile(g),
                           ],
-                          if (state.canLoadMore)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Center(
-                                child: TextButton(
-                                  onPressed: () =>
-                                      context.read<EntriesCubit>().loadMore(),
-                                  child: const Text('Carica altre'),
-                                ),
-                              ),
-                            ),
                         ],
                       ),
               ),

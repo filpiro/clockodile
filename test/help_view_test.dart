@@ -17,7 +17,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull, reason: 'at $width wide');
-      expect(find.byType(KeyboardDisplay), findsNWidgets(6));
+      expect(find.byType(KeyboardDisplay), findsNWidgets(5));
     }
   });
 }

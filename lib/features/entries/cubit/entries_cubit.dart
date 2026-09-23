@@ -6,48 +6,34 @@ import '../../../data/db/database.dart';
 import '../../../shared/widgets/date_filter_bar.dart';
 
 class EntriesState {
-  final DateFilter filter;
+  /// The one day shown; always date-only (midnight).
+  final DateTime day;
 
-  /// Day selected via the picker chip; kept when switching filters so the
-  /// chip remembers its last date. Only applied when [filter] == day.
-  final DateTime? pickedDay;
-
-  /// The Active Entry (owner of the Open Session), pinned above the list in
-  /// every filter. Null when idle.
+  /// The Active Entry (owner of the Open Session), pinned above the list on
+  /// every day. Null when idle.
   final ActiveEntry? active;
 
-  /// Closed sessions matching [filter], newest first.
+  /// Closed sessions of [day], newest first.
   final List<SessionRow> rows;
-  final int limit; // only applies to DateFilter.all
-  EntriesState(this.filter, this.pickedDay, this.active, this.rows, this.limit);
+  EntriesState(this.day, this.active, this.rows);
 
   EntriesState copyWith({
-    DateFilter? filter,
-    DateTime? pickedDay,
+    DateTime? day,
     ActiveEntry? Function()? active,
     List<SessionRow>? rows,
-    int? limit,
   }) => EntriesState(
-    filter ?? this.filter,
-    pickedDay ?? this.pickedDay,
+    day ?? this.day,
     active == null ? this.active : active(),
     rows ?? this.rows,
-    limit ?? this.limit,
   );
-
-  /// True when "all" may have more rows beyond the current page.
-  bool get canLoadMore => filter == DateFilter.all && rows.length >= limit;
 }
-
-const _pageSize = 50;
 
 class EntriesCubit extends Cubit<EntriesState> {
   final AppDatabase db;
   StreamSubscription<List<SessionRow>>? _sub;
   StreamSubscription<ActiveEntry?>? _activeSub;
 
-  EntriesCubit(this.db)
-    : super(EntriesState(DateFilter.today, null, null, const [], _pageSize)) {
+  EntriesCubit(this.db) : super(EntriesState(today(), null, const [])) {
     _activeSub = db.watchActiveEntry().listen(
       (a) => emit(state.copyWith(active: () => a)),
       onError: addError,
@@ -55,47 +41,18 @@ class EntriesCubit extends Cubit<EntriesState> {
     _watch();
   }
 
-  void setFilter(DateFilter filter) {
-    emit(state.copyWith(filter: filter, limit: _pageSize));
-    _watch();
-  }
-
   void setDay(DateTime day) {
-    emit(
-      state.copyWith(
-        filter: DateFilter.day,
-        pickedDay: DateTime(day.year, day.month, day.day),
-        limit: _pageSize,
-      ),
-    );
+    emit(state.copyWith(day: dateOnly(day)));
     _watch();
-  }
-
-  void loadMore() {
-    emit(state.copyWith(limit: state.limit + _pageSize));
-    _watch();
-  }
-
-  (DateTime?, DateTime?) _filterRange() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return switch (state.filter) {
-      DateFilter.today => (today, null),
-      DateFilter.yesterday => (today.subtract(const Duration(days: 1)), today),
-      DateFilter.day => (
-        state.pickedDay!,
-        state.pickedDay!.add(const Duration(days: 1)),
-      ),
-      DateFilter.all => (null, null),
-    };
   }
 
   void _watch() {
     _sub?.cancel();
-    final (from, to) = _filterRange();
-    final limit = state.filter == DateFilter.all ? state.limit : null;
     _sub = db
-        .watchClosedSessions(from: from, to: to, limit: limit)
+        .watchClosedSessions(
+          from: state.day,
+          to: state.day.add(const Duration(days: 1)),
+        )
         .listen((rows) => emit(state.copyWith(rows: rows)), onError: addError);
   }
 

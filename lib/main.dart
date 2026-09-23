@@ -289,11 +289,9 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
           if (cubit.state.active != null) cubit.stop();
         }),
         mod(LogicalKeyboardKey.digit1): () =>
-            _onEntries((c) => c.setFilter(DateFilter.today)),
+            _onEntries((c) => c.setDay(today())),
         mod(LogicalKeyboardKey.digit2): () =>
-            _onEntries((c) => c.setFilter(DateFilter.yesterday)),
-        mod(LogicalKeyboardKey.digit3): () =>
-            _onEntries((c) => c.setFilter(DateFilter.all)),
+            _onEntries((c) => c.setDay(yesterday())),
         // Export lives on the Report screen: switch there, then export.
         mod(LogicalKeyboardKey.keyS): () {
           setState(() => _index = _reportIndex);

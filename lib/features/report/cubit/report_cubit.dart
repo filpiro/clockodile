@@ -15,39 +15,20 @@ import '../normalize.dart';
 enum ReportMode { grouped, chronological }
 
 class ReportState {
-  final DateFilter filter;
-
-  /// Day selected via the picker chip; only applied when [filter] == day.
-  final DateTime? pickedDay;
+  /// The one day reported; always date-only (midnight).
+  final DateTime day;
 
   final ReportMode mode;
 
-  /// Normalized rows for the selected day, in display order.
+  /// Normalized rows for [day], in display order.
   final List<ReportRow> rows;
-  ReportState(this.filter, this.pickedDay, this.mode, this.rows);
+  ReportState(this.day, this.mode, this.rows);
 
   ReportState copyWith({
-    DateFilter? filter,
-    DateTime? pickedDay,
+    DateTime? day,
     ReportMode? mode,
     List<ReportRow>? rows,
-  }) => ReportState(
-    filter ?? this.filter,
-    pickedDay ?? this.pickedDay,
-    mode ?? this.mode,
-    rows ?? this.rows,
-  );
-
-  DateTime get day {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return switch (filter) {
-      DateFilter.today => today,
-      DateFilter.yesterday => today.subtract(const Duration(days: 1)),
-      DateFilter.day => pickedDay!,
-      DateFilter.all => today, // unreachable: Report's bar has no Tutte
-    };
-  }
+  }) => ReportState(day ?? this.day, mode ?? this.mode, rows ?? this.rows);
 }
 
 class ReportCubit extends Cubit<ReportState> {
@@ -55,22 +36,12 @@ class ReportCubit extends Cubit<ReportState> {
   StreamSubscription<List<SessionRow>>? _sub;
 
   ReportCubit(this.db)
-    : super(ReportState(DateFilter.today, null, ReportMode.grouped, const [])) {
-    _watch();
-  }
-
-  void setFilter(DateFilter filter) {
-    emit(state.copyWith(filter: filter));
+    : super(ReportState(today(), ReportMode.grouped, const [])) {
     _watch();
   }
 
   void setDay(DateTime day) {
-    emit(
-      state.copyWith(
-        filter: DateFilter.day,
-        pickedDay: DateTime(day.year, day.month, day.day),
-      ),
-    );
+    emit(state.copyWith(day: dateOnly(day)));
     _watch();
   }
 

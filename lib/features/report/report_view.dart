@@ -54,10 +54,8 @@ class ReportView extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     DateFilterBar(
-                      filter: state.filter,
-                      pickedDay: state.pickedDay,
-                      onFilter: context.read<ReportCubit>().setFilter,
-                      onPickDay: context.read<ReportCubit>().setDay,
+                      day: state.day,
+                      onDay: context.read<ReportCubit>().setDay,
                     ),
                     CatSegmented<ReportMode>(
                       segments: const {

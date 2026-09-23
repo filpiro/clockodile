@@ -4,13 +4,13 @@
 
 **Blocked by:** 04 — Italian strings for shadcn
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Model:** Opus, effort low — follows clear rules in the spec
 
 Spec: `../../shadcn-migration/spec.md` (phase 3; `style/components.md` § 4)
 
-- [ ] Shared date field over shadcn's form field with the date picker dialog
-- [ ] Filter state is a single day; `DateFilter.all` removed; runtime state only, no schema change
-- [ ] Tests for the filter cubit and the date field
-- [ ] `pws -c flutter analyze` has no errors
+- [x] Shared date field over shadcn's form field with the date picker dialog
+- [x] Filter state is a single day; `DateFilter.all` removed; runtime state only, no schema change
+- [x] Tests for the filter cubit and the date field
+- [x] `pws -c flutter analyze` has no errors
