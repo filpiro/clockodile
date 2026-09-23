@@ -261,8 +261,12 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
   }
 
   Widget _navItem(int index, IconData icon, String label) {
-    // Icon-only rail: the label lives in the tooltip.
+    // Icon-only rail: the label lives in the tooltip, to the right. The
+    // default (below) has no room at the window's bottom edge and flips
+    // over the pointer, which closes it at once.
     return Tooltip(
+      alignment: Alignment.centerLeft,
+      anchorAlignment: Alignment.centerRight,
       tooltip: (_) => TooltipContainer(child: Text(label)),
       child: NavigationItem(
         selected: _index == index,
