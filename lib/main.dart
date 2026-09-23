@@ -1,7 +1,5 @@
 import 'dart:io';
 
-// ponytail: Material only for the old shell; ticket 05 replaces it.
-import 'package:flutter/material.dart' as m show IconButton, Scaffold;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -262,13 +260,15 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
     act(context.read<EntriesCubit>());
   }
 
-  Widget _navButton(int index, IconData icon, String tooltip) {
-    return m.IconButton(
-      tooltip: tooltip,
-      iconSize: 20,
-      isSelected: _index == index,
-      icon: Icon(icon),
-      onPressed: () => setState(() => _index = index),
+  Widget _navItem(int index, IconData icon, String label) {
+    // Icon-only rail: the label lives in the tooltip.
+    return Tooltip(
+      tooltip: (_) => TooltipContainer(child: Text(label)),
+      child: NavigationItem(
+        selected: _index == index,
+        onChanged: (_) => setState(() => _index = index),
+        child: Icon(icon),
+      ),
     );
   }
 
@@ -298,45 +298,38 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
       },
       child: Focus(
         autofocus: true,
-        child: m.Scaffold(
-          body: Row(
-            children: [
-              // Uniform sidebar: every destination is the same icon-only
-              // IconButton (tooltip + isSelected tint), top or bottom.
-              SizedBox(
-                width: 64,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    _navButton(0, LucideIcons.listTodo, 'Attività'),
-                    _navButton(1, LucideIcons.users, 'Clienti'),
-                    _navButton(2, LucideIcons.fileChartColumn, 'Report'),
-                    const Spacer(),
-                    _navButton(
-                      _settingsIndex,
-                      LucideIcons.settings,
-                      'Impostazioni',
-                    ),
-                    _navButton(_helpIndex, LucideIcons.circleHelp, 'Aiuto'),
-                    const SizedBox(height: 12),
-                  ],
+        child: Row(
+          children: [
+            NavigationRail(
+              labelType: NavigationLabelType.none,
+              footer: [
+                _navItem(
+                  _settingsIndex,
+                  LucideIcons.settings,
+                  'Impostazioni',
                 ),
+                _navItem(_helpIndex, LucideIcons.circleHelp, 'Aiuto'),
+              ],
+              children: [
+                _navItem(0, LucideIcons.listTodo, 'Attività'),
+                _navItem(1, LucideIcons.users, 'Clienti'),
+                _navItem(_reportIndex, LucideIcons.fileChartColumn, 'Report'),
+              ],
+            ),
+            const VerticalDivider(),
+            Expanded(
+              child: IndexedStack(
+                index: _index,
+                children: const [
+                  EntriesView(),
+                  ClientsView(),
+                  ReportView(),
+                  HelpView(),
+                  SettingsView(),
+                ],
               ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: IndexedStack(
-                  index: _index,
-                  children: const [
-                    EntriesView(),
-                    ClientsView(),
-                    ReportView(),
-                    HelpView(),
-                    SettingsView(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
