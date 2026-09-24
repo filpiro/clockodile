@@ -213,7 +213,9 @@ class _EntryPageState extends State<_EntryPage> {
             ),
           ),
           child: IconButton(
-            variance: ButtonStyle.destructiveIcon(),
+            variance: const ButtonStyle.ghostIcon().withForegroundColor(
+              hoverColor: theme.colorScheme.destructive,
+            ),
             density: ButtonDensity.icon,
             icon: const Icon(LucideIcons.trash2),
             onPressed: isLast ? null : () => _deleteSession(s),
@@ -371,7 +373,7 @@ class _EntryPageState extends State<_EntryPage> {
   }
 }
 
-/// A day and a time side by side, both editing one [DateTime]. While [value]
+/// A day above a time, both editing one [DateTime]. While [value]
 /// is null, a pick borrows the other half from [fallback].
 class _DateTimeField extends StatelessWidget {
   final FormKey<Object> formKey;
@@ -397,32 +399,30 @@ class _DateTimeField extends StatelessWidget {
     return FormField(
       key: formKey,
       label: Text(label),
-      child: Row(
+      // Day above time: side by side they crowd each other.
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: DateField(
-              value: value,
-              placeholder: hint,
-              onChanged: (d) {
-                if (d == null) return;
-                onChanged(
-                  DateTime(d.year, d.month, d.day, base.hour, base.minute),
-                );
-              },
-            ),
+          DateField(
+            value: value,
+            placeholder: hint,
+            onChanged: (d) {
+              if (d == null) return;
+              onChanged(
+                DateTime(d.year, d.month, d.day, base.hour, base.minute),
+              );
+            },
           ),
           const Gap(8),
-          Expanded(
-            child: TimePicker(
-              value: value == null ? null : TimeOfDay.fromDateTime(value!),
-              placeholder: hint,
-              onChanged: (t) {
-                if (t == null) return;
-                onChanged(
-                  DateTime(base.year, base.month, base.day, t.hour, t.minute),
-                );
-              },
-            ),
+          TimePicker(
+            value: value == null ? null : TimeOfDay.fromDateTime(value!),
+            placeholder: hint,
+            onChanged: (t) {
+              if (t == null) return;
+              onChanged(
+                DateTime(base.year, base.month, base.day, t.hour, t.minute),
+              );
+            },
           ),
         ],
       ),

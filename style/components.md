@@ -79,9 +79,11 @@ interaction language is state-driven decoration.
 
 One way, everywhere:
 
-- The action is a `DestructiveButton` (or `ButtonStyle.destructiveIcon()` for an icon).
-- The colour is **always on**, not revealed on hover. The old per-intent hover shift is gone.
-- **In a row, destructive is the only coloured icon.** Edit and every other action is ghost.
+- A text action is a `DestructiveButton`, colour always on (e.g. "Termina").
+- An icon action (row delete, session delete) is **ghost, red only on hover**:
+  `ButtonStyle.ghostIcon().withForegroundColor(hoverColor: colorScheme.destructive)`.
+  A filled red square on every row was too loud (Attività eyeball).
+- In a row, every icon is ghost at rest; nothing is coloured until hovered.
 - Anything irreversible confirms through an `AlertDialog` whose confirm action is a
   `DestructiveButton`.
 
@@ -187,7 +189,7 @@ wrapping a plain `TextField`.
 | Retired | Becomes |
 |---|---|
 | `HoverTile` | `AppListRow` (`Clickable` + `Basic`) — actions always visible, no hover reveal |
-| `EditIconButton` / `DeleteIconButton` | `AppListRow`'s `onEdit`/`onDelete`; standalone use is `IconButton` + `ButtonStyle.ghostIcon()`/`destructiveIcon()` |
+| `EditIconButton` / `DeleteIconButton` | `AppListRow`'s `onEdit`/`onDelete`; standalone use is `IconButton` + `ButtonStyle.ghostIcon()` (delete adds a destructive hover foreground) |
 | `DangerButton` | `DestructiveButton` |
 | `intentHoverStyle()` | **Gone.** Intent colour is always on; see *Destructive intent* |
 | `EmptyState` | Kept as-is |

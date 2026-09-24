@@ -47,12 +47,12 @@ class AppListRow extends StatelessWidget {
         title: title,
         subtitle: subtitle,
         trailingAlignment: Alignment.center,
-        trailing: trailing ?? _actions(),
+        trailing: trailing ?? _actions(theme),
       ),
     );
   }
 
-  Widget? _actions() {
+  Widget? _actions(ThemeData theme) {
     if (onEdit == null && onDelete == null) return null;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -68,12 +68,14 @@ class AppListRow extends StatelessWidget {
               onPressed: onEdit,
             ),
           ),
-        // In a row, destructive is the only coloured icon.
+        // Ghost like edit; red only under the pointer.
         if (onDelete != null)
           _tip(
             'Elimina',
             IconButton(
-              variance: ButtonStyle.destructiveIcon(),
+              variance: const ButtonStyle.ghostIcon().withForegroundColor(
+                hoverColor: theme.colorScheme.destructive,
+              ),
               icon: const Icon(LucideIcons.trash2),
               density: ButtonDensity.icon,
               onPressed: onDelete,
