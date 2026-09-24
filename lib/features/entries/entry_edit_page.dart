@@ -1,20 +1,22 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' hide showToast;
 
 import '../../data/db/database.dart';
 import '../../shared/theme.dart';
 import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
 import '../../shared/widgets/client_field.dart';
+import '../../shared/widgets/date_field.dart';
 import '../ai/ai_provider.dart';
 import '../ai/cubit/ai_cubit.dart';
 import '../ai/summary_command.dart';
 import 'cubit/entries_cubit.dart';
+
+const _pagePadding = 24.0;
 
 /// No [entry] → create a new Entry born active (no end field, spec).
 /// With [entry] → edit client/note and the entry's sessions.
@@ -23,9 +25,13 @@ Future<void> openEntryPage(
   Entry? entry,
   Client? client,
 }) {
-  return Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (_) => _EntryPage(entry, client)));
+  return Navigator.of(context).push(
+    PageRouteBuilder(
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      pageBuilder: (_, _, _) => _EntryPage(entry, client),
+    ),
+  );
 }
 
 /// Local editable copy of one session row.
@@ -155,64 +161,65 @@ class _EntryPageState extends State<_EntryPage> {
   Widget _sessionTile(_EditableSession s) {
     final isLast = _sessions!.length <= 1;
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: CatDateTimeField(
-                        label: 'Inizio',
-                        value: s.start,
-                        onChanged: (v) => setState(() => s.start = v),
-                      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _DateTimeField(
+                      formKey: FormKey(('start', s.id)),
+                      label: 'Inizio',
+                      value: s.start,
+                      fallback: s.start,
+                      onChanged: (v) => setState(() => s.start = v),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      // Open session: "in corso" until set, never cleared.
-                      child: CatDateTimeField(
-                        label: 'Fine',
-                        placeholder: 'in corso',
-                        value: s.end,
-                        onChanged: (v) => setState(() => s.end = v),
-                      ),
-                    ),
-                  ],
-                ),
-                if (s.invalid)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      "La fine deve essere dopo l'inizio",
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                  )
-                else if (s.end != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(formatHm(s.end!.difference(s.start))),
                   ),
-              ],
+                  const Gap(12),
+                  Expanded(
+                    // Open session: "in corso" until set, never cleared.
+                    child: _DateTimeField(
+                      formKey: FormKey(('end', s.id)),
+                      label: 'Fine',
+                      placeholder: 'in corso',
+                      value: s.end,
+                      fallback: s.start,
+                      onChanged: (v) => setState(() => s.end = v),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(4),
+              if (s.invalid)
+                Text(
+                  "La fine deve essere dopo l'inizio",
+                  style: TextStyle(color: theme.colorScheme.destructive),
+                ).small()
+              else if (s.end != null)
+                Text(formatHm(s.end!.difference(s.start))).small().muted(),
+            ],
+          ),
+        ),
+        const Gap(8),
+        Tooltip(
+          tooltip: (_) => TooltipContainer(
+            child: Text(
+              isLast ? 'Ultima sessione — non eliminabile' : 'Elimina sessione',
             ),
           ),
-          // Without it the icon's 40px hover disc touches the end-time
-          // field's border.
-          const SizedBox(width: 16),
-          DeleteIconButton(
-            tooltip: isLast
-                ? 'Ultima sessione — non eliminabile'
-                : 'Elimina sessione',
+          child: IconButton(
+            variance: ButtonStyle.destructiveIcon(),
+            density: ButtonDensity.icon,
+            icon: const Icon(LucideIcons.trash2),
             onPressed: isLast ? null : () => _deleteSession(s),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -236,19 +243,26 @@ class _EntryPageState extends State<_EntryPage> {
       child: Focus(
         autofocus: !widget.isCreate,
         child: Scaffold(
-          appBar: AppBar(
-            title: Text(
-              widget.isCreate ? 'Nuova attività' : 'Modifica attività',
-            ),
-            actions: [
-              FilledButton(
-                onPressed: canSave ? _save : null,
-                child: const Text('Salva'),
+          loadingProgressIndeterminate:
+              !widget.isCreate && _sessions == null,
+          headers: [
+            AppBar(
+              title: Text(
+                widget.isCreate ? 'Nuova attività' : 'Modifica attività',
               ),
-              const SizedBox(width: 16),
-            ],
-          ),
-          body: _body(),
+              trailing: [
+                OutlineButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Annulla'),
+                ),
+                PrimaryButton(
+                  onPressed: canSave ? _save : null,
+                  child: const Text('Salva'),
+                ),
+              ],
+            ),
+          ],
+          child: _body(),
         ),
       ),
     );
@@ -256,10 +270,15 @@ class _EntryPageState extends State<_EntryPage> {
 
   /// Grows from three lines to eight, then scrolls rather than pushing Salva
   /// off screen. The AI button sits inside the border at the bottom right, in
-  /// a strip the content padding reserves — a `suffixIcon` would centre it
+  /// a strip the bottom padding reserves — a trailing feature would centre it
   /// vertically and sit in the text's way.
   Widget _noteField() {
     const buttonStrip = 40.0;
+    final theme = Theme.of(context);
+    // shadcn TextField's own default padding (0.75 × content padding at the
+    // sides, one gap on top), bar the reserved strip.
+    final side = theme.density.baseContentPadding * theme.scaling * 0.75;
+    final top = theme.density.baseGap * theme.scaling;
     // The cubit only ever turns AI on under Windows.
     final ai = context.watch<AiCubit>().state;
     final aiOn = ai.enabled;
@@ -267,83 +286,145 @@ class _EntryPageState extends State<_EntryPage> {
         ai.status == LocalAiStatus.ready &&
         !_generating &&
         hasEnoughWordsForSummary(_note.text);
-    return Stack(
-      children: [
-        Opacity(
-          opacity: _generating ? 0.5 : 1,
-          child: TextField(
-            controller: _note,
-            enabled: !_generating,
-            minLines: 3,
-            maxLines: 8,
-            onChanged: (_) => setState(() {}), // the word gate moves live
-            decoration: InputDecoration(
-              labelText: 'Nota',
-              // Without it the label floats in the middle of a multi-line box.
-              alignLabelWithHint: true,
-              contentPadding: EdgeInsets.fromLTRB(
-                12,
-                12,
-                12,
-                aiOn ? buttonStrip : 12,
+    return FormField(
+      key: const FormKey(#note),
+      label: const Text('Nota'),
+      child: Stack(
+        children: [
+          Opacity(
+            opacity: _generating ? 0.5 : 1,
+            child: TextField(
+              controller: _note,
+              enabled: !_generating,
+              minLines: 3,
+              maxLines: 8,
+              padding: aiOn
+                  ? EdgeInsets.fromLTRB(side, top, side, buttonStrip)
+                  : null,
+              onChanged: (_) => setState(() {}), // the word gate moves live
+            ),
+          ),
+          // Absent entirely with AI off: the app looks exactly as it did before.
+          if (aiOn)
+            Positioned(
+              right: 4,
+              bottom: 4,
+              child: Tooltip(
+                tooltip: (_) =>
+                    const TooltipContainer(child: Text('Riassumi la nota')),
+                child: IconButton(
+                  variance: ButtonStyle.ghostIcon(),
+                  density: ButtonDensity.icon,
+                  onPressed: canSummarise ? _summarise : null,
+                  icon: _generating
+                      ? const CircularProgressIndicator()
+                      : const Icon(LucideIcons.sparkles),
+                ),
               ),
             ),
-          ),
-        ),
-        // Absent entirely with AI off: the app looks exactly as it did before.
-        if (aiOn)
-          Positioned(
-            right: 4,
-            bottom: 0,
-            child: IconButton(
-              tooltip: 'Riassumi la nota',
-              onPressed: canSummarise ? _summarise : null,
-              icon: _generating
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(LucideIcons.sparkles),
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _body() {
-    return Center(
+    return Align(
+      alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: formMaxWidth),
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(_pagePadding),
           children: [
-            ClientField(
-              controller: _client,
-              autofocus: widget.isCreate,
-              onChanged: (_) => setState(() {}),
+            FormField(
+              key: const FormKey(#client),
+              label: const Text('Cliente'),
+              child: ClientField(
+                controller: _client,
+                autofocus: widget.isCreate,
+                onChanged: (_) => setState(() {}),
+              ),
             ),
-            const SizedBox(height: 16),
+            const Gap(16),
             if (widget.isCreate)
               // End hidden entirely on create: new entries are born active.
-              CatDateTimeField(
+              _DateTimeField(
+                formKey: const FormKey(#start),
                 label: 'Inizio',
                 value: _start,
+                fallback: _start,
                 onChanged: (v) => setState(() => _start = v),
               )
             else ...[
-              const CatSectionHeader.inline(title: 'Sessioni'),
-              if (_sessions == null)
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                for (final s in _sessions!) _sessionTile(s),
+              const Text('Sessioni').h4(),
+              const Gap(8),
+              for (final s in _sessions ?? const <_EditableSession>[]) ...[
+                _sessionTile(s),
+                const Gap(16),
+              ],
             ],
-            const SizedBox(height: 16),
+            const Gap(16),
             _noteField(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A day and a time side by side, both editing one [DateTime]. While [value]
+/// is null, a pick borrows the other half from [fallback].
+class _DateTimeField extends StatelessWidget {
+  final FormKey<Object> formKey;
+  final String label;
+  final String? placeholder;
+  final DateTime? value;
+  final DateTime fallback;
+  final ValueChanged<DateTime> onChanged;
+
+  const _DateTimeField({
+    required this.formKey,
+    required this.label,
+    this.placeholder,
+    required this.value,
+    required this.fallback,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final base = value ?? fallback;
+    final hint = placeholder == null ? null : Text(placeholder!);
+    return FormField(
+      key: formKey,
+      label: Text(label),
+      child: Row(
+        children: [
+          Expanded(
+            child: DateField(
+              value: value,
+              placeholder: hint,
+              onChanged: (d) {
+                if (d == null) return;
+                onChanged(
+                  DateTime(d.year, d.month, d.day, base.hour, base.minute),
+                );
+              },
+            ),
+          ),
+          const Gap(8),
+          Expanded(
+            child: TimePicker(
+              value: value == null ? null : TimeOfDay.fromDateTime(value!),
+              placeholder: hint,
+              onChanged: (t) {
+                if (t == null) return;
+                onChanged(
+                  DateTime(base.year, base.month, base.day, t.hour, t.minute),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

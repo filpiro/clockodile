@@ -5,9 +5,9 @@ import 'package:clockodile/features/ai/cubit/ai_cubit.dart';
 import 'package:clockodile/features/entries/cubit/entries_cubit.dart';
 import 'package:clockodile/features/entries/entry_edit_page.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import 'ai_fakes.dart';
 
@@ -45,10 +45,10 @@ void main() {
             BlocProvider(create: (_) => EntriesCubit(db)),
             BlocProvider.value(value: ai),
           ],
-          child: MaterialApp(
+          child: ShadcnApp(
             home: Builder(
               builder: (context) => Scaffold(
-                body: TextButton(
+                child: TextButton(
                   onPressed: () => openEntryPage(context, entry: entry),
                   child: const Text('apri'),
                 ),
@@ -62,9 +62,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder noteField() => find.widgetWithText(TextField, 'Nota');
+  Finder noteField() => find.descendant(
+    of: find.widgetWithText(FormField, 'Nota'),
+    matching: find.byType(TextField),
+  );
   Finder aiButton() => find.ancestor(
-    of: find.byTooltip('Riassumi la nota'),
+    of: find.byIcon(LucideIcons.sparkles),
     matching: find.byType(IconButton),
   );
 
@@ -143,9 +146,7 @@ void main() {
     await aiTo(tester, LocalAiStatus.ready);
     await openPage(tester);
 
-    final padding =
-        tester.widget<TextField>(noteField()).decoration!.contentPadding
-            as EdgeInsets;
+    final padding = tester.widget<TextField>(noteField()).padding as EdgeInsets;
     expect(padding.bottom, greaterThan(padding.top));
   });
 }
