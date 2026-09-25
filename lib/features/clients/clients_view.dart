@@ -135,11 +135,16 @@ Future<String?> _askName(
     const DialogConfiguration(),
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        placeholder: const Text('Nome'),
-        onSubmitted: (_) => submit(context),
+      // A TextField takes all the width it gets; without this the dialog
+      // spans the window.
+      content: SizedBox(
+        width: 360,
+        child: TextField(
+          controller: controller,
+          autofocus: true,
+          placeholder: const Text('Nome'),
+          onSubmitted: (_) => submit(context),
+        ),
       ),
       actions: [
         OutlineButton(

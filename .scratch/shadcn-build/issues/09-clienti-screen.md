@@ -14,4 +14,4 @@ Spec: `../../shadcn-migration/spec.md` (phase 4)
 - [x] Integration test's create-client steps tap the header button
 - [x] Clienti widget tests green
 - [x] `pws -c flutter analyze` has no errors
-- [ ] Eyeballed: identicon, create/rename/delete
+- [x] Eyeballed: identicon, create/rename/delete
