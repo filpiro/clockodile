@@ -10,8 +10,8 @@
 
 Spec: `../../shadcn-migration/spec.md` (phase 4 (Report board))
 
-- [ ] Board geometry unchanged; tiles do not use the list row
-- [ ] If `Tooltip` cannot anchor to a board tile, keep the board's own tooltip restyled with theme roles (spec § 5)
-- [ ] Report board and board geometry tests green
-- [ ] `pws -c flutter analyze` has no errors
+- [x] Board geometry unchanged; tiles do not use the list row
+- [x] If `Tooltip` cannot anchor to a board tile, keep the board's own tooltip restyled with theme roles (spec § 5)
+- [x] Report board and board geometry tests green
+- [x] `pws -c flutter analyze` has no errors
 - [ ] Eyeballed: bars, tooltip, labels
