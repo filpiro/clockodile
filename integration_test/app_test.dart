@@ -1,5 +1,4 @@
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,12 +83,12 @@ void main() {
         isEmpty);
     expect(find.text('in corso'), findsNothing);
 
-    // --- new client via FAB on clients screen ---
+    // --- new client via header button on clients screen ---
     await tester.tap(find.text('Clienti'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.text('Nuovo cliente'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Nome'), 'Acme');
+    await tester.enterText(find.widgetWithText(shadcn.TextField, 'Nome'), 'Acme');
     await tester.tap(find.text('Crea'));
     await tester.pumpAndSettle();
 

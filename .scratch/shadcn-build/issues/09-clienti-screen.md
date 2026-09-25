@@ -10,8 +10,8 @@
 
 Spec: `../../shadcn-migration/spec.md` (phase 4)
 
-- [ ] No colour control anywhere
-- [ ] Integration test's create-client steps tap the header button
-- [ ] Clienti widget tests green
-- [ ] `pws -c flutter analyze` has no errors
+- [x] No colour control anywhere
+- [x] Integration test's create-client steps tap the header button
+- [x] Clienti widget tests green
+- [x] `pws -c flutter analyze` has no errors
 - [ ] Eyeballed: identicon, create/rename/delete
