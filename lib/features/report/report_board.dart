@@ -109,19 +109,22 @@ class _BoardTile extends StatelessWidget {
           (states) => BoxDecoration(
             // A zero- or negative-length row has no room for borders: it is
             // the hairline. Never hidden.
-            color: degenerate
-                ? cs.destructive
-                // Hand-written hover alpha: the board is a chart, not a shadcn
-                // widget, so no ButtonStyle owns this state for us.
-                : cs.primary.withValues(
-                    alpha: states.contains(WidgetState.hovered) ? .85 : 1,
-                  ),
+            color: degenerate ? cs.destructive : cs.muted,
             // Borders inset the content without changing the box height, so
-            // contiguous tiles still sum to their combined duration.
+            // contiguous tiles still sum to their combined duration. The
+            // left edge is always there so hover never shifts the content;
+            // it only turns primary under the pointer.
             border: degenerate
                 ? null
-                : Border.symmetric(
-                    horizontal: BorderSide(color: cs.background),
+                : Border(
+                    left: BorderSide(
+                      color: states.contains(WidgetState.hovered)
+                          ? cs.primary
+                          : cs.muted,
+                      width: 3,
+                    ),
+                    top: BorderSide(color: cs.background),
+                    bottom: BorderSide(color: cs.background),
                   ),
           ),
         ),
@@ -135,35 +138,23 @@ class _BoardTile extends StatelessWidget {
                   alignment: Alignment.topLeft,
                   minHeight: 0,
                   maxHeight: double.infinity,
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(color: cs.primaryForeground),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Identicon(r.client.id, size: Identicon.small),
-                              const Gap(8),
-                              Flexible(
-                                child: Text(
-                                  r.client.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ).small().semiBold(),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            span,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ).small(),
-                          if (note.isNotEmpty) Text(note).small(),
-                        ],
-                      ),
+                  // Laid out like an entity list row, tighter vertically:
+                  // a half-hour tile is only 48px tall.
+                  child: Basic(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    leading: Identicon(r.client.id, size: Identicon.small),
+                    title: Text(
+                      r.client.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      span,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
