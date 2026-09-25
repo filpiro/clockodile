@@ -44,6 +44,8 @@ class AppListRow extends StatelessWidget {
       child: Basic(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: leading,
+        // Basic top-aligns leading; centred on title+subtitle it lines up.
+        leadingAlignment: Alignment.center,
         title: title,
         subtitle: subtitle,
         trailingAlignment: Alignment.center,

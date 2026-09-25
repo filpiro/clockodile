@@ -145,7 +145,12 @@ class _BoardTile extends StatelessWidget {
                       horizontal: 12,
                       vertical: 4,
                     ),
-                    leading: Identicon(r.client.id, size: Identicon.small),
+                    // Basic top-aligns leading, which sits it above the name's
+                    // glyphs. Not centred: a short tile shows only the name.
+                    leading: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Identicon(r.client.id, size: Identicon.small),
+                    ),
                     title: Text(
                       r.client.name,
                       maxLines: 1,
