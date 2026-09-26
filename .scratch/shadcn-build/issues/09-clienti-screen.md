@@ -4,7 +4,7 @@
 
 **Blocked by:** ~~01 — Client identicon~~; 05 — Shell + Aiuto; 06 — AppListRow + EmptyState
 
-**Status:** ready-for-agent
+**Status:** done — commits a91178a, 737f612
 
 **Model:** Opus, effort low — follows clear rules in the spec
 

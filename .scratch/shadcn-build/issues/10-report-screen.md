@@ -4,7 +4,7 @@
 
 **Blocked by:** ~~01 — Client identicon~~; 05 — Shell + Aiuto
 
-**Status:** ready-for-agent
+**Status:** done — commits beab685, c91ac51, cd55faa
 
 **Model:** Opus, effort medium — board layout and tooltip are tricky, but specified
 

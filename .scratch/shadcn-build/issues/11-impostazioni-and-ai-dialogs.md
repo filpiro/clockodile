@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 — Toast on shadcn; 05 — Shell + Aiuto
 
-**Status:** ready-for-agent
+**Status:** done — commit a9c081f
 
 **Model:** Opus, effort low — follows clear rules in the spec
 
