@@ -67,7 +67,7 @@ Future<void> main() async {
 
   // Native title bar hidden: _TitleBar below draws a themed one instead.
   const options = WindowOptions(
-    size: Size(900, 640),
+    size: Size(1100, 720),
     center: true,
     titleBarStyle: TitleBarStyle.hidden,
   );

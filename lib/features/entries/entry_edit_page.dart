@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide showToast;
 
 import '../../data/db/database.dart';
-import '../../shared/theme.dart';
 import '../../shared/widgets/app_toast.dart';
 import '../../shared/utils/format.dart';
 import '../../shared/widgets/client_field.dart';
@@ -17,6 +16,8 @@ import '../ai/summary_command.dart';
 import 'cubit/entries_cubit.dart';
 
 const _pagePadding = 24.0;
+const _editorMaxWidth = 1120.0;
+const _twoColumnMinWidth = 720.0;
 
 /// No [entry] → create a new Entry born active (no end field, spec).
 /// With [entry] → edit client/note and the entry's sessions.
@@ -245,8 +246,7 @@ class _EntryPageState extends State<_EntryPage> {
       child: Focus(
         autofocus: !widget.isCreate,
         child: Scaffold(
-          loadingProgressIndeterminate:
-              !widget.isCreate && _sessions == null,
+          loadingProgressIndeterminate: !widget.isCreate && _sessions == null,
           headers: [
             AppBar(
               title: Text(
@@ -270,7 +270,7 @@ class _EntryPageState extends State<_EntryPage> {
     );
   }
 
-  /// Grows from three lines to eight, then scrolls rather than pushing Salva
+  /// Grows from three lines to six, then scrolls rather than pushing Salva
   /// off screen. The AI button sits inside the border at the bottom right, in
   /// a strip the bottom padding reserves — a trailing feature would centre it
   /// vertically and sit in the text's way.
@@ -299,7 +299,7 @@ class _EntryPageState extends State<_EntryPage> {
               controller: _note,
               enabled: !_generating,
               minLines: 3,
-              maxLines: 8,
+              maxLines: 6,
               padding: aiOn
                   ? EdgeInsets.fromLTRB(side, top, side, buttonStrip)
                   : null,
@@ -330,43 +330,65 @@ class _EntryPageState extends State<_EntryPage> {
   }
 
   Widget _body() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: formMaxWidth),
-        child: ListView(
-          padding: const EdgeInsets.all(_pagePadding),
-          children: [
-            FormField(
-              key: const FormKey(#client),
-              label: const Text('Cliente'),
-              child: ClientField(
-                controller: _client,
-                autofocus: widget.isCreate,
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-            const Gap(16),
-            if (widget.isCreate)
-              // End hidden entirely on create: new entries are born active.
-              _DateTimeField(
-                formKey: const FormKey(#start),
-                label: 'Inizio',
-                value: _start,
-                fallback: _start,
-                onChanged: (v) => setState(() => _start = v),
-              )
-            else ...[
-              const Text('Sessioni').h4(),
-              const Gap(8),
-              for (final s in _sessions ?? const <_EditableSession>[]) ...[
-                _sessionTile(s),
-                const Gap(16),
-              ],
-            ],
-            const Gap(16),
-            _noteField(),
-          ],
+    final details = <Widget>[
+      FormField(
+        key: const FormKey(#client),
+        label: const Text('Cliente'),
+        child: ClientField(
+          controller: _client,
+          autofocus: widget.isCreate,
+          onChanged: (_) => setState(() {}),
+        ),
+      ),
+      const Gap(16),
+      _noteField(),
+    ];
+    final times = <Widget>[
+      if (widget.isCreate)
+        // End hidden entirely on create: new entries are born active.
+        _DateTimeField(
+          formKey: const FormKey(#start),
+          label: 'Inizio',
+          value: _start,
+          fallback: _start,
+          onChanged: (v) => setState(() => _start = v),
+        )
+      else ...[
+        const Text('Sessioni').h4(),
+        const Gap(8),
+        for (final s in _sessions ?? const <_EditableSession>[]) ...[
+          _sessionTile(s),
+          const Gap(16),
+        ],
+      ],
+    ];
+    return Padding(
+      padding: const EdgeInsets.all(_pagePadding),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _editorMaxWidth),
+          child: LayoutBuilder(
+            builder: (context, constraints) =>
+                constraints.maxWidth < _twoColumnMinWidth
+                ? ListView(
+                    primary: false,
+                    children: [...details, const Gap(16), ...times],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ListView(primary: false, children: details),
+                      ),
+                      const Gap(24),
+                      const VerticalDivider(),
+                      const Gap(24),
+                      Expanded(
+                        child: ListView(primary: false, children: times),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
