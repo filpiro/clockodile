@@ -4,13 +4,13 @@
 
 **Blocked by:** 12 — Remove old deps, all tests green
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Model:** Opus, effort low — follows clear rules in the spec
 
 Spec: `../../shadcn-migration/spec.md` (phase 6)
 
-- [ ] ADR 0005: catui dropped for direct shadcn_flutter; coherence held by the conventions doc (~10 lines)
-- [ ] README: catui/catppuccin mentions replaced
-- [ ] `style/components.md`: gaps and corrections from tickets 02–11 added; the catui→shadcn table kept
-- [ ] `CLAUDE.md`, `CONTEXT.md`, ADR 0004 untouched (already correct)
+- [x] ADR 0005: catui dropped for direct shadcn_flutter; coherence held by the conventions doc (~10 lines)
+- [x] README: catui/catppuccin mentions replaced
+- [x] `style/components.md`: gaps and corrections from tickets 02–11 added; the catui→shadcn table kept
+- [x] `CLAUDE.md`, `CONTEXT.md`, ADR 0004 untouched (already correct)

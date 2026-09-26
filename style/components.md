@@ -167,12 +167,15 @@ never through shadcn's `formatDateTime`. Times from `TimePicker` already render 
 
 ## 2. Shared widgets
 
-The whole list. Three files.
+The whole list.
 
 | Widget | Why it exists |
 |---|---|
 | `AppListRow` (`lib/shared/widgets/app_list_row.dart`) | `Clickable` + `Basic`, with `onEdit`/`onDelete` rendering the action pair (icon, style, tooltip, hit target). 5 call sites, and it owns the row interaction language. Rows needing something else pass `trailing:` instead. |
 | `EmptyState` (`lib/shared/widgets/empty_state.dart`) | Survives unchanged apart from `.muted()` text. shadcn has no equivalent. |
+| `DateFilterBar` (`lib/shared/widgets/date_filter_bar.dart`) | Oggi / Ieri `Toggle`s beside a `DateField` — see *The date filter*. Shared by Attività and Report. |
+| `Identicon` (`lib/shared/widgets/identicon.dart`) | A Client's picture, drawn from its id (ADR 0004). |
+| `app_toast.dart` | `navigatorKey` and the toast helpers — see *Third-party* below. |
 | `DateField` (`lib/shared/widgets/date_field.dart`) | `ObjectFormField<DateTime>` + shadcn's `DatePickerDialog`, displaying `dmyShort()` ("22/09/26"). Exists because `DatePicker` hard-codes US order ("September 22, 2026") in a `ShadcnLocalizations` *extension*, which no translation can override. Two call sites, but a correctness fix, not a style choice. |
 
 Plus one constant, `formMaxWidth = 560`.
@@ -281,6 +284,23 @@ A date *range* (two `DateField`s) is a plausible future want and explicitly not 
   keyboard, and one less interaction language.
 
 ---
+
+## 5. Gaps found during the build
+
+What shadcn did not do as expected, and what we did instead.
+
+- **Title bar**: `window_manager`'s `WindowCaption` is a Material widget. The caption
+  is hand-made in `lib/main.dart` from shadcn buttons; close turns `destructive` on
+  hover, and the buttons have wider gaps than the defaults.
+- **`Basic` top-aligns `leading`**. The identicon sat a few px above the text.
+  `AppListRow` centres its leading widget. The report board tile nudges it down 2px
+  instead: a short tile shows only the name, and a centred icon gets cut off.
+- **Report board tiles** rest on `muted`, not solid `primary`; hover turns a thin left
+  edge `primary`. Solid bars were too loud. This corrects "`primary` for the report
+  bars" above: `primary` is the hover edge, not the fill.
+- **Entry editor timestamps**: `DateField` above `TimePicker`, stacked, not side by
+  side — side by side was too cramped at `formMaxWidth`.
+- **`showToast` has no "forever"**. The sticky AI toast uses a one-year duration.
 
 ## Screen-by-screen inventory
 

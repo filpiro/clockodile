@@ -63,5 +63,5 @@ lib/
   shared/         theme, formatting, small widgets
 ```
 
-State is `flutter_bloc` cubits, one per feature, over a single `AppDatabase`. UI atoms, tokens and theme come from [`catui`](https://github.com/filpiro/catui) (Catppuccin + Lucide). The window uses a hidden native title bar with a themed `WindowCaption` drawn above the navigator.
+State is `flutter_bloc` cubits, one per feature, over a single `AppDatabase`. UI is [`shadcn_flutter`](https://pub.dev/packages/shadcn_flutter) used directly, with no house UI layer (ADR 0005); conventions live in `style/components.md`. The window uses a hidden native title bar with a shadcn-styled caption drawn above the navigator.
 
