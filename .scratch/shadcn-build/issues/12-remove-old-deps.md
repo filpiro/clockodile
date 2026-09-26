@@ -10,10 +10,10 @@
 
 Spec: `../../shadcn-migration/spec.md` (phase 5)
 
-- [ ] `catui`, `sonner_toast`, `flutter_localizations` and `uses-material-design` removed from pubspec
-- [ ] `lib/main.dart`: `localizationsDelegates` is only `[ShadcnLocalizationsIt.delegate]` — drop `...GlobalMaterialLocalizations.delegates` (kept by ticket 04 while Material widgets remain)
-- [ ] No file in lib, test or integration_test names catui, catppuccin, sonner or imports `package:flutter/material.dart`
-- [ ] `pws -c flutter analyze` has no errors
-- [ ] Full `pws -c flutter test` green
-- [ ] `pws -c flutter test integration_test` green on Windows
+- [x] `catui`, `sonner_toast`, `flutter_localizations` and `uses-material-design` removed from pubspec
+- [x] `lib/main.dart`: `localizationsDelegates` is only `[ShadcnLocalizationsIt.delegate]` — drop `...GlobalMaterialLocalizations.delegates` (kept by ticket 04 while Material widgets remain)
+- [x] No file in lib, test or integration_test names catui, catppuccin, sonner or imports `package:flutter/material.dart`
+- [x] `pws -c flutter analyze` has no errors
+- [x] Full `pws -c flutter test` green
+- [x] `pws -c flutter test integration_test` green on Windows
 - [ ] Full Windows eyeball pass (spec phase 4 list), light and dark

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -123,10 +122,7 @@ class ClockodileApp extends StatelessWidget {
       themeMode: themeMode,
       locale: const Locale('it'),
       supportedLocales: const [Locale('it')],
-      localizationsDelegates: const [
-        ShadcnLocalizationsIt.delegate,
-        ...GlobalMaterialLocalizations.delegates,
-      ],
+      localizationsDelegates: const [ShadcnLocalizationsIt.delegate],
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.keyW, control: true):

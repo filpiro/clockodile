@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// A Client's picture: a 5x5 grid, mirrored left to right, drawn from a hash
 /// of the client id (ADR 0004). The id never changes, so neither does this —
@@ -33,14 +33,15 @@ class Identicon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     final (:cells, :hue) = identicon(clientId);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        // Not muted: hovered rows are muted, the tile would vanish.
+        color: theme.colorScheme.border,
         borderRadius: BorderRadius.circular(size / 5),
       ),
       child: CustomPaint(

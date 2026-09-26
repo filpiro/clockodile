@@ -84,7 +84,7 @@ void main() {
     expect(find.text('in corso'), findsNothing);
 
     // --- new client via header button on clients screen ---
-    await tester.tap(find.text('Clienti'));
+    await tester.tap(find.byIcon(shadcn.LucideIcons.users)); // icon-only rail
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nuovo cliente'));
     await tester.pumpAndSettle();
