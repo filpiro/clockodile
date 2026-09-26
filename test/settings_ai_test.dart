@@ -1,14 +1,12 @@
-import 'package:catui/catui.dart';
 import 'package:clockodile/data/db/database.dart';
 import 'package:clockodile/features/ai/cubit/ai_cubit.dart';
 import 'package:clockodile/features/settings/cubit/theme_cubit.dart';
 import 'package:clockodile/features/settings/settings_view.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' show ThemeMode;
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import 'ai_fakes.dart';
 
@@ -38,14 +36,14 @@ void main() {
             BlocProvider(create: (_) => ThemeCubit(db)),
             BlocProvider.value(value: ai),
           ],
-          child: const MaterialApp(home: Scaffold(body: SettingsView())),
+          child: const ShadcnApp(home: Scaffold(child: SettingsView())),
         ),
       ),
     );
     await tester.pumpAndSettle();
   }
 
-  Finder aiRow() => find.widgetWithText(CatSettingRow, 'Riassunto delle note');
+  Finder aiRow() => find.widgetWithText(Basic, 'Riassunto delle note');
   Finder aiSwitch() =>
       find.descendant(of: aiRow(), matching: find.byType(Switch));
   bool switchOn(WidgetTester tester) => tester.widget<Switch>(aiSwitch()).value;
@@ -116,18 +114,25 @@ void main() {
     expect(find.text('Elimina modello (1,3 GB)'), findsOneWidget);
   });
 
-  /// The selected segment is the filled one.
-  String selectedRetention(WidgetTester tester) => tester
-      .widget<Text>(
-        find.descendant(
-          of: find.descendant(
-            of: find.byType(CatSegmented<int>),
-            matching: find.byType(FilledButton),
+  Finder retentionToggles() => find.ancestor(
+    of: find.textContaining('giorni'),
+    matching: find.byType(Toggle),
+  );
+
+  /// The selected choice is the Toggle that is on.
+  String selectedRetention(WidgetTester tester) {
+    final on = retentionToggles().evaluate().singleWhere(
+      (e) => (e.widget as Toggle).value,
+    );
+    return tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byWidget(on.widget),
+            matching: find.byType(Text),
           ),
-          matching: find.byType(Text),
-        ),
-      )
-      .data!;
+        )
+        .data!;
+  }
 
   Future<void> pickRetention(WidgetTester tester, String label) async {
     final segment = find.text(label);
@@ -139,12 +144,12 @@ void main() {
 
   testWidgets('the three choices are there, no save button', (tester) async {
     await openSettings(tester);
-    expect(find.byType(CatSegmented<int>), findsOneWidget);
+    expect(retentionToggles(), findsNWidgets(3));
     for (final label in ['30 giorni', '45 giorni', '60 giorni']) {
       expect(find.text(label), findsOneWidget);
     }
-    expect(find.widgetWithText(FilledButton, 'Salva'), findsNothing);
-    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Salva'), findsNothing);
+    expect(find.byType(TextField), findsNothing);
   });
 
   testWidgets('growing it writes at once and leaves aiEnabled alone', (
@@ -206,11 +211,11 @@ void main() {
     await openSettings(tester);
 
     final page = tester.getSize(find.byType(SettingsView)).width;
-    final section = tester.getSize(find.byType(CatSection).first).width;
-    expect(section, closeTo(page - AppTokens.pagePadding * 2, 1));
+    final section = tester.getSize(aiRow()).width;
+    expect(section, closeTo(page - 24 * 2, 1));
     expect(
-      tester.getSize(find.byType(CatSegmented<ThemeMode>)).width,
-      lessThan(section),
+      tester.getTopRight(find.widgetWithText(Toggle, 'Sistema')).dx,
+      lessThan(page / 2),
     );
   });
 
