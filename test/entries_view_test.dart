@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import 'ai_fakes.dart';
+import 'hover.dart';
 
 /// Attività: the header button, the pinned active row and the row actions.
 void main() {
@@ -18,8 +19,13 @@ void main() {
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     ai = fakeAiCubit(db);
+    // Hover highlights follow the focus highlight mode, which tests start
+    // in touch mode.
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
   });
   tearDown(() async {
+    FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
     await ai.close();
     await db.close();
   });
@@ -92,6 +98,10 @@ void main() {
     await pumpView(tester);
     expect(find.text('Acme'), findsOneWidget);
 
+    // Delete is hidden until the row is hovered.
+    final mouse = await hoverOver(tester, find.text('Acme'));
+    addTearDown(mouse.removePointer);
+
     await tester.tap(find.byIcon(LucideIcons.trash2));
     await tester.pumpAndSettle();
     expect(find.text("Eliminare l'attività?"), findsOneWidget);
@@ -99,6 +109,8 @@ void main() {
     await settle(tester);
     expect(find.text('Acme'), findsOneWidget);
 
+    await mouse.moveTo(tester.getCenter(find.text('Acme')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(LucideIcons.trash2));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Elimina'));

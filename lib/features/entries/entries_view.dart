@@ -150,15 +150,11 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Tooltip(
-            tooltip: (_) => const TooltipContainer(child: Text('Modifica')),
-            child: IconButton(
-              variance: ButtonStyle.ghostIcon(),
-              density: ButtonDensity.icon,
-              icon: const Icon(LucideIcons.pencil),
-              onPressed: () =>
-                  openEntryPage(context, entry: a.entry, client: a.client),
-            ),
+          RowAction(
+            icon: LucideIcons.pencil,
+            tooltip: 'Modifica',
+            onPressed: () =>
+                openEntryPage(context, entry: a.entry, client: a.client),
           ),
           const Gap(8),
           // Red by explicit choice: in this app red marks a strong action,

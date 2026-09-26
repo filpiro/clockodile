@@ -7,12 +7,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import 'hover.dart';
+
 /// Clienti: create via the header button, rename by tapping the row, delete.
 void main() {
   late AppDatabase db;
 
-  setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
-  tearDown(() => db.close());
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    // Hover highlights follow the focus highlight mode, which tests start
+    // in touch mode.
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+  });
+  tearDown(() {
+    FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
+    db.close();
+  });
 
   /// Lets drift's query streams deliver, then settles the frames.
   Future<void> settle(WidgetTester tester) async {
@@ -53,7 +64,11 @@ void main() {
       const Size.square(Identicon.normal),
     );
 
-    await tester.tap(find.text('Acme'));
+    // Pencil is hidden until the row is hovered, and opens the same dialog
+    // as tapping the row.
+    final mouse = await hoverOver(tester, find.text('Acme'));
+    addTearDown(mouse.removePointer);
+    await tester.tap(find.byIcon(LucideIcons.pencil));
     await tester.pumpAndSettle();
     await tester.enterText(nameField(), 'Beta');
     await tester.tap(find.text('Salva'));
@@ -61,6 +76,8 @@ void main() {
     expect(find.text('Beta'), findsOneWidget);
     expect((await db.select(db.clients).getSingle()).name, 'Beta');
 
+    await mouse.moveTo(tester.getCenter(find.text('Beta')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(LucideIcons.trash2));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Elimina'));

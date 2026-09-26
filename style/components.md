@@ -71,7 +71,9 @@ decoration — declarative, not a tween, and `onFocus` comes free so the focus-w
 case needs no hand-rolling. There is **no ink ripple anywhere in shadcn**; the
 interaction language is state-driven decoration.
 
-- **List row**: `Clickable` gives the hover fill. Nothing else on a row changes on hover.
+- **List row**: `Clickable` gives the hover fill. Row actions (`onEdit`/`onDelete`)
+  hide at rest and reveal on row hover or when one of them has keyboard focus —
+  see `RowAction` in `app_list_row.dart`. Nothing else on a row changes on hover.
 - **Button**: the `ButtonStyle` variant owns all four states. Never pass hover colours.
 - **Disabled**: never hand-compute a faded foreground — pass `enabled: false`.
 
@@ -90,7 +92,9 @@ One way, everywhere:
 ### Icon-only controls
 
 `IconButton(variance: ButtonStyle.ghostIcon(), density: ButtonDensity.icon)`. Size comes
-from `ButtonSize` under the app's `Density.reducedDensity` — never an `iconSize:`.
+from `ButtonSize` under the app's `Density.reducedDensity` — never an `iconSize:`. A row
+action is quieter still: `ButtonSize.small` + `ButtonDensity.iconDense` (see `RowAction`
+below) — smaller than a standalone icon button, since a row can carry several.
 
 shadcn buttons have **no `tooltip:` argument**. A tooltip is a wrapper:
 
@@ -101,8 +105,9 @@ Tooltip(
 )
 ```
 
-Row actions do not write that wrapper: `AppListRow` bakes icon, style, tooltip and hit
-target into its `onEdit`/`onDelete` slots. Only one-off icon buttons wrap by hand.
+Row actions do not write that wrapper: `AppListRow`'s `onEdit`/`onDelete` slots (and any
+`RowAction` used directly in a hand-built `trailing:`) bake in icon, style, size, density,
+tooltip and hit target. Only one-off icon buttons wrap by hand.
 
 ### States
 
@@ -172,6 +177,7 @@ The whole list.
 | Widget | Why it exists |
 |---|---|
 | `AppListRow` (`lib/shared/widgets/app_list_row.dart`) | `Clickable` + `Basic`, with `onEdit`/`onDelete` rendering the action pair (icon, style, tooltip, hit target). 5 call sites, and it owns the row interaction language. Rows needing something else pass `trailing:` instead. |
+| `RowAction` (same file) | The quiet ghost icon button `onEdit`/`onDelete` build from; also used directly (e.g. the running entry's pencil in `entries_view.dart`) when a row needs a custom `trailing:`. Hides until row hover/focus, isolates itself from the row's own hover state. |
 | `EmptyState` (`lib/shared/widgets/empty_state.dart`) | Survives unchanged apart from `.muted()` text. shadcn has no equivalent. |
 | `DateFilterBar` (`lib/shared/widgets/date_filter_bar.dart`) | Oggi / Ieri `Toggle`s beside a `DateField` — see *The date filter*. Shared by Attività and Report. |
 | `Identicon` (`lib/shared/widgets/identicon.dart`) | A Client's picture, drawn from its id (ADR 0004). |
@@ -191,7 +197,7 @@ wrapping a plain `TextField`.
 
 | Retired | Becomes |
 |---|---|
-| `HoverTile` | `AppListRow` (`Clickable` + `Basic`) — actions always visible, no hover reveal |
+| `HoverTile` | `AppListRow` (`Clickable` + `Basic`) — actions hide until row hover/focus |
 | `EditIconButton` / `DeleteIconButton` | `AppListRow`'s `onEdit`/`onDelete`; standalone use is `IconButton` + `ButtonStyle.ghostIcon()` (delete adds a destructive hover foreground) |
 | `DangerButton` | `DestructiveButton` |
 | `intentHoverStyle()` | **Gone.** Intent colour is always on; see *Destructive intent* |
@@ -280,8 +286,9 @@ A date *range* (two `DateField`s) is a plausible future want and explicitly not 
 - `DateField`/`TimePicker` open a dialog by default on desktop (`mode:` can make it a popover), **not keyboard-typeable**. We never
   typed them, and splitting date from time is an improvement: editing a time no longer
   forces a walk through the date step.
-- No hover reveal on row actions. They are always visible and muted — better for
-  keyboard, and one less interaction language.
+- ~~No hover reveal on row actions.~~ Superseded: row actions now hide until
+  hover/focus (wayfinder ticket `ui-polish/01`) — a busy row full of always-on
+  ghost icons read louder than intended.
 
 ---
 

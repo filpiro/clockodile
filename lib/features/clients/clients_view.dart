@@ -49,6 +49,7 @@ class ClientsView extends StatelessWidget {
                   title: Text(c.client.name),
                   subtitle: Text('${c.entryCount} attività'),
                   onTap: () => _rename(context, c.client),
+                  onEdit: () => _rename(context, c.client),
                   onDelete: () => _delete(context, c),
                 ),
             ],
