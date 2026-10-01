@@ -36,19 +36,21 @@ class Identicon extends StatelessWidget {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final (:cells, :hue) = identicon(clientId);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        // Not muted: hovered rows are muted, the tile would vanish.
-        color: theme.colorScheme.border,
-        borderRadius: BorderRadius.circular(size / 5),
-      ),
-      child: CustomPaint(
-        painter: _IdenticonPainter(
-          cells,
-          // Mid saturation; lighter on dark so the blocks stay readable.
-          HSLColor.fromAHSL(1, hue, .5, dark ? .65 : .45).toColor(),
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          // Not muted: hovered rows are muted, the tile would vanish.
+          color: theme.colorScheme.border,
+          borderRadius: BorderRadius.circular(size / 5),
+        ),
+        child: CustomPaint(
+          painter: _IdenticonPainter(
+            cells,
+            // Mid saturation; lighter on dark so the blocks stay readable.
+            HSLColor.fromAHSL(1, hue, .5, dark ? .65 : .45).toColor(),
+          ),
         ),
       ),
     );

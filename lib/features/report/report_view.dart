@@ -59,12 +59,8 @@ class ReportView extends StatelessWidget {
         return Scaffold(
           headers: [
             AppBar(
-              padding: const EdgeInsets.fromLTRB(
-                _pagePadding,
-                _pagePadding,
-                _pagePadding,
-                8,
-              ),
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               title: Wrap(
                 spacing: 24,
                 runSpacing: 8,

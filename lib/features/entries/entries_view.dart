@@ -13,8 +13,6 @@ import 'clocky.dart';
 import 'cubit/entries_cubit.dart';
 import 'entry_edit_page.dart';
 
-const _pagePadding = 24.0;
-
 /// One list row: an Entry's closed sessions within a single day.
 class _EntryDayGroup {
   final Entry entry;
@@ -50,12 +48,8 @@ class EntriesView extends StatelessWidget {
         return Scaffold(
           headers: [
             AppBar(
-              padding: const EdgeInsets.fromLTRB(
-                _pagePadding,
-                _pagePadding,
-                _pagePadding,
-                8,
-              ),
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               title: DateFilterBar(
                 day: state.day,
                 onDay: context.read<EntriesCubit>().setDay,

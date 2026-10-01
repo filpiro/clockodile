@@ -9,6 +9,7 @@ import '../../data/db/database.dart';
 import '../ai/ai_install_dialogs.dart';
 import '../ai/cubit/ai_cubit.dart';
 import '../ai/llama_config.dart';
+import '../../shared/theme.dart';
 import 'cubit/theme_cubit.dart';
 
 const _pagePadding = 24.0;
@@ -125,12 +126,18 @@ class _SettingsViewState extends State<SettingsView> {
         // Acts at once, like the theme: a cancelled or failed install leaves
         // state.enabled false, so the switch falls back by itself.
         Basic(
-          title: const Text('Riassunto delle note'),
-          subtitle: Text(
-            'Usa un modello locale su questo computer. Dopo '
-            '${AiConfig.sleepIdleSeconds} secondi senza richieste il modello '
-            'va in pausa: il riassunto successivo richiede qualche secondo '
-            'in più.',
+          title: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: formMaxWidth),
+            child: const Text('Riassunto delle note'),
+          ),
+          subtitle: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: formMaxWidth),
+            child: Text(
+              'Usa un modello locale su questo computer. Dopo '
+              '${AiConfig.sleepIdleSeconds} secondi senza richieste il modello '
+              'va in pausa: il riassunto successivo richiede qualche secondo '
+              'in più.',
+            ),
           ),
           trailing: Switch(
             value: ai.state.enabled,
@@ -139,10 +146,11 @@ class _SettingsViewState extends State<SettingsView> {
           ),
         ),
         if (ai.state.filesOnDisk) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 32),
           Align(
             alignment: Alignment.centerLeft,
             child: DestructiveButton(
+              size: ButtonSize.small,
               onPressed: () => confirmAiDelete(context, ai),
               child: Text('Elimina modello ($installedSize)'),
             ),
@@ -156,47 +164,51 @@ class _SettingsViewState extends State<SettingsView> {
   Widget build(BuildContext context) {
     // No cap: a settings page is sections, not prose. The sections stretch,
     // the controls inside them keep their own width.
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(_pagePadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Applied and persisted instantly, like the AI switch.
-          ..._section(
-            'Tema',
-            children: [
-              BlocBuilder<ThemeCubit, ThemeMode>(
-                builder: (context, mode) => _choices<ThemeMode>(
-                  const {
-                    ThemeMode.light: 'Chiaro',
-                    ThemeMode.dark: 'Scuro',
-                    ThemeMode.system: 'Sistema',
-                  },
-                  mode,
-                  context.read<ThemeCubit>().setMode,
-                  icons: const {
-                    ThemeMode.light: LucideIcons.sun,
-                    ThemeMode.dark: LucideIcons.moon,
-                    ThemeMode.system: LucideIcons.monitor,
-                  },
+    // Scaffold paints the theme background, like the other screens.
+    return Scaffold(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(_pagePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Applied and persisted instantly, like the AI switch.
+            ..._section(
+              'Tema',
+              children: [
+                BlocBuilder<ThemeCubit, ThemeMode>(
+                  builder: (context, mode) => _choices<ThemeMode>(
+                    const {
+                      ThemeMode.light: 'Chiaro',
+                      ThemeMode.dark: 'Scuro',
+                      ThemeMode.system: 'Sistema',
+                    },
+                    mode,
+                    context.read<ThemeCubit>().setMode,
+                    icons: const {
+                      ThemeMode.light: LucideIcons.sun,
+                      ThemeMode.dark: LucideIcons.moon,
+                      ThemeMode.system: LucideIcons.monitor,
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-          // Persisted on pick, like the theme.
-          ..._section(
-            'Conservazione',
-            // Last wherever the AI section doesn't render.
-            divider: Platform.isWindows,
-            description: "Le attività più vecchie vengono eliminate all'avvio.",
-            children: [
-              if (_storedDays case final days?)
-                _choices<int>(_retentionChoices, days, _setRetention),
-            ],
-          ),
-          // The Local Model is Windows x64 only.
-          if (Platform.isWindows) ..._aiSection(context),
-        ],
+              ],
+            ),
+            // Persisted on pick, like the theme.
+            ..._section(
+              'Conservazione',
+              // Last wherever the AI section doesn't render.
+              divider: Platform.isWindows,
+              description:
+                  "Le attività più vecchie vengono eliminate all'avvio.",
+              children: [
+                if (_storedDays case final days?)
+                  _choices<int>(_retentionChoices, days, _setRetention),
+              ],
+            ),
+            // The Local Model is Windows x64 only.
+            if (Platform.isWindows) ..._aiSection(context),
+          ],
+        ),
       ),
     );
   }

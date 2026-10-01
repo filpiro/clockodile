@@ -116,6 +116,7 @@ class ClockodileApp extends StatelessWidget {
     final themeMode = context.watch<ThemeCubit>().state;
     return ShadcnApp(
       title: 'Clockodile',
+      debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: lightTheme,
       darkTheme: darkTheme,

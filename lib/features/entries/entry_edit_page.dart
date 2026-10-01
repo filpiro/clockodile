@@ -249,6 +249,8 @@ class _EntryPageState extends State<_EntryPage> {
           loadingProgressIndeterminate: !widget.isCreate && _sessions == null,
           headers: [
             AppBar(
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               title: Text(
                 widget.isCreate ? 'Nuova attività' : 'Modifica attività',
               ),
