@@ -8,21 +8,36 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/identicon.dart';
 import 'cubit/clients_cubit.dart';
 
-const _pagePadding = 24.0;
-
-class ClientsView extends StatelessWidget {
+class ClientsView extends StatefulWidget {
   const ClientsView({super.key});
+
+  @override
+  State<ClientsView> createState() => _ClientsViewState();
+}
+
+class _ClientsViewState extends State<ClientsView> {
+  // Screen state only: resets when the tab is left.
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       headers: [
         AppBar(
-          padding: const EdgeInsets.fromLTRB(
-            _pagePadding,
-            _pagePadding,
-            _pagePadding,
-            8,
+          backgroundColor: Colors.transparent,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          title: Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: TextField(
+                placeholder: const Text('Cerca tra i clienti...'),
+                features: const [
+                  InputFeature.leading(Icon(LucideIcons.search)),
+                ],
+                onChanged: (v) => setState(() => _query = v.trim()),
+              ),
+            ),
           ),
           trailing: [
             PrimaryButton(
@@ -34,9 +49,15 @@ class ClientsView extends StatelessWidget {
         ),
       ],
       child: BlocBuilder<ClientsCubit, List<ClientWithCount>>(
-        builder: (context, clients) {
+        builder: (context, all) {
+          if (all.isEmpty) return const EmptyState('Nessun cliente.');
+          final q = _query.toLowerCase();
+          final clients = [
+            for (final c in all)
+              if (c.client.name.toLowerCase().contains(q)) c,
+          ];
           if (clients.isEmpty) {
-            return const EmptyState('Nessun cliente.');
+            return const EmptyState('Nessun cliente trovato.');
           }
           return ListView(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
@@ -61,7 +82,11 @@ class ClientsView extends StatelessWidget {
 
   Future<void> _create(BuildContext context) async {
     final cubit = context.read<ClientsCubit>();
-    final name = await _askName(context, title: 'Nuovo cliente', confirm: 'Crea');
+    final name = await _askName(
+      context,
+      title: 'Nuovo cliente',
+      confirm: 'Crea',
+    );
     if (name == null) return;
     try {
       await cubit.create(name);

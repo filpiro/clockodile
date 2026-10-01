@@ -27,7 +27,9 @@ void main() {
 
   /// Lets drift's query streams deliver, then settles the frames.
   Future<void> settle(WidgetTester tester) async {
-    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+    await tester.runAsync(
+      () => Future.delayed(const Duration(milliseconds: 50)),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -85,5 +87,28 @@ void main() {
     expect(await db.select(db.clients).get(), isEmpty);
     expect(find.text('Nessun cliente.'), findsOneWidget);
     await teardownTree(tester);
+  });
+
+  testWidgets('search filters the list as you type', (tester) async {
+    await db.matchOrCreateClient('Acme');
+    await db.matchOrCreateClient('Bianchi');
+    await pumpView(tester);
+    expect(find.text('Cerca tra i clienti...'), findsOneWidget);
+    expect(find.byIcon(LucideIcons.search), findsOneWidget);
+
+    final search = find.widgetWithText(TextField, 'Cerca tra i clienti...');
+    await tester.enterText(search, 'AC');
+    await tester.pumpAndSettle();
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.text('Bianchi'), findsNothing);
+
+    await tester.enterText(search, 'zzz');
+    await tester.pumpAndSettle();
+    expect(find.text('Nessun cliente trovato.'), findsOneWidget);
+
+    await tester.enterText(search, '');
+    await tester.pumpAndSettle();
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.text('Bianchi'), findsOneWidget);
   });
 }
