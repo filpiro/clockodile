@@ -14,4 +14,4 @@ When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the 
 
 Edit the right-hand column to match whatever vocabulary you actually use.
 
-This repo tracks issues as local markdown, so these strings are written into the `Status:` line of an issue file rather than applied as tracker labels. See `issue-tracker.md`.
+These strings are applied as GitHub issue labels. See `issue-tracker.md`.

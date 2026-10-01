@@ -5,7 +5,7 @@ There is no house style package. `catui` is gone, and nothing replaces it: this 
 months apart still look like one app, plus the table saying what each retired widget
 became.
 
-Decided in [wayfinder ticket 05](../.scratch/shadcn-migration/issues/05-component-mapping-and-coherence.md).
+Decided in wayfinder ticket 05 (old local tracker, now deleted).
 
 **The governing principle**: reach for the simplest native shadcn_flutter component
 that matches the behaviour actually needed. Do not preserve an abstraction just
@@ -166,7 +166,7 @@ it misses renders English; it never crashes.
 Dates in the UI go through `lib/shared/utils/format.dart` (`dmy`, `dmyShort`, `hhmm`),
 never through shadcn's `formatDateTime`. Times from `TimePicker` already render `09:05`,
 24-hour. No `intl`, no `flutter_localizations`. Decided in
-[wayfinder ticket 09](../.scratch/shadcn-migration/issues/09-italian-localization.md).
+wayfinder ticket 09 (old local tracker, now deleted).
 
 ---
 
