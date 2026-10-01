@@ -26,6 +26,10 @@ _Avoid_: Active session, running timer
 The Entry owning the Open Session. At most one at a time; derived, never stored. Tapping an inactive Entry makes it the Active Entry (reactivation — always a new Session, even for an Entry idle for days). Tapping the Active Entry does nothing.
 _Avoid_: Open entry, active task, current task
 
+**Clocky**:
+The crocodile mascot. Walks in place in the corner of Attività while an Active Entry exists; enters after each Stop-then-activate, stays put when the Active Entry merely switches.
+_Avoid_: Croc, sprite, animation
+
 **Retention Period**:
 How long an Entry is kept, counted in days from the start of its most recent Session. Chosen from 30, 45 or 60 days, default 60, can never be disabled. An Entry whose newest Session started before the cutoff is purged together with all its Sessions; the Active Entry is never purged, whatever its age. Sessions are never purged individually — an Entry's total never silently shrinks.
 _Avoid_: Lifetime, rotation, expiry

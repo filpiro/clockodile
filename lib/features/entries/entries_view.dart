@@ -9,6 +9,7 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/identicon.dart';
 import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/utils/format.dart';
+import 'clocky.dart';
 import 'cubit/entries_cubit.dart';
 import 'entry_edit_page.dart';
 
@@ -68,29 +69,35 @@ class EntriesView extends StatelessWidget {
               ],
             ),
           ],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Stack(
             children: [
-              if (state.active != null) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: _ActiveEntryTile(state.active!),
-                ),
-                const Divider(),
-              ],
-              Expanded(
-                child: state.rows.isEmpty && state.active == null
-                    ? const EmptyState('Nessuna attività.')
-                    : ListView(
-                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-                        children: [
-                          for (final day in byDay.entries) ...[
-                            _DayHeader(day.key, day.value.values.toList()),
-                            for (final g in day.value.values) _EntryDayTile(g),
-                          ],
-                        ],
-                      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (state.active != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _ActiveEntryTile(state.active!),
+                    ),
+                    const Divider(),
+                  ],
+                  Expanded(
+                    child: state.rows.isEmpty && state.active == null
+                        ? const EmptyState('Nessuna attività.')
+                        : ListView(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                            children: [
+                              for (final day in byDay.entries) ...[
+                                _DayHeader(day.key, day.value.values.toList()),
+                                for (final g in day.value.values)
+                                  _EntryDayTile(g),
+                              ],
+                            ],
+                          ),
+                  ),
+                ],
               ),
+              Positioned.fill(child: Clocky(visible: state.active != null)),
             ],
           ),
         );
