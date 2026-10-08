@@ -91,7 +91,7 @@ class EntriesView extends StatelessWidget {
                   ),
                 ],
               ),
-              Positioned.fill(child: Clocky(visible: state.active != null)),
+              Positioned.fill(child: Clocky(walking: state.active != null)),
             ],
           ),
         );
