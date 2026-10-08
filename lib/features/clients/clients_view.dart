@@ -1,49 +1,77 @@
-import 'package:clockodile/shared/widgets/empty_state.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' hide showToast;
 
 import '../../data/db/database.dart';
-import '../../shared/utils/colors.dart';
+import '../../shared/widgets/app_list_row.dart';
 import '../../shared/widgets/app_toast.dart';
-import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/empty_state.dart';
+import '../../shared/widgets/identicon.dart';
 import 'cubit/clients_cubit.dart';
 
-class ClientsView extends StatelessWidget {
+class ClientsView extends StatefulWidget {
   const ClientsView({super.key});
 
   @override
+  State<ClientsView> createState() => _ClientsViewState();
+}
+
+class _ClientsViewState extends State<ClientsView> {
+  // Screen state only: resets when the tab is left.
+  String _query = '';
+
+  @override
   Widget build(BuildContext context) {
-    return CatPage(
-      fab: FloatingActionButton(
-        heroTag: null,
-        tooltip: 'Nuovo cliente',
-        onPressed: () => _create(context),
-        child: const Icon(LucideIcons.plus),
-      ),
-      body: BlocBuilder<ClientsCubit, List<ClientWithCount>>(
-        builder: (context, clients) {
+    return Scaffold(
+      headers: [
+        AppBar(
+          backgroundColor: Colors.transparent,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          title: Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: TextField(
+                placeholder: const Text('Cerca tra i clienti...'),
+                features: const [
+                  InputFeature.leading(Icon(LucideIcons.search)),
+                ],
+                onChanged: (v) => setState(() => _query = v.trim()),
+              ),
+            ),
+          ),
+          trailing: [
+            PrimaryButton(
+              leading: const Icon(LucideIcons.plus),
+              onPressed: () => _create(context),
+              child: const Text('Nuovo cliente'),
+            ),
+          ],
+        ),
+      ],
+      child: BlocBuilder<ClientsCubit, List<ClientWithCount>>(
+        builder: (context, all) {
+          if (all.isEmpty) return const EmptyState('Nessun cliente.');
+          final q = _query.toLowerCase();
+          final clients = [
+            for (final c in all)
+              if (c.client.name.toLowerCase().contains(q)) c,
+          ];
           if (clients.isEmpty) {
-            return const EmptyState('Nessun cliente.');
+            return const EmptyState('Nessun cliente trovato.');
           }
           return ListView(
-            padding: const EdgeInsets.only(bottom: AppTokens.fabClearance),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
             children: [
               for (final c in clients)
-                HoverTile(
+                AppListRow(
                   // Stateful row: keyed so hover doesn't survive a reorder.
                   key: ValueKey(c.client.id),
-                  leading: ClientDot(
-                    c.client.colorHex,
-                    size: ClientDotSize.tappable,
-                    onTap: () => _pickColor(context, c.client),
-                  ),
+                  leading: Identicon(c.client.id),
                   title: Text(c.client.name),
                   subtitle: Text('${c.entryCount} attività'),
                   onTap: () => _rename(context, c.client),
-                  actions: [
-                    DeleteIconButton(onPressed: () => _delete(context, c)),
-                  ],
+                  onEdit: () => _rename(context, c.client),
+                  onDelete: () => _delete(context, c),
                 ),
             ],
           );
@@ -54,12 +82,10 @@ class ClientsView extends StatelessWidget {
 
   Future<void> _create(BuildContext context) async {
     final cubit = context.read<ClientsCubit>();
-    final name = await catTextInput(
+    final name = await _askName(
       context,
       title: 'Nuovo cliente',
-      label: 'Nome',
       confirm: 'Crea',
-      cancel: 'Annulla',
     );
     if (name == null) return;
     try {
@@ -72,12 +98,10 @@ class ClientsView extends StatelessWidget {
 
   Future<void> _rename(BuildContext context, Client client) async {
     final cubit = context.read<ClientsCubit>();
-    final name = await catTextInput(
+    final name = await _askName(
       context,
       title: 'Rinomina cliente',
-      label: 'Nome',
       confirm: 'Salva',
-      cancel: 'Annulla',
       initial: client.name,
     );
     if (name == null || name == client.name) return;
@@ -86,47 +110,6 @@ class ClientsView extends StatelessWidget {
     } catch (_) {
       // UNIQUE COLLATE NOCASE violation
       showToast('Esiste già un cliente chiamato "$name"');
-    }
-  }
-
-  Future<void> _pickColor(BuildContext context, Client client) async {
-    final cubit = context.read<ClientsCubit>();
-    // ponytail: hue slider with fixed S/L instead of a full color picker —
-    // keeps the readability-by-construction guarantee and avoids a dependency.
-    var hue = HSLColor.fromColor(hexToColor(client.colorHex)).hue;
-    final picked = await showDialog<double>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, setState) => AlertDialog(
-          title: const Text('Colore cliente'),
-          content: Row(
-            children: [
-              ClientDot.color(hslToColor(hue), size: ClientDotSize.large),
-              Expanded(
-                child: Slider(
-                  min: 0,
-                  max: 360,
-                  value: hue,
-                  onChanged: (v) => setState(() => hue = v),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: const Text('Annulla'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(c, hue),
-              child: const Text('Salva'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) {
-      await cubit.setColor(client.id, colorToHex(hslToColor(picked)));
     }
   }
 
@@ -139,13 +122,65 @@ class ClientsView extends StatelessWidget {
       );
       return;
     }
-    final ok = await catConfirm(
+    final ok = await showOverlay<bool>(
       context,
-      title: 'Eliminare "${c.client.name}"?',
-      confirm: 'Elimina',
-      cancel: 'Annulla',
-      danger: true,
-    );
-    if (ok) await cubit.delete(c.client.id);
+      const DialogConfiguration(),
+      builder: (context) => AlertDialog(
+        title: Text('Eliminare "${c.client.name}"?'),
+        actions: [
+          OutlineButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla'),
+          ),
+          DestructiveButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Elimina'),
+          ),
+        ],
+      ),
+    ).future;
+    if (ok == true) await cubit.delete(c.client.id);
   }
+}
+
+/// Trimmed non-empty name, or null on cancel.
+Future<String?> _askName(
+  BuildContext context, {
+  required String title,
+  required String confirm,
+  String initial = '',
+}) async {
+  final controller = TextEditingController(text: initial);
+  void submit(BuildContext context) {
+    final name = controller.text.trim();
+    if (name.isNotEmpty) Navigator.pop(context, name);
+  }
+
+  final name = await showOverlay<String>(
+    context,
+    const DialogConfiguration(),
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      // A TextField takes all the width it gets; without this the dialog
+      // spans the window.
+      content: SizedBox(
+        width: 360,
+        child: TextField(
+          controller: controller,
+          autofocus: true,
+          placeholder: const Text('Nome'),
+          onSubmitted: (_) => submit(context),
+        ),
+      ),
+      actions: [
+        OutlineButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annulla'),
+        ),
+        PrimaryButton(onPressed: () => submit(context), child: Text(confirm)),
+      ],
+    ),
+  ).future;
+  controller.dispose();
+  return name;
 }

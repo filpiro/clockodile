@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import 'cubit/ai_cubit.dart';
 import 'llama_config.dart';
@@ -17,7 +16,7 @@ Future<void> runAiInstall(
   final install = update ? cubit.update : cubit.enable;
   if (cubit.state.pendingBytes == 0) return install();
   final size = formatBytes(cubit.state.pendingBytes);
-  final ok = await catConfirm(
+  final ok = await confirmDialog(
     context,
     title: update ? 'Aggiornare i file AI?' : "Attivare l'AI locale?",
     message: update
@@ -30,21 +29,21 @@ Future<void> runAiInstall(
   );
   if (!ok || !context.mounted) return;
 
-  final navigator = Navigator.of(context);
+  final navigator = Navigator.of(context, rootNavigator: true);
   // The modal stays open only to show a failure; success and cancel close it.
   Future<void> attempt() async {
     await install();
     if (cubit.state.installFailure == null) navigator.pop();
   }
 
-  final closed = showDialog<void>(
-    context: context,
-    barrierDismissible: false,
+  final closed = showOverlay<void>(
+    context,
+    const DialogConfiguration(barrierDismissible: false),
     builder: (_) => BlocProvider.value(
       value: cubit,
       child: _InstallModal(onRetry: attempt),
     ),
-  );
+  ).future;
   attempt();
   await closed;
 }
@@ -72,27 +71,27 @@ class _InstallModal extends StatelessWidget {
                 children: [
                   Text(_progressLine(progress)),
                   const SizedBox(height: 12),
-                  LinearProgressIndicator(
-                    value: progress?.total == null
+                  Progress(
+                    progress: progress?.total == null
                         ? null
-                        : progress!.received / progress.total!,
+                        : (progress!.received / progress.total!).clamp(0, 1),
                   ),
                 ],
               ),
       ),
       actions: failure != null
           ? [
-              TextButton(
+              OutlineButton(
                 onPressed: () {
                   cubit.dismissInstallFailure();
                   Navigator.pop(context);
                 },
                 child: const Text('Chiudi'),
               ),
-              FilledButton(onPressed: onRetry, child: const Text('Riprova')),
+              PrimaryButton(onPressed: onRetry, child: const Text('Riprova')),
             ]
           : [
-              TextButton(
+              OutlineButton(
                 onPressed: cubit.cancelInstall,
                 child: const Text('Annulla'),
               ),
@@ -119,7 +118,7 @@ class _InstallModal extends StatelessWidget {
 
 /// Asks before removing the files; [AiCubit.deleteFiles] on Elimina.
 Future<void> confirmAiDelete(BuildContext context, AiCubit cubit) async {
-  final ok = await catConfirm(
+  final ok = await confirmDialog(
     context,
     title: "Eliminare l'AI locale?",
     message:
@@ -130,6 +129,41 @@ Future<void> confirmAiDelete(BuildContext context, AiCubit cubit) async {
     danger: true,
   );
   if (ok) await cubit.deleteFiles();
+}
+
+/// Yes/no [AlertDialog]; [danger] makes the confirm a [DestructiveButton].
+Future<bool> confirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirm,
+  required String cancel,
+  bool danger = false,
+}) async {
+  final ok = await showOverlay<bool>(
+    context,
+    const DialogConfiguration(),
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        OutlineButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(cancel),
+        ),
+        danger
+            ? DestructiveButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(confirm),
+              )
+            : PrimaryButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(confirm),
+              ),
+      ],
+    ),
+  ).future;
+  return ok == true;
 }
 
 /// The size "Elimina modello" frees.

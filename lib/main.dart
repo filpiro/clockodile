@@ -1,11 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:catui/catui.dart';
-import 'package:sonner_toast/sonner_toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/database.dart';
@@ -28,12 +25,9 @@ import 'features/settings/cubit/theme_cubit.dart';
 import 'features/settings/settings_view.dart';
 import 'shared/theme.dart';
 import 'shared/widgets/app_toast.dart';
+import 'shadcn_it.dart';
 
 const _instancePort = 38573;
-
-/// The Local Model's toast sits above the Navigator; it opens dialogs through
-/// this.
-final _navigatorKey = GlobalKey<NavigatorState>();
 
 /// Single-instance lock: the bound socket doubles as IPC — any incoming
 /// connection means a second instance launched, so come to front.
@@ -71,9 +65,9 @@ Future<void> main() async {
   await windowManager.ensureInitialized();
   await _acquireInstanceLockOrExit();
 
-  // Native title bar hidden: WindowCaption below draws a themed one instead.
+  // Native title bar hidden: _TitleBar below draws a themed one instead.
   const options = WindowOptions(
-    size: Size(900, 640),
+    size: Size(1100, 720),
     center: true,
     titleBarStyle: TitleBarStyle.hidden,
   );
@@ -83,7 +77,8 @@ Future<void> main() async {
   });
 
   final db = AppDatabase();
-  final purge = db.purgeExpiredEntries();
+  // A delete on a local file: milliseconds, and the window is still hidden.
+  await db.purgeExpiredEntries();
   final aiPaths = LlamaPaths.production();
   runApp(
     RepositoryProvider.value(
@@ -107,29 +102,28 @@ Future<void> main() async {
             )..init(),
           ),
         ],
-        child: ClockodileApp(purge: purge),
+        child: const ClockodileApp(),
       ),
     ),
   );
 }
 
 class ClockodileApp extends StatelessWidget {
-  const ClockodileApp({super.key, required this.purge});
-
-  final Future<void> purge;
+  const ClockodileApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeMode = context.watch<ThemeCubit>().state;
-    return MaterialApp(
+    return ShadcnApp(
       title: 'Clockodile',
-      navigatorKey: _navigatorKey,
+      debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
       locale: const Locale('it'),
       supportedLocales: const [Locale('it')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      localizationsDelegates: const [ShadcnLocalizationsIt.delegate],
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.keyW, control: true):
@@ -139,33 +133,75 @@ class ClockodileApp extends StatelessWidget {
         ...WidgetsApp.defaultActions,
         VoidCallbackIntent: VoidCallbackAction(),
       },
-      // Caption, toasts and the Local Model listener sit above the Navigator so
-      // they survive pushed routes.
-      builder: (context, child) => Stack(
+      // Caption and the Local Model listener sit above the Navigator so they
+      // survive pushed routes. Toasts are ShadcnApp's own layer, above both.
+      builder: (context, child) => Column(
         children: [
-          Column(
-            children: [
-              SizedBox(
-                height: kWindowCaptionHeight,
-                child: WindowCaption(
-                  title: const Text('Clockodile'),
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  brightness: Theme.of(context).brightness,
-                ),
-              ),
-              Expanded(
-                child: AiToastHost(navigatorKey: _navigatorKey, child: child!),
-              ),
-            ],
+          const _TitleBar(),
+          Expanded(
+            child: AiToastHost(navigatorKey: navigatorKey, child: child!),
           ),
-          SonnerOverlay(key: Sonner.overlayKey, config: appToastConfig),
         ],
       ),
-      home: FutureBuilder<void>(
-        future: purge,
-        builder: (context, snap) => snap.connectionState == ConnectionState.done
-            ? const HomeShell()
-            : const Scaffold(body: Center(child: CircularProgressIndicator())),
+      home: const HomeShell(),
+    );
+  }
+}
+
+/// Drag to move, double-click to maximise, and the three window buttons.
+/// Hand-made: window_manager's WindowCaption is a Material widget.
+class _TitleBar extends StatelessWidget {
+  const _TitleBar();
+
+  Future<void> _toggleMaximize() async => await windowManager.isMaximized()
+      ? windowManager.unmaximize()
+      : windowManager.maximize();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget button(
+      IconData icon,
+      VoidCallback onPressed, {
+      AbstractButtonStyle variance = const ButtonStyle.ghostIcon(),
+    }) => IconButton(
+      variance: variance,
+      density: ButtonDensity.icon,
+      size: ButtonSize.small,
+      icon: Icon(icon),
+      onPressed: onPressed,
+    );
+    return Container(
+      height: kWindowCaptionHeight,
+      color: Theme.of(context).colorScheme.background,
+      child: Row(
+        children: [
+          Expanded(
+            child: DragToMoveArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: const Text('Clockodile').small().muted(),
+                ),
+              ),
+            ),
+          ),
+          button(LucideIcons.minus, windowManager.minimize),
+          const Gap(8),
+          button(LucideIcons.square, _toggleMaximize),
+          const Gap(8),
+          // White on red, as shadcn's own destructive button does.
+          button(
+            LucideIcons.x,
+            windowManager.close,
+            variance: const ButtonStyle.ghostIcon()
+                .withBackgroundColor(
+                  hoverColor: Theme.of(context).colorScheme.destructive,
+                )
+                .withForegroundColor(hoverColor: Colors.white),
+          ),
+          const Gap(4),
+        ],
       ),
     );
   }
@@ -221,13 +257,19 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
     act(context.read<EntriesCubit>());
   }
 
-  Widget _navButton(int index, IconData icon, String tooltip) {
-    return IconButton(
-      tooltip: tooltip,
-      iconSize: 20,
-      isSelected: _index == index,
-      icon: Icon(icon),
-      onPressed: () => setState(() => _index = index),
+  Widget _navItem(int index, IconData icon, String label) {
+    // Icon-only rail: the label lives in the tooltip, to the right. The
+    // default (below) has no room at the window's bottom edge and flips
+    // over the pointer, which closes it at once.
+    return Tooltip(
+      alignment: Alignment.centerLeft,
+      anchorAlignment: Alignment.centerRight,
+      tooltip: (_) => TooltipContainer(child: Text(label)),
+      child: NavigationItem(
+        selected: _index == index,
+        onChanged: (_) => setState(() => _index = index),
+        child: Icon(icon),
+      ),
     );
   }
 
@@ -244,11 +286,9 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
           if (cubit.state.active != null) cubit.stop();
         }),
         mod(LogicalKeyboardKey.digit1): () =>
-            _onEntries((c) => c.setFilter(DateFilter.today)),
+            _onEntries((c) => c.setDay(today())),
         mod(LogicalKeyboardKey.digit2): () =>
-            _onEntries((c) => c.setFilter(DateFilter.yesterday)),
-        mod(LogicalKeyboardKey.digit3): () =>
-            _onEntries((c) => c.setFilter(DateFilter.all)),
+            _onEntries((c) => c.setDay(yesterday())),
         // Export lives on the Report screen: switch there, then export.
         mod(LogicalKeyboardKey.keyS): () {
           setState(() => _index = _reportIndex);
@@ -257,45 +297,38 @@ class _HomeShellState extends State<HomeShell> with WindowListener {
       },
       child: Focus(
         autofocus: true,
-        child: Scaffold(
-          body: Row(
-            children: [
-              // Uniform sidebar: every destination is the same icon-only
-              // IconButton (tooltip + isSelected tint), top or bottom.
-              SizedBox(
-                width: 64,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    _navButton(0, LucideIcons.listTodo, 'Attività'),
-                    _navButton(1, LucideIcons.users, 'Clienti'),
-                    _navButton(2, LucideIcons.fileChartColumn, 'Report'),
-                    const Spacer(),
-                    _navButton(
-                      _settingsIndex,
-                      LucideIcons.settings,
-                      'Impostazioni',
-                    ),
-                    _navButton(_helpIndex, LucideIcons.circleHelp, 'Aiuto'),
-                    const SizedBox(height: 12),
-                  ],
+        child: Row(
+          children: [
+            NavigationRail(
+              labelType: NavigationLabelType.none,
+              footer: [
+                _navItem(
+                  _settingsIndex,
+                  LucideIcons.settings,
+                  'Impostazioni',
                 ),
+                _navItem(_helpIndex, LucideIcons.circleHelp, 'Aiuto'),
+              ],
+              children: [
+                _navItem(0, LucideIcons.listTodo, 'Attività'),
+                _navItem(1, LucideIcons.users, 'Clienti'),
+                _navItem(_reportIndex, LucideIcons.fileChartColumn, 'Report'),
+              ],
+            ),
+            const VerticalDivider(),
+            Expanded(
+              child: IndexedStack(
+                index: _index,
+                children: const [
+                  EntriesView(),
+                  ClientsView(),
+                  ReportView(),
+                  HelpView(),
+                  SettingsView(),
+                ],
               ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: IndexedStack(
-                  index: _index,
-                  children: const [
-                    EntriesView(),
-                    ClientsView(),
-                    ReportView(),
-                    HelpView(),
-                    SettingsView(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

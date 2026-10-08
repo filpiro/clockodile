@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:clockodile/shared/widgets/empty_state.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../../data/db/database.dart';
-import '../../shared/widgets/client_dot.dart';
+import '../../shared/widgets/app_list_row.dart';
+import '../../shared/widgets/empty_state.dart';
+import '../../shared/widgets/identicon.dart';
 import '../../shared/widgets/date_filter_bar.dart';
 import '../../shared/utils/format.dart';
+import 'clocky.dart';
 import 'cubit/entries_cubit.dart';
 import 'entry_edit_page.dart';
 
@@ -44,52 +45,53 @@ class EntriesView extends StatelessWidget {
               .sessions
               .add(r.session);
         }
-        return CatPage(
-          fab: FloatingActionButton(
-            heroTag: null,
-            tooltip: 'Nuova attività',
-            onPressed: () => openEntryPage(context),
-            child: const Icon(LucideIcons.plus),
-          ),
-          toolbar: Align(
-            alignment: Alignment.centerLeft,
-            child: DateFilterBar(
-              filter: state.filter,
-              pickedDay: state.pickedDay,
-              showAll: true,
-              onFilter: context.read<EntriesCubit>().setFilter,
-              onPickDay: context.read<EntriesCubit>().setDay,
-            ),
-          ),
-          body: Column(
-            children: [
-              if (state.active != null) _ActiveEntryTile(state.active!),
-              Expanded(
-                child: state.rows.isEmpty && state.active == null
-                    ? const EmptyState('Nessuna attività.')
-                    : ListView(
-                        padding: const EdgeInsets.only(
-                          bottom: AppTokens.fabClearance,
-                        ),
-                        children: [
-                          for (final day in byDay.entries) ...[
-                            _DayHeader(day.key, day.value.values.toList()),
-                            for (final g in day.value.values) _EntryDayTile(g),
-                          ],
-                          if (state.canLoadMore)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Center(
-                                child: TextButton(
-                                  onPressed: () =>
-                                      context.read<EntriesCubit>().loadMore(),
-                                  child: const Text('Carica altre'),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+        return Scaffold(
+          headers: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              title: DateFilterBar(
+                day: state.day,
+                onDay: context.read<EntriesCubit>().setDay,
               ),
+              trailing: [
+                PrimaryButton(
+                  leading: const Icon(LucideIcons.plus),
+                  onPressed: () => openEntryPage(context),
+                  child: const Text('Nuova attività'),
+                ),
+              ],
+            ),
+          ],
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (state.active != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _ActiveEntryTile(state.active!),
+                    ),
+                    const Divider(),
+                  ],
+                  Expanded(
+                    child: state.rows.isEmpty && state.active == null
+                        ? const EmptyState('Nessuna attività.')
+                        : ListView(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                            children: [
+                              for (final day in byDay.entries) ...[
+                                _DayHeader(day.key, day.value.values.toList()),
+                                for (final g in day.value.values)
+                                  _EntryDayTile(g),
+                              ],
+                            ],
+                          ),
+                  ),
+                ],
+              ),
+              Positioned.fill(child: Clocky(walking: state.active != null)),
             ],
           ),
         );
@@ -101,7 +103,7 @@ class EntriesView extends StatelessWidget {
 /// Pinned above the list in every filter. Shows both the running session's
 /// elapsed time and the entry's total accumulated time (ticking every
 /// minute). Tap is a no-op (activation of the active entry does nothing);
-/// edit via hover pencil, stop via "Termina".
+/// edit via the pencil, stop via "Termina".
 class _ActiveEntryTile extends StatefulWidget {
   final ActiveEntry active;
   const _ActiveEntryTile(this.active);
@@ -128,21 +130,16 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
   @override
   Widget build(BuildContext context) {
     final a = widget.active;
-    final scheme = Theme.of(context).colorScheme;
     final running = DateTime.now().difference(a.openSession.start);
     final total = a.closedTotal + running;
     final hasPast = a.closedTotal > Duration.zero;
-    return HoverTile(
-      leading: ClientDot(a.client.colorHex),
+    return AppListRow(
+      leading: Identicon(a.client.id, size: Identicon.small),
       title: Row(
         children: [
           Flexible(child: Text(a.client.name)),
-          const SizedBox(width: 8),
-          CatTag(
-            'in corso',
-            background: scheme.primaryContainer,
-            foreground: scheme.onPrimaryContainer,
-          ),
+          const Gap(8),
+          const PrimaryBadge(child: Text('in corso')),
         ],
       ),
       subtitle: Text(
@@ -151,32 +148,25 @@ class _ActiveEntryTileState extends State<_ActiveEntryTile> {
         '${hasPast ? ' · totale ${formatHm(total)}' : ''}'
         '${a.entry.note.isEmpty ? '' : ' — ${a.entry.note}'}',
       ),
-      actions: [
-        EditIconButton(
-          onPressed: () =>
-              openEntryPage(context, entry: a.entry, client: a.client),
-        ),
-        const SizedBox(width: 8),
-        FilledButton.tonalIcon(
-          // Same hover treatment as delete, by explicit choice: in this app
-          // red marks a strong action, not only irreversible data loss.
-          // 48 tall, not the stock 40: it fills the tap box it already
-          // occupies, so the row doesn't grow, and it stops reading as
-          // smaller than the edit button's 40px hover disc.
-          style:
-              intentHoverStyle(
-                idle: scheme.onSecondaryContainer,
-                accent: scheme.error,
-              ).copyWith(
-                minimumSize: const WidgetStatePropertyAll(
-                  Size(64, AppTokens.pillMinHeight),
-                ),
-              ),
-          icon: const Icon(LucideIcons.circleStop),
-          label: const Text('Termina'),
-          onPressed: () => context.read<EntriesCubit>().stop(),
-        ),
-      ],
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RowAction(
+            icon: LucideIcons.pencil,
+            tooltip: 'Modifica',
+            onPressed: () =>
+                openEntryPage(context, entry: a.entry, client: a.client),
+          ),
+          const Gap(8),
+          // Red by explicit choice: in this app red marks a strong action,
+          // not only irreversible data loss.
+          DestructiveButton(
+            leading: const Icon(LucideIcons.circleStop),
+            onPressed: () => context.read<EntriesCubit>().stop(),
+            child: const Text('Termina'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -189,21 +179,48 @@ class _DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = groups.fold(Duration.zero, (sum, g) => sum + g.total);
-    return CatSectionHeader(
-      title: italianDayLabel(day),
-      trailing: Text(
-        formatHm(total),
-        style: Theme.of(context).textTheme.titleSmall,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(italianDayLabel(day)).h4()),
+          Text(formatHm(total)).h4(),
+        ],
       ),
     );
   }
 }
 
 /// An Entry's sessions within one day. Tap = activate (reactivation opens a
-/// new session; no-op if already active). Edit and delete on hover.
+/// new session; no-op if already active). Edit and delete always visible.
 class _EntryDayTile extends StatelessWidget {
   final _EntryDayGroup g;
   const _EntryDayTile(this.g);
+
+  Future<void> _delete(BuildContext context) async {
+    final cubit = context.read<EntriesCubit>();
+    final ok = await showOverlay<bool>(
+      context,
+      const DialogConfiguration(),
+      builder: (context) => AlertDialog(
+        title: const Text("Eliminare l'attività?"),
+        content: const Text(
+          'Verranno eliminate tutte le sue sessioni, anche in altri giorni.',
+        ),
+        actions: [
+          OutlineButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla'),
+          ),
+          DestructiveButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Elimina'),
+          ),
+        ],
+      ),
+    ).future;
+    if (ok == true) cubit.deleteEntry(g.entry.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -211,40 +228,21 @@ class _EntryDayTile extends StatelessWidget {
     final spans = n == 1
         ? '${hhmm(g.sessions.single.start)}–${hhmm(g.sessions.single.end!)}'
         : '$n sessioni';
-    return HoverTile(
-      // HoverTile keeps hover state; without a key it is reused by position
+    return AppListRow(
+      // The row keeps hover state; without a key it is reused by position
       // and a deleted row hands its highlight to whichever row slides up.
       // Keyed by first session, not entry: an Entry spanning two days appears
       // twice in this list, and duplicate sibling keys throw.
       key: ValueKey(g.sessions.first.id),
-      leading: ClientDot(g.client.colorHex),
+      leading: Identicon(g.client.id, size: Identicon.small),
       title: Text(g.client.name),
       subtitle: Text(
         '$spans (${formatHm(g.total)})'
         '${g.entry.note.isEmpty ? '' : ' — ${g.entry.note}'}',
       ),
       onTap: () => context.read<EntriesCubit>().activate(g.entry.id),
-      actions: [
-        EditIconButton(
-          onPressed: () =>
-              openEntryPage(context, entry: g.entry, client: g.client),
-        ),
-        DeleteIconButton(
-          onPressed: () async {
-            final cubit = context.read<EntriesCubit>();
-            final ok = await catConfirm(
-              context,
-              title: "Eliminare l'attività?",
-              message:
-                  'Verranno eliminate tutte le sue sessioni, anche in altri giorni.',
-              confirm: 'Elimina',
-              cancel: 'Annulla',
-              danger: true,
-            );
-            if (ok) cubit.deleteEntry(g.entry.id);
-          },
-        ),
-      ],
+      onEdit: () => openEntryPage(context, entry: g.entry, client: g.client),
+      onDelete: () => _delete(context),
     );
   }
 }

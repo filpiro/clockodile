@@ -1,6 +1,6 @@
 import 'package:clockodile/features/help/help_view.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// The Help page is prose: it caps its width, so its longest shortcut
 /// description has to wrap inside that cap instead of overflowing the row.
@@ -13,10 +13,11 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(const MaterialApp(home: HelpView()));
+      await tester.pumpWidget(const ShadcnApp(home: HelpView()));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull, reason: 'at $width wide');
+      expect(find.byType(KeyboardDisplay), findsNWidgets(5));
     }
   });
 }

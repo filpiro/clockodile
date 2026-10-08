@@ -1,15 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-import '../../shared/utils/colors.dart';
-
 part 'database.g.dart';
 
 class Clients extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name =>
       text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
-  TextColumn get colorHex => text()();
 }
 
 /// An Entry (UI "Attività") is a named item of work against one Client.
@@ -36,7 +33,7 @@ class Settings extends Table {
   IntColumn get retentionDays => integer().withDefault(const Constant(60))();
 
   /// 'light' | 'dark' | 'system'
-  TextColumn get themeMode => text().withDefault(const Constant('system'))();
+  TextColumn get themeMode => text().withDefault(const Constant('dark'))();
 
   BoolColumn get aiEnabled => boolean().withDefault(const Constant(false))();
 
@@ -105,7 +102,7 @@ class AppDatabase extends _$AppDatabase {
   static const defaultRetentionDays = 60;
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,15 +142,25 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         await m.addColumn(settings, settings.aiWslMode);
       }
+      if (from < 7) {
+        // The client colour gave way to the identicon (ADR 0004). Drop only
+        // that column: no table rebuild, so no row can be lost. Guarded: an
+        // older build opening an upgraded file writes its own lower
+        // user_version back, so this can run again on a file without it.
+        final columns = await customSelect(
+          "SELECT 1 FROM pragma_table_info('clients') WHERE name = 'color_hex'",
+        ).get();
+        if (columns.isNotEmpty) await m.dropColumn(clients, 'color_hex');
+      }
     },
   );
 
   /// The single settings row, always present (see [migration]'s beforeOpen).
   Future<Setting> getSettings() => select(settings).getSingle();
 
-  Future<void> saveSettings(SettingsCompanion values) => into(
-    settings,
-  ).insertOnConflictUpdate(values.copyWith(id: const Value(1)));
+  Future<void> saveSettings(SettingsCompanion values) =>
+      into(settings)
+          .insertOnConflictUpdate(values.copyWith(id: const Value(1)));
 
   // ---- retention ----
 
@@ -162,19 +169,19 @@ class AppDatabase extends _$AppDatabase {
     return row?.retentionDays ?? defaultRetentionDays;
   }
 
-  Future<void> setRetentionDays(int days) =>
-      into(settings).insertOnConflictUpdate(
+  Future<void> setRetentionDays(int days) => into(settings)
+      .insertOnConflictUpdate(
         SettingsCompanion(id: const Value(1), retentionDays: Value(days)),
       );
 
   /// 'light' | 'dark' | 'system'
   Future<String> getThemeMode() async {
     final row = await select(settings).getSingleOrNull();
-    return row?.themeMode ?? 'system';
+    return row?.themeMode ?? 'dark';
   }
 
-  Future<void> setThemeMode(String mode) =>
-      into(settings).insertOnConflictUpdate(
+  Future<void> setThemeMode(String mode) => into(settings)
+      .insertOnConflictUpdate(
         SettingsCompanion(id: const Value(1), themeMode: Value(mode)),
       );
 
@@ -260,9 +267,8 @@ class AppDatabase extends _$AppDatabase {
       if (open?.entryId == entryId) return; // already active
       final now = DateTime.now();
       await _closeOpenSession(now);
-      await into(
-        sessions,
-      ).insert(SessionsCompanion.insert(entryId: entryId, start: now));
+      await into(sessions)
+          .insert(SessionsCompanion.insert(entryId: entryId, start: now));
     });
   }
 
@@ -273,7 +279,7 @@ class AppDatabase extends _$AppDatabase {
     sessions,
   )..where((s) => s.end.isNull())).write(SessionsCompanion(end: Value(at)));
 
-  /// Case-insensitive match on name; creates with a generated color if absent.
+  /// Case-insensitive match on name; creates the client if absent.
   Future<Client> matchOrCreateClient(String name) async {
     name = name.trim();
     final existing =
@@ -281,10 +287,8 @@ class AppDatabase extends _$AppDatabase {
               ..where((c) => c.name.collate(Collate.noCase).equals(name)))
             .getSingleOrNull();
     if (existing != null) return existing;
-    final id = await into(clients).insert(
-      ClientsCompanion.insert(name: name, colorHex: randomClientColorHex()),
-    );
-    return Client(id: id, name: name, colorHex: '');
+    final id = await into(clients).insert(ClientsCompanion.insert(name: name));
+    return Client(id: id, name: name);
   }
 
   // ---- sessions list ----
@@ -294,7 +298,6 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<SessionRow>> watchClosedSessions({
     DateTime? from,
     DateTime? to,
-    int? limit,
   }) {
     final query =
         (select(sessions)
@@ -311,7 +314,6 @@ class AppDatabase extends _$AppDatabase {
               innerJoin(entries, entries.id.equalsExp(sessions.entryId)),
               innerJoin(clients, clients.id.equalsExp(entries.clientId)),
             ]);
-    if (limit != null) query.limit(limit);
     return query.watch().map(
       (rows) => rows
           .map(
@@ -403,11 +405,6 @@ class AppDatabase extends _$AppDatabase {
   Future<void> renameClient(int id, String name) =>
       (update(clients)..where((c) => c.id.equals(id))).write(
         ClientsCompanion(name: Value(name.trim())),
-      );
-
-  Future<void> setClientColor(int id, String colorHex) =>
-      (update(clients)..where((c) => c.id.equals(id))).write(
-        ClientsCompanion(colorHex: Value(colorHex)),
       );
 
   /// Returns false (and deletes nothing) if the client has linked entries.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Centered "nothing to show" placeholder: dimmed illustration above a
 /// message. Used wherever a list can legitimately be empty.
@@ -24,7 +24,7 @@ class EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(message),
+          Text(message).muted(),
         ],
       ),
     );

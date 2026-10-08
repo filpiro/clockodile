@@ -1,8 +1,7 @@
-import 'package:catui/catui.dart';
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-import '../../shared/utils/colors.dart';
 import '../../shared/utils/format.dart';
+import '../../shared/widgets/identicon.dart';
 import 'board_geometry.dart';
 import 'normalize.dart';
 import 'report_view.dart';
@@ -25,7 +24,7 @@ class ReportBoard extends StatelessWidget {
     final axis = boardAxis(rows);
     if (axis == null) return const SizedBox.shrink();
     final (axisStart, axisEnd) = axis;
-    final theme = Theme.of(context);
+    final cs = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
       // Vertical room for the first and last hour labels, which straddle the
@@ -45,7 +44,7 @@ class ReportBoard extends StatelessWidget {
                 right: 0,
                 child: Container(
                   height: 1,
-                  color: theme.colorScheme.outlineVariant,
+                  color: cs.border,
                 ),
               ),
               Positioned(
@@ -56,10 +55,7 @@ class ReportBoard extends StatelessWidget {
                 child: Text(
                   hhmm(h),
                   textAlign: TextAlign.right,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                ).small().muted(),
               ),
             ],
             for (final r in rows)
@@ -79,106 +75,95 @@ class ReportBoard extends StatelessWidget {
   }
 }
 
-class _BoardTile extends StatefulWidget {
+class _BoardTile extends StatelessWidget {
   final ReportRow r;
   const _BoardTile(this.r, {super.key});
 
   @override
-  State<_BoardTile> createState() => _BoardTileState();
-}
-
-class _BoardTileState extends State<_BoardTile> {
-  @override
   Widget build(BuildContext context) {
-    final r = widget.r;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final note = r.entry.note;
     final degenerate = isHairlineRow(r.normDuration);
-
-    // Everything a short tile clips — a zero-length row's only text at all.
-    final tooltip = [
-      r.client.name,
-      '${hhmm(r.normStart)}–${hhmm(r.normEnd)} (${formatHm(r.normDuration)})',
-      'reale ${hhmm(r.session.start)}–${hhmm(r.session.end!)}',
-      if (note.isNotEmpty) note,
-    ].join('\n');
+    final span =
+        '${hhmm(r.normStart)}–${hhmm(r.normEnd)} (${formatHm(r.normDuration)})';
 
     return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
+      // Everything a short tile clips — a zero-length row's only text at all.
+      tooltip: (_) => TooltipContainer(
+        child: Text(
+          [
+            r.client.name,
+            span,
+            'reale ${hhmm(r.session.start)}–${hhmm(r.session.end!)}',
+            if (note.isNotEmpty) note,
+          ].join('\n'),
+        ),
+      ),
+      child: Clickable(
         // Same deal as the list rows: tap copies the note, no note no tap.
-        onTap: note.isEmpty ? null : () => copyNote(note),
-        child: HoverFade(
-          // Height alone decides how much content survives: a short tile
-          // ends up showing only the client name. OverflowBox keeps that a
-          // clip rather than an overflow error. Built once — hover only
-          // repaints the fill.
-          child: degenerate
-              ? null
-              : ClipRect(
-                  child: OverflowBox(
-                    alignment: Alignment.topLeft,
-                    minHeight: 0,
-                    maxHeight: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            r.client.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelLarge,
-                          ),
-                          Text(
-                            '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
-                            ' (${formatHm(r.normDuration)})',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          if (note.isNotEmpty)
-                            Text(
-                              note,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                        ],
-                      ),
+        onPressed: note.isEmpty ? null : () => copyNote(note),
+        mouseCursor: WidgetStatePropertyAll(
+          note.isEmpty ? MouseCursor.defer : SystemMouseCursors.click,
+        ),
+        decoration: WidgetStateProperty.resolveWith(
+          (states) => BoxDecoration(
+            // A zero- or negative-length row has no room for borders: it is
+            // the hairline. Never hidden.
+            color: degenerate ? cs.destructive : cs.muted,
+            // Borders inset the content without changing the box height, so
+            // contiguous tiles still sum to their combined duration. The
+            // left edge is always there so hover never shifts the content;
+            // it only turns primary under the pointer.
+            border: degenerate
+                ? null
+                : Border(
+                    left: BorderSide(
+                      color: states.contains(WidgetState.hovered)
+                          ? cs.primary
+                          : cs.muted,
+                      width: 3,
+                    ),
+                    top: BorderSide(color: cs.background),
+                    bottom: BorderSide(color: cs.background),
+                  ),
+          ),
+        ),
+        // Height alone decides how much content survives: a short tile ends
+        // up showing only the client name. OverflowBox keeps that a clip
+        // rather than an overflow error.
+        child: degenerate
+            ? const SizedBox.expand()
+            : ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  minHeight: 0,
+                  maxHeight: double.infinity,
+                  // Laid out like an entity list row, tighter vertically:
+                  // a half-hour tile is only 48px tall.
+                  child: Basic(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    // Basic top-aligns leading, which sits it above the name's
+                    // glyphs. Not centred: a short tile shows only the name.
+                    leading: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Identicon(r.client.id, size: Identicon.small),
+                    ),
+                    title: Text(
+                      r.client.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      span,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
-          builder: (context, t, _, child) => Container(
-            decoration: BoxDecoration(
-              // A zero- or negative-length row has no room for borders: it
-              // is the hairline. Never hidden.
-              color: degenerate
-                  ? cs.error
-                  : Color.lerp(
-                      cs.surfaceContainer,
-                      cs.surfaceContainerHighest,
-                      t,
-                    ),
-              // Borders inset the content without changing the box height,
-              // so contiguous tiles still sum to their combined duration.
-              border: degenerate
-                  ? null
-                  : Border(
-                      left: BorderSide(
-                        color: hexToColor(r.client.colorHex),
-                        width: 4,
-                      ),
-                      top: BorderSide(color: cs.surface),
-                      bottom: BorderSide(color: cs.surface),
-                    ),
-            ),
-            child: child,
-          ),
-        ),
+              ),
       ),
     );
   }

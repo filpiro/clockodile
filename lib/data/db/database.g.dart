@@ -31,19 +31,8 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL UNIQUE COLLATE NOCASE',
   );
-  static const VerificationMeta _colorHexMeta = const VerificationMeta(
-    'colorHex',
-  );
   @override
-  late final GeneratedColumn<String> colorHex = GeneratedColumn<String>(
-    'color_hex',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, name, colorHex];
+  List<GeneratedColumn> get $columns => [id, name];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -67,14 +56,6 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('color_hex')) {
-      context.handle(
-        _colorHexMeta,
-        colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_colorHexMeta);
-    }
     return context;
   }
 
@@ -92,10 +73,6 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      colorHex: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}color_hex'],
-      )!,
     );
   }
 
@@ -108,23 +85,17 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
 class Client extends DataClass implements Insertable<Client> {
   final int id;
   final String name;
-  final String colorHex;
-  const Client({required this.id, required this.name, required this.colorHex});
+  const Client({required this.id, required this.name});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
-    map['color_hex'] = Variable<String>(colorHex);
     return map;
   }
 
   ClientsCompanion toCompanion(bool nullToAbsent) {
-    return ClientsCompanion(
-      id: Value(id),
-      name: Value(name),
-      colorHex: Value(colorHex),
-    );
+    return ClientsCompanion(id: Value(id), name: Value(name));
   }
 
   factory Client.fromJson(
@@ -135,7 +106,6 @@ class Client extends DataClass implements Insertable<Client> {
     return Client(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      colorHex: serializer.fromJson<String>(json['colorHex']),
     );
   }
   @override
@@ -144,20 +114,15 @@ class Client extends DataClass implements Insertable<Client> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
-      'colorHex': serializer.toJson<String>(colorHex),
     };
   }
 
-  Client copyWith({int? id, String? name, String? colorHex}) => Client(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    colorHex: colorHex ?? this.colorHex,
-  );
+  Client copyWith({int? id, String? name}) =>
+      Client(id: id ?? this.id, name: name ?? this.name);
   Client copyWithCompanion(ClientsCompanion data) {
     return Client(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
     );
   }
 
@@ -165,60 +130,42 @@ class Client extends DataClass implements Insertable<Client> {
   String toString() {
     return (StringBuffer('Client(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('colorHex: $colorHex')
+          ..write('name: $name')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, colorHex);
+  int get hashCode => Object.hash(id, name);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Client &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.colorHex == this.colorHex);
+      (other is Client && other.id == this.id && other.name == this.name);
 }
 
 class ClientsCompanion extends UpdateCompanion<Client> {
   final Value<int> id;
   final Value<String> name;
-  final Value<String> colorHex;
   const ClientsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
-    this.colorHex = const Value.absent(),
   });
   ClientsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
-    required String colorHex,
-  }) : name = Value(name),
-       colorHex = Value(colorHex);
+  }) : name = Value(name);
   static Insertable<Client> custom({
     Expression<int>? id,
     Expression<String>? name,
-    Expression<String>? colorHex,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
-      if (colorHex != null) 'color_hex': colorHex,
     });
   }
 
-  ClientsCompanion copyWith({
-    Value<int>? id,
-    Value<String>? name,
-    Value<String>? colorHex,
-  }) {
-    return ClientsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      colorHex: colorHex ?? this.colorHex,
-    );
+  ClientsCompanion copyWith({Value<int>? id, Value<String>? name}) {
+    return ClientsCompanion(id: id ?? this.id, name: name ?? this.name);
   }
 
   @override
@@ -230,9 +177,6 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
-    if (colorHex.present) {
-      map['color_hex'] = Variable<String>(colorHex.value);
-    }
     return map;
   }
 
@@ -240,8 +184,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
   String toString() {
     return (StringBuffer('ClientsCompanion(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('colorHex: $colorHex')
+          ..write('name: $name')
           ..write(')'))
         .toString();
   }
@@ -824,7 +767,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('system'),
+    defaultValue: const Constant('dark'),
   );
   static const VerificationMeta _aiEnabledMeta = const VerificationMeta(
     'aiEnabled',
@@ -1535,17 +1478,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 }
 
 typedef $$ClientsTableCreateCompanionBuilder =
-    ClientsCompanion Function({
-      Value<int> id,
-      required String name,
-      required String colorHex,
-    });
+    ClientsCompanion Function({Value<int> id, required String name});
 typedef $$ClientsTableUpdateCompanionBuilder =
-    ClientsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<String> colorHex,
-    });
+    ClientsCompanion Function({Value<int> id, Value<String> name});
 
 final class $$ClientsTableReferences
     extends BaseReferences<_$AppDatabase, $ClientsTable, Client> {
@@ -1587,11 +1522,6 @@ class $$ClientsTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get colorHex => $composableBuilder(
-    column: $table.colorHex,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1639,11 +1569,6 @@ class $$ClientsTableOrderingComposer
     column: $table.name,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get colorHex => $composableBuilder(
-    column: $table.colorHex,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$ClientsTableAnnotationComposer
@@ -1660,9 +1585,6 @@ class $$ClientsTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get colorHex =>
-      $composableBuilder(column: $table.colorHex, builder: (column) => column);
 
   Expression<T> entriesRefs<T extends Object>(
     Expression<T> Function($$EntriesTableAnnotationComposer a) f,
@@ -1720,18 +1642,10 @@ class $$ClientsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<String> colorHex = const Value.absent(),
-              }) => ClientsCompanion(id: id, name: name, colorHex: colorHex),
+              }) => ClientsCompanion(id: id, name: name),
           createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required String colorHex,
-              }) => ClientsCompanion.insert(
-                id: id,
-                name: name,
-                colorHex: colorHex,
-              ),
+              ({Value<int> id = const Value.absent(), required String name}) =>
+                  ClientsCompanion.insert(id: id, name: name),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (

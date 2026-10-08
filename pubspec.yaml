@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.13.0
 
 dependencies:
   crypto: ^3.0.6
@@ -15,18 +15,9 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
-  flutter_localizations:
-    sdk: flutter
-  # Toast overlay, motion and swipe only — it ships no UI, so the card is ours
-  # and this stays out of catui.
-  sonner_toast: ^2.0.2
+  lottie: ^3.6.1
+  shadcn_flutter: ^0.0.54
   window_manager: ^0.5.2
-  # House style: theme, design tokens, atomic widgets.
-  # Re-exports catppuccin_flutter and lucide_icons_flutter.
-  catui:
-    git:
-      url: https://github.com/filpiro/catui
-      ref: 'c087d1e'
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +32,6 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
-  uses-material-design: true
   assets:
     - assets/images/
+    - assets/lottie/

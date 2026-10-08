@@ -1,123 +1,316 @@
-# UI Components Inventory
+# UI conventions and the shadcn_flutter mapping
 
-Every visual component in this app, grouped by scope — what clockodile puts on screen, not how the style works.
+There is no house style package. `catui` is gone, and nothing replaces it: this file
+*is* the coherence layer. It holds the rules a session follows so that screens built
+months apart still look like one app, plus the table saying what each retired widget
+became.
 
-The house style itself — theme, tokens, shared widgets and the rules for using them — is `packages/catui/DESIGN.md`. Read that first; this file assumes it.
+Decided in wayfinder ticket 05 (old local tracker, now deleted).
 
-Clockodile's only style decision: `lib/shared/theme.dart` passes the flavor's green as `primary` (latte for light, mocha for dark, `themeMode` from Settings). Everything else is catui's.
+**The governing principle**: reach for the simplest native shadcn_flutter component
+that matches the behaviour actually needed. Do not preserve an abstraction just
+because the old UI layer had one. Compose at the call site; a shared widget needs
+three or more call sites *and* logic of its own to earn a file.
 
-## App shell (`lib/main.dart`)
+---
 
-| Component | Widget | Notes |
-|---|---|---|
-| Navigation rail | `NavigationRail` | 3 destinations (Attività, Clienti, Report), labels always visible |
-| Rail bottom icons | `IconButton` ×2 | Impostazioni, Aiuto — `isSelected` state, outside destinations |
-| Rail/content divider | `VerticalDivider` | width 1 |
-| Screen host | `IndexedStack` | keeps all 5 screens alive |
-| Startup loader | `CircularProgressIndicator` | shown while purge future resolves |
+## 1. The rules
 
-## From catui
+### Spacing
 
-Behaviour and rationale live in `packages/catui/DESIGN.md`; this is only where each one is used.
-
-| Component | Used by |
+| Rule | Value |
 |---|---|
-| `HoverTile` | Attività list, Active Entry tile, Clienti list, Report rows (`dense`) |
-| `EditIconButton` | Attività rows, Active Entry tile |
-| `DeleteIconButton` | Attività rows, Clienti rows, Entry page sessions |
-| `DangerButton` | delete confirms in Attività, Clienti, Impostazioni |
-| `intentHoverStyle()` | the four above, plus "Termina" |
-| `EmptyState` | Attività, Report, Clienti |
+| Page padding | `pagePadding` (24) — a `const` in the file that uses it; shadcn has no padding getter on `ThemeData` |
+| Gutter between controls in a row | `.gap(8)` |
+| Between sections | a `Divider`, then `.gap(24)` — no 48px section gap |
+| Form / prose max width | `formMaxWidth` (560) — **the only shared constant in the repo** |
+| List row padding | owned by `AppListRow`; no call site sets it |
 
-## Shared widgets (`lib/shared/widgets/`)
+Everything else comes from `ThemeData`: `theme.radiusSm/Md/Lg` (and `theme.borderRadiusMd` etc.),
+`theme.iconTheme`, `theme.density`. Never hand-write a radius, an icon size, a disabled
+alpha or a hover alpha — shadcn styles `WidgetState` itself. A number that appears in
+exactly one file is a `const` at the top of that file, not a shared token.
 
-| Component | Widget | Used by | Notes |
-|---|---|---|---|
-| Client autocomplete | `ClientField` (custom) | Entry page | `RawAutocomplete`, dropdown from 3 chars; options: `Material(elevation 4)` + `ListView` of dense `ListTile`s, highlighted option = `secondaryContainer` bg, color dot per client. Stays in the app: it reads `ClientsCubit` and knows the Client entity |
+### Colour roles
 
-## Attività screen (`lib/features/entries/entries_view.dart`)
+shadcn's `ColorScheme` has **no** `surface`, `onSurface`, `surfaceVariant`, `error` or
+`outline`. The roles are: `background`, `foreground`, `card`, `popover`, `primary`,
+`secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`, `chart1–5`.
 
-| Component | Widget | Notes |
-|---|---|---|
-| New-entry FAB | `FloatingActionButton` | icon `add`, tooltip "Nuova attività" |
-| Date filter chips | `ChoiceChip` ×4 | Oggi, Ieri, Data (calendar avatar + picked date label), Tutte — no checkmark, selected bg only |
-| Active Entry tile | `_ActiveEntryTile` (custom, on `HoverTile`) | pinned above list; color dot, "in corso" badge (`primaryContainer` rounded container), subtitle "dalle · sessione · totale — nota", ticks every minute |
-| Stop button | `FilledButton.tonalIcon` | "Termina", icon `circleStop`, hover-revealed; hovers to `error` via `intentHoverStyle` — deliberate: in this app red marks a strong action, not only irreversible data loss. Pill forced to 48px (`minimumSize`) instead of the stock 40 so it fills the tap box it already occupies and stops reading smaller than the edit button's 40px hover disc; row height is unchanged. Separated from the edit button by an 8px `SizedBox` local to this tile — not `HoverTile` spacing, which would also push edit/delete apart in every Entry row |
-| Day header | `_DayHeader` (custom) | Italian day label left, day total right, `titleSmall` |
-| Entry day row | `_EntryDayTile` (custom, on `HoverTile`) | color dot, client name, "HH:MM–HH:MM (h:mm)" or "N sessioni (h:mm)" + nota; tap = activate |
-| Row hover actions | `EditIconButton` + `DeleteIconButton` | pencil (edit), trash (delete w/ confirm dialog) |
-| Delete confirm | `AlertDialog` | "Eliminare l'attività?" + cascade warning; confirm is a `DangerButton` |
-| Load more | `TextButton` | "Carica altre", only in Tutte |
-| Empty state | `EmptyState` | "Nessuna attività." |
+- `background` is the page. The app is flat — sections are **not** cards.
+- `card` / `popover` only where a genuinely raised surface exists: dialogs, toasts, popovers.
+- `muted` / `mutedForeground` for inert fills and secondary text.
+- `primary` for the single main action, and for the report bars.
+- `border` for hairlines, dividers and gridlines.
+- `destructive` for delete, for "Termina", and for invalid values.
 
-## Entry page (`lib/features/entries/entry_edit_page.dart`)
+**Trap**: the theme's accent colour (Green) lands on `primary` and `ring`, **not** on
+shadcn's `accent` role — `accent` is the subtle hover fill and stays slate. Never reach
+for `accent` expecting green.
 
-| Component | Widget | Notes |
-|---|---|---|
-| Page scaffold | `Scaffold` + `AppBar` | title "Nuova/Modifica attività"; actions: `TextButton` Annulla + `FilledButton` Salva |
-| Form column | `ConstrainedBox(560)` + `ListView` | centered |
-| Client input | `ClientField` | no autofocus |
-| Start picker (create) | `ListTile` + `showDatePicker`/`showTimePicker` | "Inizio", calendar icon |
-| Session card (edit) | `Card` + dense `ListTile` | Inizio/Fine tappable stamps (`InkWell` columns), duration or validation error subtitle |
-| Session delete | `DeleteIconButton` | disabled on last session (tooltip explains) |
-| Open-end stamp | `InkWell` column | "non impostata — in corso", settable once |
-| Note input | `TextField` | `OutlineInputBorder` |
-| Loading sessions | `CircularProgressIndicator` | while sessions load |
+Translations from the old Material roles: `onSurfaceVariant` → `mutedForeground`,
+`surfaceContainerHighest` → `muted`, `outlineVariant` → `border`, `error`/`onError` →
+`destructive`/`destructiveForeground`, `surface` → `background`.
 
-## Report screen (`lib/features/report/report_view.dart`)
+### Typography
 
-| Component | Widget | Notes |
-|---|---|---|
-| Filter chips | `ChoiceChip` ×3 | Oggi, Ieri, Data — no Tutte, no checkmark |
-| Mode chips | `ChoiceChip` ×2 | "Raggruppa per cliente" (default) / "Ordine cronologico" — radio pair, exactly one selected, never zero. Presentation only: same rows, same total, same CSV in both |
-| Export button | `FilledButton.tonalIcon` | "Esporta CSV", disabled when empty |
-| Client header (grouped mode) | `_ClientHeader` (custom) | color dot + name, `titleSmall` |
-| Report row (grouped mode) | `_ReportTile` (on `HoverTile`, `dense`) | normalized "HH:MM–HH:MM (h:mm) — nota"; subtitle client + real times; no color dot (the header carries it); zero-length rows in `error` color; tap copies the note, note-less rows aren't tappable but still highlight |
-| Day board (chronological mode) | `ReportBoard` (`Stack` of `Positioned`) | single full-width column on a wall-clock axis; fixed 1.6 px/minute, no zoom; axis = first normalized start floored to its hour → last normalized end ceiled to its hour; 56px left gutter with `HH:00` labels and an `outlineVariant` hairline gridline per hour; gaps are bare background; no "now" marker. Geometry lives in `board_geometry.dart` |
-| Board tile | `_BoardTile` (custom) | height *is* the normalized duration, no minimum; `surfaceContainer` fill (`surfaceContainerHighest` on hover), 4px client-color left border, 1px `surface` top/bottom so contiguous tiles stay separable without changing height; content is a clipped column (client, normalized range + duration, note) — a short tile keeps only the client name; tooltip carries client, normalized range, duration, real range and note; tap copies the note like the list rows. Zero/negative-length rows: 2px `error` hairline, tooltip only |
-| Day total footer | `Text` `titleSmall` | "Totale normalizzato: h:mm" |
-| Empty state | `EmptyState` | "Nessuna sessione nel giorno scelto." |
+There is no `textTheme`. Text styling is extension methods that chain:
+`Text('x').large().bold()`.
 
-## Clienti screen (`lib/features/clients/clients_view.dart`)
+`.h1()` 30 · `.h2()` 24 · `.h3()` 20 · `.h4()` 18 · `.p()` 14 · `.lead()` 16 muted ·
+`.large()` 16 semibold · `.small()` 12 · `.muted()` (sets `mutedForeground`) ·
+`.italic()` `.bold()` `.semiBold()` `.mono()`.
 
-| Component | Widget | Notes |
-|---|---|---|
-| New-client FAB | `FloatingActionButton` | icon `add` |
-| Client row | `HoverTile` | tappable color dot (opens hue picker), name, "N attività"; tap = rename |
-| Delete action | `DeleteIconButton` | hover-revealed; blocked with snackbar if entries exist |
-| Create dialog | `AlertDialog` | "Nuovo cliente", autofocused `TextField`, Annulla/Crea |
-| Rename dialog | `AlertDialog` | autofocused `TextField`, Annulla/Salva |
-| Color dialog | `AlertDialog` | preview `CircleAvatar` + hue `Slider` (fixed S/L), Annulla/Salva |
-| Delete confirm | `AlertDialog` | Annulla/Elimina |
-| Empty state | `EmptyState` | "Nessun cliente." |
+From the old code: `titleSmall` → `.h4()`, `bodySmall`/`labelMedium` → `.small()`,
+`bodyLarge` → `.p()`, and `.muted()` anywhere `onSurfaceVariant` was the colour.
 
-## Impostazioni screen (`lib/features/settings/settings_view.dart`)
+### Interaction
 
-The page has no width cap: the sections stretch to the window, the controls in them keep their natural width.
+`Clickable` supplies hover, pressed, focused and disabled as `WidgetStateProperty`
+decoration — declarative, not a tween, and `onFocus` comes free so the focus-within
+case needs no hand-rolling. There is **no ink ripple anywhere in shadcn**; the
+interaction language is state-driven decoration.
 
-| Component | Widget | Notes |
-|---|---|---|
-| Sections | `CatSection` ×3 | Tema, Conservazione, AI — each owns its title, description and spacing |
-| Theme switch | `CatSegmented<ThemeMode>` | Chiaro/Scuro/Sistema with icons, instant apply |
-| Retention field | `TextFormField` (capped at `formMaxWidth`) | digits only, validator (min 30); the helper text is the section's description |
-| Save button | `FilledButton` | "Salva"; retention-shrink confirm `AlertDialog` first, whose confirm is a `DangerButton` |
-| AI switch | `CatSettingRow` + `Switch` | "Riassunto delle note", instant apply, install dialog on enable |
-| Delete model | `OutlinedButton` (error colours) | only with files on disk; Windows-only section |
+- **List row**: `Clickable` gives the hover fill. Row actions (`onEdit`/`onDelete`)
+  hide at rest and reveal on row hover or when one of them has keyboard focus —
+  see `RowAction` in `app_list_row.dart`. Nothing else on a row changes on hover.
+- **Button**: the `ButtonStyle` variant owns all four states. Never pass hover colours.
+- **Disabled**: never hand-compute a faded foreground — pass `enabled: false`.
 
-## Aiuto screen (`lib/features/help/help_view.dart`)
+### Destructive intent
 
-Prose: capped at `AppTokens.formMaxWidth`.
+One way, everywhere:
 
-| Component | Widget | Notes |
-|---|---|---|
-| Shortcut chips | `Container` rows | `surfaceContainerHighest` rounded box (110 wide) + description text |
-| Intro texts | `Text` | shortcuts scope + tap-to-activate explanation |
+- A text action is a `DestructiveButton`, colour always on (e.g. "Termina").
+- An icon action (row delete, session delete) is **ghost, red only on hover**:
+  `ButtonStyle.ghostIcon().withForegroundColor(hoverColor: colorScheme.destructive)`.
+  A filled red square on every row was too loud (Attività eyeball).
+- In a row, every icon is ghost at rest; nothing is coloured until hovered.
+- Anything irreversible confirms through an `AlertDialog` whose confirm action is a
+  `DestructiveButton`.
 
-## Global patterns
+### Icon-only controls
 
-- **Feedback**: `SnackBar` everywhere (export result, save/create/delete errors, blocked actions)
-- **Pickers**: Material `showDatePicker` + `showTimePicker`, locale `it`
-- **Color dots**: `CircleAvatar` radius 6–14 with client hex color — the app's main visual identity
-- **Confirmations**: `AlertDialog` with `TextButton` Annulla + `FilledButton` action
-- **Hover-reveal actions**: desktop-only affordance via `HoverTile`; no touch fallback
-- **Empty states**: `EmptyState` from catui — dimmed 96px illustration above the message
+`IconButton(variance: ButtonStyle.ghostIcon(), density: ButtonDensity.icon)`. Size comes
+from `ButtonSize` under the app's `Density.reducedDensity` — never an `iconSize:`. A row
+action is quieter still: `ButtonSize.small` + `ButtonDensity.iconDense` (see `RowAction`
+below) — smaller than a standalone icon button, since a row can carry several.
+
+shadcn buttons have **no `tooltip:` argument**. A tooltip is a wrapper:
+
+```dart
+Tooltip(
+  tooltip: const TooltipContainer(child: Text('Modifica')),
+  child: IconButton(...),
+)
+```
+
+Row actions do not write that wrapper: `AppListRow`'s `onEdit`/`onDelete` slots (and any
+`RowAction` used directly in a hand-built `trailing:`) bake in icon, style, size, density,
+tooltip and hit target. Only one-off icon buttons wrap by hand.
+
+### States
+
+- **Loading, page level**: `Scaffold.loadingProgress` — a top bar, free.
+- **Loading, one control**: `Spinner` inline.
+- **Empty**: `EmptyState` (`lib/shared/widgets/empty_state.dart`) — dimmed illustration
+  above a `.muted()` message. Kept as-is; shadcn has no empty-state primitive.
+- **Error, transient**: a toast.
+- **Error, in place of content**: `.muted()` text where the content would be.
+
+### Toggle groups
+
+Mutually exclusive choices are `Toggle`s, not a segmented widget — shadcn has none, and
+`MultipleChoice` is for multi-select we do not have.
+
+```dart
+Toggle(
+  value: selected == Thing.a,
+  style: const ButtonStyle.outline(), // not ButtonDensity.compact: it strips padding and border
+  onChanged: (v) => setState(() => selected = v ? Thing.a : null),
+  child: const Text('Oggi'),
+)
+```
+
+Laid out in a `Wrap(spacing: 8)` or `Row(...).gap(8)`. Exclusion is one state field on
+the parent. No fixed sizing — labels vary in width. `outline` because the selected state
+already fills; never hand-swap primary/outline.
+
+### Pages
+
+`Scaffold(headers: [...], footers: [...], child: ...)`. The toolbar goes in `headers`,
+the footer in `footers`. There is **no `AppPage` wrapper** — `maxWidth` and scrolling are
+`ConstrainedBox` and `SingleChildScrollView` at the call site.
+
+There is no FAB in shadcn and no slot for one. Primary page actions are normal
+`PrimaryButton`s in the header.
+
+### Sections
+
+Flat, not carded: a title (`.h4()`), an optional `.muted().small()` description, the
+content, then a `Divider`. A settings row is `Basic(title:, subtitle:, trailing:)` used
+directly — no widget, no width cap of its own.
+
+### Italian
+
+The app is Italian-only; shadcn ships English only. `lib/shadcn_it.dart` holds
+`ShadcnLocalizationsIt extends ShadcnLocalizationsEn` plus its delegate, passed as
+`ShadcnApp(localizationsDelegates: [ShadcnLocalizationsIt.delegate])` — ours comes first,
+so it wins. It overrides only the strings that reach our screens: month and weekday
+names, `datePickerSelectYear`, `buttonCancel`/`buttonSave`, `timeHour`/`timeMinute`, the
+picker placeholders, and the text-field context menu (`menuCut`, `menuCopy`, …). A string
+it misses renders English; it never crashes.
+
+**After any shadcn upgrade, diff `lib/l10n/shadcn_en.arb` in the package for new strings.**
+
+Dates in the UI go through `lib/shared/utils/format.dart` (`dmy`, `dmyShort`, `hhmm`),
+never through shadcn's `formatDateTime`. Times from `TimePicker` already render `09:05`,
+24-hour. No `intl`, no `flutter_localizations`. Decided in
+wayfinder ticket 09 (old local tracker, now deleted).
+
+---
+
+## 2. Shared widgets
+
+The whole list.
+
+| Widget | Why it exists |
+|---|---|
+| `AppListRow` (`lib/shared/widgets/app_list_row.dart`) | `Clickable` + `Basic`, with `onEdit`/`onDelete` rendering the action pair (icon, style, tooltip, hit target). 5 call sites, and it owns the row interaction language. Rows needing something else pass `trailing:` instead. |
+| `RowAction` (same file) | The quiet ghost icon button `onEdit`/`onDelete` build from; also used directly (e.g. the running entry's pencil in `entries_view.dart`) when a row needs a custom `trailing:`. Hides until row hover/focus, isolates itself from the row's own hover state. |
+| `EmptyState` (`lib/shared/widgets/empty_state.dart`) | Survives unchanged apart from `.muted()` text. shadcn has no equivalent. |
+| `DateFilterBar` (`lib/shared/widgets/date_filter_bar.dart`) | Oggi / Ieri `Toggle`s beside a `DateField` — see *The date filter*. Shared by Attività and Report. |
+| `Identicon` (`lib/shared/widgets/identicon.dart`) | A Client's picture, drawn from its id (ADR 0004). |
+| `app_toast.dart` | `navigatorKey` and the toast helpers — see *Third-party* below. |
+| `DateField` (`lib/shared/widgets/date_field.dart`) | `ObjectFormField<DateTime>` + shadcn's `DatePickerDialog`, displaying `dmyShort()` ("22/09/26"). Exists because `DatePicker` hard-codes US order ("September 22, 2026") in a `ShadcnLocalizations` *extension*, which no translation can override. Two call sites, but a correctness fix, not a style choice. |
+
+Plus one constant, `formMaxWidth = 560`.
+
+`ClientField` stays app code (it reads `ClientsCubit`), but shrinks to an `AutoComplete`
+wrapping a plain `TextField`.
+
+---
+
+## 3. Mapping table
+
+### catui → shadcn
+
+| Retired | Becomes |
+|---|---|
+| `HoverTile` | `AppListRow` (`Clickable` + `Basic`) — actions hide until row hover/focus |
+| `EditIconButton` / `DeleteIconButton` | `AppListRow`'s `onEdit`/`onDelete`; standalone use is `IconButton` + `ButtonStyle.ghostIcon()` (delete adds a destructive hover foreground) |
+| `DangerButton` | `DestructiveButton` |
+| `intentHoverStyle()` | **Gone.** Intent colour is always on; see *Destructive intent* |
+| `EmptyState` | Kept as-is |
+| `CatPage` | `Scaffold` + `ConstrainedBox`/`SingleChildScrollView` at the call site |
+| `CatSection` | `.h4()` title + `.muted().small()` description + `Divider` |
+| `CatSectionHeader` | `Text(...).h4()` in a `Row` with `Expanded` + trailing |
+| `CatSettingRow` | `Basic(title:, subtitle:, trailing:)` |
+| `CatSegmented` | `Toggle`s, mutually exclusive |
+| `CatTag` | `Badge` family — **except** the Aiuto key-caps, which become `KeyboardDisplay` |
+| `CatDateTimeField` | `DateField` + `TimePicker` side by side. Not typeable; we never typed them |
+| `ClientDot` | `Avatar` — identity handled by wayfinder ticket 06 |
+| `catConfirm` | `AlertDialog` + `showOverlay(context, DialogConfiguration(), ...)`, confirm = `DestructiveButton` when destructive |
+| `catTextInput` | Same, hand-composed with a `TextField`. No helper exists |
+| `catSurfaceDecoration` | `OutlinedContainer` |
+| `AppTokens` | Dissolved into `ThemeData`; only `formMaxWidth` survives |
+
+### Material → shadcn
+
+| Retired | Becomes |
+|---|---|
+| `Scaffold` | shadcn `Scaffold` — `headers`/`footers`/`child`, no `appBar`, no FAB, no drawer |
+| `AppBar` | shadcn `AppBar` inside `Scaffold.headers` |
+| `FloatingActionButton` | **Deleted.** `PrimaryButton` in the page header |
+| `AlertDialog` / `showDialog` | `AlertDialog` + `showOverlay`, closed with `Navigator.pop(context, value)` |
+| `TextField` | shadcn `TextField`. **No `InputDecoration`** — `placeholder: Widget`, `features: [InputFeature.clear(), ...]`, labels and errors from `FormField` inside a `Form` |
+| `TextFormField` | `FormField` + `TextField` inside a `Form` |
+| `Switch` | `Switch` (richer: `leading`/`trailing`/`gap`) |
+| `Slider` | `Slider` — takes a `SliderValue`, not a `double` |
+| `ListTile` | **None.** `Basic`, or `AppListRow` |
+| `ChoiceChip` | `Toggle` |
+| `Tooltip` | `Tooltip(tooltip: Widget, child:)` — a widget, not `message: String` |
+| `InkWell` | `Clickable` |
+| `IconButton` | `IconButton` + a `ButtonStyle....Icon()` variance |
+| `FilledButton` | `PrimaryButton` |
+| `OutlinedButton` | `OutlineButton` |
+| `TextButton` | `TextButton` |
+| `CircularProgressIndicator` | `CircularProgressIndicator` or `Spinner` |
+| `LinearProgressIndicator` | `Progress`, or `Scaffold.loadingProgress` |
+| `VerticalDivider` | `Divider` — the rail divider dies with the rail anyway |
+| `SnackBar` | a toast |
+| `showDatePicker` / `showTimePicker` | `DateField` / `TimePicker` widgets. **No imperative form exists** |
+| `Theme.of(context)` | `Theme.of(context)` — shadcn's, returning shadcn `ThemeData` |
+
+### Third-party
+
+| Retired | Becomes |
+|---|---|
+| `sonner_toast` | `showToast()` + `ToastLayer`, already installed under `ShadcnApp`. Native stack, shadcn defaults (bottomRight, 320px); helper borrows `navigatorKey.currentContext`; AI toast uses `showDuration: Duration(days: 365)` and is closed and raised again on each state change. See wayfinder ticket 10 |
+| `catppuccin_flutter` | Gone — see wayfinder ticket 06 |
+
+---
+
+## 4. The date filter
+
+The one behaviour change this migration makes, because the control could not be ported
+without deciding it.
+
+The bar is a **date filter**, and there is always exactly one effective date.
+A `DateField` is permanently visible; `Oggi` and `Ieri` are `Toggle` shortcuts beside it
+in the same `Wrap`. They are mutually exclusive in both directions:
+
+- picking a custom date clears Oggi/Ieri;
+- selecting Ieri clears Oggi and the custom date;
+- selecting Oggi clears Ieri and the custom date.
+
+`Oggi` is the default. This fixes today's bug where the manually picked date survives a
+switch back to Oggi.
+
+**`Tutte` / `DateFilter.all` is removed**, along with everything behind it: the
+pagination (`limit`, `loadMore`, `canLoadMore`, "Carica altre"), the `showAll` flag, and
+the `Ctrl+3` shortcut. Activities are always viewed in a bounded window. `DateFilter.all`
+was runtime state only — `limit` reached no further than
+`db.watchClosedSessions(limit:)` — so **no schema change, no migration, no data loss**.
+
+The cubit collapses `DateFilter filter` + `DateTime? pickedDay` into a single
+`DateTime day`; the toggles derive their `value` by comparing it to today/yesterday. The
+invalid state becomes unrepresentable.
+
+A date *range* (two `DateField`s) is a plausible future want and explicitly not now.
+
+### Known losses, accepted
+
+- `AutoComplete` takes `List<String>` suggestions, so **no leading dot or avatar in the
+  client dropdown**. Client colour was decorative; it is gone regardless.
+- `DateField`/`TimePicker` open a dialog by default on desktop (`mode:` can make it a popover), **not keyboard-typeable**. We never
+  typed them, and splitting date from time is an improvement: editing a time no longer
+  forces a walk through the date step.
+- ~~No hover reveal on row actions.~~ Superseded: row actions now hide until
+  hover/focus (wayfinder ticket `ui-polish/01`) — a busy row full of always-on
+  ghost icons read louder than intended.
+
+---
+
+## 5. Gaps found during the build
+
+What shadcn did not do as expected, and what we did instead.
+
+- **Title bar**: `window_manager`'s `WindowCaption` is a Material widget. The caption
+  is hand-made in `lib/main.dart` from shadcn buttons; close turns `destructive` on
+  hover, and the buttons have wider gaps than the defaults.
+- **`Basic` top-aligns `leading`**. The identicon sat a few px above the text.
+  `AppListRow` centres its leading widget. The report board tile nudges it down 2px
+  instead: a short tile shows only the name, and a centred icon gets cut off.
+- **Report board tiles** rest on `muted`, not solid `primary`; hover turns a thin left
+  edge `primary`. Solid bars were too loud. This corrects "`primary` for the report
+  bars" above: `primary` is the hover edge, not the fill.
+- **Entry editor timestamps**: `DateField` above `TimePicker`, stacked, not side by
+  side — side by side was too cramped at `formMaxWidth`.
+- **`showToast` has no "forever"**. The sticky AI toast uses a one-year duration.
+
+## Screen-by-screen inventory
+
+Deleted. It inventoried a stack that no longer exists, and rewriting it before the
+screens are built would be fiction. The execution effort regenerates it if it is still
+wanted.

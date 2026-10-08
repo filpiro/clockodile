@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clocky walk preview</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center; background: #e8edf0; }
+  canvas { max-width: 100%; height: auto; }
+</style>
+<canvas width="320" height="320" role="img" aria-label="Clocky walk animation"></canvas>
+<script>
+// walk/walk_sheet.png: one row of square frames, from make_walk.py.
+// 67 ms per frame matches the app (lib/features/entries/clocky.dart, 800 ms / 12).
+const canvas = document.querySelector('canvas');
+const context = canvas.getContext('2d');
+const image = new Image();
+let frame = 0;
+image.onload = () => {
+  const size = image.height, count = image.width / size;
+  setInterval(() => {
+    context.clearRect(0, 0, 320, 320);
+    context.drawImage(image, frame * size, 0, size, size, 0, 0, 320, 320);
+    frame = (frame + 1) % count;
+  }, 67);
+};
+image.onerror = () => canvas.setAttribute('aria-label', 'Unable to load sprite');
+image.src = 'walk/walk_sheet.png';
+</script>
+</html>

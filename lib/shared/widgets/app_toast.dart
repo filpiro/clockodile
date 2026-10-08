@@ -1,42 +1,26 @@
-import 'package:catui/catui.dart';
-import 'package:flutter/material.dart';
-import 'package:sonner_toast/sonner_toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' hide showToast;
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn show showToast;
 
-/// Bottom centre, one fixed width, one toast at a time. `sonner_toast` ships no
-/// UI: it is the overlay, the motion and the swipe, and the card below is ours.
-const appToastConfig = SonnerConfig(
-  alignment: Alignment.bottomCenter,
-  width: 380,
-  maxVisibleToasts: 1,
-  outerPadding: EdgeInsets.only(bottom: AppTokens.gutter),
-);
+/// The app's Navigator. Its context sits above every route, so a toast raised
+/// through it always lands on ShadcnApp's own toast layer, never on a screen
+/// Scaffold's; the Local Model's toast opens its dialogs through it too.
+final navigatorKey = GlobalKey<NavigatorState>();
 
-const _toastLife = Duration(seconds: 4);
+// ponytail: showToast takes no "forever"; a year is one on a desktop app.
+const _stickyLife = Duration(days: 365);
 
-/// The sticky toast waiting for the slot back, if one is outstanding. A message
-/// borrows the single slot for [_toastLife]; without this, a "Nota copiata"
-/// would bury an unresolved state for the rest of the session, since the state
-/// only announces itself when it changes.
-_Toast? _sticky;
+/// shadcn's own default, restated only because the call has to pick one.
+const _messageLife = Duration(seconds: 5);
 
-/// Stamps every raised toast, so a toast that has already been replaced cannot
-/// hand the slot back on its way out.
-int _generation = 0;
+/// The Local Model's toast, if one is up. Messages stack over it, and it shows
+/// again when they close.
+ToastOverlay? _ai;
 
-class _Toast {
-  const _Toast(this.message, this.action, this.onAction, this.spinner);
-
-  final String message;
-  final String? action;
-  final VoidCallback? onAction;
-  final bool spinner;
-}
-
-/// Shows [message] as the app's single toast, replacing whatever is showing.
+/// Shows [message] on shadcn's toast stack, bottom right.
 ///
-/// [sticky] drops the timer: a state the user has to resolve stays until it
-/// resolves or the close X is pressed. Everything else fades on its own, and
-/// gives the slot back to the sticky toast it interrupted.
+/// [sticky] is for a state the user has to resolve: it has no timer to speak
+/// of, and a new sticky toast replaces the last one. Everything else goes
+/// after shadcn's 5s.
 void showToast(
   String message, {
   String? action,
@@ -44,46 +28,28 @@ void showToast(
   bool sticky = false,
   bool spinner = false,
 }) {
-  final toast = _Toast(message, action, onAction, spinner);
-  if (sticky) _sticky = toast;
-  _raise(toast, sticky: sticky);
-}
-
-void _raise(_Toast toast, {required bool sticky}) {
-  // Stamp first: dismissAll below makes the outgoing toast run its own
-  // onDismiss, which must see that the slot has already moved on.
-  final id = ++_generation;
-  Sonner.dismissAll();
-  Sonner.toast(
-    duration: sticky ? null : _toastLife,
-    onDismiss: sticky
-        ? null
-        : () {
-            final outstanding = _sticky;
-            if (id == _generation && outstanding != null) {
-              _raise(outstanding, sticky: true);
-            }
-          },
-    builder: (context, dismiss) => _ToastCard(
-      message: toast.message,
-      action: toast.action,
-      onAction: toast.onAction,
-      spinner: toast.spinner,
-      onClose: () {
-        // Closing the sticky toast by hand is the user saying they have read
-        // it: it does not come back until the state changes again.
-        if (sticky) _sticky = null;
-        dismiss();
-      },
+  // No app mounted (a widget test of one screen): nowhere to show it.
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+  if (sticky) _ai?.close();
+  final toast = shadcn.showToast(
+    context: context,
+    showDuration: sticky ? _stickyLife : _messageLife,
+    builder: (context, overlay) => _ToastCard(
+      message: message,
+      action: action,
+      onAction: onAction,
+      spinner: spinner,
+      onClose: overlay.close,
     ),
   );
+  if (sticky) _ai = toast;
 }
 
-/// Takes the outstanding toast away, for a state that resolved by itself.
+/// Takes the sticky toast away, for a state that resolved by itself.
 void dismissToast() {
-  _sticky = null;
-  _generation++;
-  Sonner.dismissAll();
+  _ai?.close();
+  _ai = null;
 }
 
 class _ToastCard extends StatelessWidget {
@@ -103,45 +69,28 @@ class _ToastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      // The surface is the shared recipe's; Material is here for the buttons'
-      // ink and the default text style, not for a colour of its own.
-      color: Colors.transparent,
-      child: Container(
-        decoration: catSurfaceDecoration(theme.colorScheme),
-        padding: const EdgeInsets.fromLTRB(AppTokens.gutter, 8, 8, 8),
-        child: Row(
-          children: [
-            if (spinner) ...[
-              const SizedBox.square(
-                dimension: 12,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(child: Text(message, style: theme.textTheme.bodySmall)),
-            if (action != null)
-              TextButton(
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  textStyle: theme.textTheme.bodySmall,
-                ),
-                onPressed: onAction,
-                child: Text(action!),
-              ),
-            // A desktop app: swipe alone would leave a mouse with no way out.
-            // No tooltip: the toast floats above the Navigator's Overlay, and a
-            // tooltip needs one over it.
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              iconSize: AppTokens.iconSize,
-              icon: const Icon(LucideIcons.x, semanticLabel: 'Chiudi'),
-              onPressed: onClose,
+    return SurfaceCard(
+      child: Row(
+        children: [
+          if (spinner) const CircularProgressIndicator(),
+          Expanded(child: Text(message).small()),
+          if (action != null)
+            OutlineButton(
+              size: ButtonSize.small,
+              onPressed: onAction,
+              child: Text(action!),
             ),
-          ],
-        ),
-      ),
+          // A desktop app: swipe alone would leave a mouse with no way out.
+          // No tooltip: the toast layer sits above the Navigator's Overlay.
+          IconButton(
+            variance: const ButtonStyle.ghostIcon(),
+            density: ButtonDensity.icon,
+            size: ButtonSize.small,
+            icon: const Icon(LucideIcons.x, semanticLabel: 'Chiudi'),
+            onPressed: onClose,
+          ),
+        ],
+      ).gap(8),
     );
   }
 }

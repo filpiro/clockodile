@@ -1,16 +1,18 @@
-import 'package:clockodile/shared/widgets/empty_state.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:catui/catui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' hide showToast;
 
-import '../../shared/widgets/client_dot.dart';
-import '../../shared/widgets/date_filter_bar.dart';
+import '../../shared/widgets/app_list_row.dart';
 import '../../shared/widgets/app_toast.dart';
+import '../../shared/widgets/date_filter_bar.dart';
+import '../../shared/widgets/empty_state.dart';
+import '../../shared/widgets/identicon.dart';
 import '../../shared/utils/format.dart';
 import 'cubit/report_cubit.dart';
 import 'normalize.dart';
 import 'report_board.dart';
+
+const _pagePadding = 24.0;
 
 /// Export with toast feedback — used by the page button and Ctrl+S.
 Future<void> runReportExport(BuildContext context) async {
@@ -39,60 +41,88 @@ class ReportView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ReportCubit, ReportState>(
       builder: (context, state) {
+        final cubit = context.read<ReportCubit>();
         final total = state.rows.fold(
           Duration.zero,
           (sum, r) => sum + r.normDuration,
         );
         final perClient = clientTotals(state.rows);
-        return CatPage(
-          toolbar: Row(
-            children: [
-              Expanded(
-                child: Wrap(
-                  spacing: 24,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    DateFilterBar(
-                      filter: state.filter,
-                      pickedDay: state.pickedDay,
-                      onFilter: context.read<ReportCubit>().setFilter,
-                      onPickDay: context.read<ReportCubit>().setDay,
-                    ),
-                    CatSegmented<ReportMode>(
-                      segments: const {
-                        ReportMode.grouped: 'Raggruppa per cliente',
-                        ReportMode.chronological: 'Ordine cronologico',
-                      },
-                      icons: const {
-                        ReportMode.grouped: LucideIcons.listClock,
-                        ReportMode.chronological: LucideIcons.timeline,
-                      },
-                      selected: state.mode,
-                      onChanged: context.read<ReportCubit>().setMode,
-                    ),
-                  ],
-                ),
-              ),
-              Tooltip(
-                message: 'Esporta CSV',
-                child: IconButton.filledTonal(
-                  onPressed: state.rows.isEmpty
-                      ? null
-                      : () => runReportExport(context),
-                  icon: const Icon(LucideIcons.fileDown),
-                ),
-              ),
-            ],
+        Widget modeToggle(ReportMode m, IconData icon, String label) => Toggle(
+          value: state.mode == m,
+          onChanged: (_) => cubit.setMode(m),
+          style: const ButtonStyle.outline(),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [Icon(icon), const Gap(8), Text(label)],
           ),
-          body: switch (state) {
+        );
+        return Scaffold(
+          headers: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              title: Wrap(
+                spacing: 24,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  DateFilterBar(day: state.day, onDay: cubit.setDay),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      modeToggle(
+                        ReportMode.grouped,
+                        LucideIcons.listTree,
+                        'Raggruppa per cliente',
+                      ),
+                      modeToggle(
+                        ReportMode.chronological,
+                        LucideIcons.chartGantt,
+                        'Ordine cronologico',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              trailing: [
+                Tooltip(
+                  tooltip: (_) =>
+                      const TooltipContainer(child: Text('Esporta CSV')),
+                  child: IconButton(
+                    variance: ButtonStyle.ghostIcon(),
+                    density: ButtonDensity.icon,
+                    icon: const Icon(LucideIcons.fileDown),
+                    enabled: state.rows.isNotEmpty,
+                    onPressed: () => runReportExport(context),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          footers: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                _pagePadding,
+                8,
+                _pagePadding,
+                _pagePadding,
+              ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text('Totale normalizzato: ${formatHm(total)}').h4(),
+              ),
+            ),
+          ],
+          child: switch (state) {
             ReportState(rows: []) => const EmptyState(
               'Nessuna sessione nel giorno scelto.',
             ),
-            ReportState(mode: ReportMode.chronological) => ReportBoard(
-              state.rows,
+            ReportState(mode: ReportMode.chronological) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _pagePadding),
+              child: ReportBoard(state.rows),
             ),
             _ => ListView(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
               children: [
                 for (final (i, r) in state.rows.indexed) ...[
                   if (i == 0 || state.rows[i - 1].client.id != r.client.id)
@@ -102,13 +132,6 @@ class ReportView extends StatelessWidget {
               ],
             ),
           },
-          footer: Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'Totale normalizzato: ${formatHm(total)}',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-          ),
         );
       },
     );
@@ -125,12 +148,15 @@ class _ClientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CatSectionHeader(
-      leading: ClientDot(r.client.colorHex, size: ClientDotSize.small),
-      title: r.client.name,
-      trailing: Text(
-        formatHm(total),
-        style: Theme.of(context).textTheme.titleSmall,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Row(
+        children: [
+          Identicon(r.client.id, size: Identicon.small),
+          const Gap(8),
+          Expanded(child: Text(r.client.name).h4()),
+          Text(formatHm(total)).h4(),
+        ],
       ),
     );
   }
@@ -144,19 +170,18 @@ class _ReportTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final zero = r.normDuration <= Duration.zero;
     final note = r.entry.note;
-    return HoverTile(
+    return AppListRow(
       // Stateful row: keyed so hover doesn't survive a filter change.
       key: ValueKey(r.session.id),
-      dense: true,
       // No note, no tap.
       onTap: note.isEmpty ? null : () => copyNote(note),
-      // No color dot: the client header above every run already carries it.
+      // No identicon: the client header above every run already carries it.
       title: Text(
         '${hhmm(r.normStart)}–${hhmm(r.normEnd)}'
         ' (${formatHm(r.normDuration)})'
-        '${r.entry.note.isEmpty ? '' : ' — ${r.entry.note}'}',
+        '${note.isEmpty ? '' : ' — $note'}',
         style: zero
-            ? TextStyle(color: Theme.of(context).colorScheme.error)
+            ? TextStyle(color: Theme.of(context).colorScheme.destructive)
             : null,
       ),
       subtitle: Text(
